@@ -5,16 +5,19 @@ type Theme = 'light' | 'dark';
 
 interface DarkModeContextProps {
   theme: Theme;
+  isDark: boolean;
   toggleTheme: () => void;
 }
 
 const DarkModeContext = createContext<DarkModeContextProps>({
   theme: 'light',
+  isDark: false,
   toggleTheme: () => {},
 });
 
 export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light');
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     // Check for saved theme preference or use system preference
@@ -38,7 +41,7 @@ export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <DarkModeContext.Provider value={{ theme, toggleTheme }}>
+    <DarkModeContext.Provider value={{ theme, isDark, toggleTheme }}>
       {children}
     </DarkModeContext.Provider>
   );
