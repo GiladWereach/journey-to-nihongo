@@ -15,7 +15,7 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
   character,
   size = 'md',
   color = 'text-indigo',
-  animated = true,
+  animated = false, // Default to false to prevent flickering
   className,
   style,
 }) => {
@@ -30,15 +30,25 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
 
   useEffect(() => {
     if (animated && charRef.current) {
-      // Add the animation class immediately
-      charRef.current.classList.add('animate-scale-in');
+      // Make sure the element is visible before animation
+      charRef.current.style.opacity = '1';
+      
+      // Add the animation class with a slight delay to ensure it's visible first
+      setTimeout(() => {
+        if (charRef.current) {
+          charRef.current.classList.add('animate-scale-in');
+        }
+      }, 50);
       
       // For intersection observer functionality (for elements that come into view later)
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
-              entry.target.classList.add('animate-scale-in');
+              if (entry.target instanceof HTMLElement) {
+                entry.target.style.opacity = '1';
+                entry.target.classList.add('animate-scale-in');
+              }
               observer.unobserve(entry.target);
             }
           });
@@ -62,10 +72,14 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
         sizeClasses[size],
         color,
         'transition-all duration-500 ease-out',
+        // Only apply opacity-0 if explicitly animated, otherwise always visible
         animated ? 'opacity-0' : 'opacity-100',
         className
       )}
-      style={style}
+      style={{
+        willChange: 'opacity, transform',
+        ...style
+      }}
     >
       {character}
     </div>

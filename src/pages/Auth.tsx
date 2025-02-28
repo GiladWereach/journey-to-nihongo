@@ -68,7 +68,7 @@ const Auth = () => {
               character={char}
               size="md"
               color="text-indigo"
-              animated={true}
+              animated={false} // Changed animated to false to prevent flickering
             />
           ))}
         </div>
