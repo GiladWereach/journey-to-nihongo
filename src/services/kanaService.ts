@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { KanaCharacter, KanaGroup, KanaType, UserKanaProgress } from '@/types/kana';
 
@@ -832,3 +833,271 @@ const katakanaSecondary: KanaCharacter[] = [
     examples: [
       { word: 'タクシー', romaji: 'takushī', meaning: 'taxi' },
       { word: 'タイム', romaji: 'taimu', meaning: 'time' }
+    ]
+  },
+  // Add remaining katakanaSecondary characters
+  {
+    id: 'katakana-chi',
+    character: 'チ',
+    romaji: 'chi',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'vertical stroke with hook'],
+    mnemonic: 'Looks like a checkmark',
+    examples: [
+      { word: 'チーズ', romaji: 'chīzu', meaning: 'cheese' },
+      { word: 'チケット', romaji: 'chiketto', meaning: 'ticket' }
+    ]
+  },
+  {
+    id: 'katakana-tsu',
+    character: 'ツ',
+    romaji: 'tsu',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['top right diagonal', 'middle right diagonal', 'bottom right diagonal'],
+    mnemonic: 'Looks like three quotation marks in a row',
+    examples: [
+      { word: 'ツアー', romaji: 'tsuā', meaning: 'tour' },
+      { word: 'ツール', romaji: 'tsūru', meaning: 'tool' }
+    ]
+  },
+  {
+    id: 'katakana-te',
+    character: 'テ',
+    romaji: 'te',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'vertical stroke with hook'],
+    mnemonic: 'Looks like a telephone pole',
+    examples: [
+      { word: 'テレビ', romaji: 'terebi', meaning: 'television' },
+      { word: 'テニス', romaji: 'tenisu', meaning: 'tennis' }
+    ]
+  },
+  {
+    id: 'katakana-to',
+    character: 'ト',
+    romaji: 'to',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'horizontal stroke'],
+    mnemonic: 'Looks like a doorknob',
+    examples: [
+      { word: 'トマト', romaji: 'tomato', meaning: 'tomato' },
+      { word: 'トイレ', romaji: 'toire', meaning: 'toilet' }
+    ]
+  }
+];
+
+const katakanaAdvanced: KanaCharacter[] = [
+  // N-row (ナ行)
+  {
+    id: 'katakana-na',
+    character: 'ナ',
+    romaji: 'na',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'diagonal stroke'],
+    mnemonic: 'Looks like the number 7',
+    examples: [
+      { word: 'ナイフ', romaji: 'naifu', meaning: 'knife' },
+      { word: 'ナツ', romaji: 'natsu', meaning: 'summer' }
+    ]
+  },
+  {
+    id: 'katakana-ni',
+    character: 'ニ',
+    romaji: 'ni',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['top horizontal', 'bottom horizontal'],
+    mnemonic: 'Looks like two (ni) horizontal lines',
+    examples: [
+      { word: 'ニュース', romaji: 'nyūsu', meaning: 'news' },
+      { word: 'ニンジン', romaji: 'ninjin', meaning: 'carrot' }
+    ]
+  },
+  {
+    id: 'katakana-nu',
+    character: 'ヌ',
+    romaji: 'nu',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke with hook', 'diagonal stroke'],
+    mnemonic: 'Looks like a noodle hanging from chopsticks',
+    examples: [
+      { word: 'ヌガー', romaji: 'nugā', meaning: 'nougat' },
+      { word: 'ヌル', romaji: 'nuru', meaning: 'null (programming)' }
+    ]
+  },
+  {
+    id: 'katakana-ne',
+    character: 'ネ',
+    romaji: 'ne',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'vertical curve with hook'],
+    mnemonic: 'Looks like a bent nail',
+    examples: [
+      { word: 'ネコ', romaji: 'neko', meaning: 'cat' },
+      { word: 'ネット', romaji: 'netto', meaning: 'internet/net' }
+    ]
+  },
+  {
+    id: 'katakana-no',
+    character: 'ノ',
+    romaji: 'no',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['diagonal stroke'],
+    mnemonic: 'Looks like a forward slash',
+    examples: [
+      { word: 'ノート', romaji: 'nōto', meaning: 'notebook' },
+      { word: 'ノミ', romaji: 'nomi', meaning: 'flea' }
+    ]
+  }
+];
+
+// Group data for UI organization
+const kanaGroups: KanaGroup[] = [
+  {
+    id: 'hiragana-basic',
+    title: 'Basic Hiragana',
+    description: 'The first characters you should learn',
+    characters: hiraganaBasic,
+    type: 'hiragana'
+  },
+  {
+    id: 'hiragana-secondary',
+    title: 'Secondary Hiragana',
+    description: 'Continue your hiragana journey',
+    characters: hiraganaSecondary,
+    type: 'hiragana'
+  },
+  {
+    id: 'hiragana-advanced',
+    title: 'Advanced Hiragana',
+    description: 'Complete your hiragana knowledge',
+    characters: hiraganaAdvanced,
+    type: 'hiragana'
+  },
+  {
+    id: 'katakana-basic',
+    title: 'Basic Katakana',
+    description: 'Start learning katakana',
+    characters: katakanaBasic, 
+    type: 'katakana'
+  },
+  {
+    id: 'katakana-secondary',
+    title: 'Secondary Katakana',
+    description: 'Build your katakana skills',
+    characters: katakanaSecondary,
+    type: 'katakana'
+  },
+  {
+    id: 'katakana-advanced',
+    title: 'Advanced Katakana',
+    description: 'Master katakana completely',
+    characters: katakanaAdvanced,
+    type: 'katakana'
+  }
+];
+
+// Service functions
+export const getKanaGroups = (): KanaGroup[] => {
+  return kanaGroups;
+};
+
+export const getKanaGroup = (groupId: string): KanaGroup | undefined => {
+  return kanaGroups.find(group => group.id === groupId);
+};
+
+export const getKanaCharacter = (characterId: string): KanaCharacter | undefined => {
+  for (const group of kanaGroups) {
+    const character = group.characters.find(char => char.id === characterId);
+    if (character) return character;
+  }
+  return undefined;
+};
+
+export const getAllKanaCharacters = (type?: KanaType): KanaCharacter[] => {
+  const allCharacters: KanaCharacter[] = [];
+  
+  for (const group of kanaGroups) {
+    if (!type || group.type === type) {
+      allCharacters.push(...group.characters);
+    }
+  }
+  
+  return allCharacters;
+};
+
+export const getUserKanaProgress = async (userId: string): Promise<UserKanaProgress[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('kana_progress')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching kana progress:', error);
+    return [];
+  }
+};
+
+export const updateKanaProgress = async (
+  userId: string,
+  characterId: string,
+  correctCount: number,
+  incorrectCount: number
+): Promise<boolean> => {
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from('kana_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('character_id', characterId)
+      .single();
+    
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
+    }
+    
+    if (existing) {
+      // Update existing record
+      const { error: updateError } = await supabase
+        .from('kana_progress')
+        .update({
+          correct_count: existing.correct_count + correctCount,
+          incorrect_count: existing.incorrect_count + incorrectCount,
+          last_practiced_at: new Date().toISOString()
+        })
+        .eq('id', existing.id);
+      
+      if (updateError) throw updateError;
+    } else {
+      // Insert new record
+      const { error: insertError } = await supabase
+        .from('kana_progress')
+        .insert({
+          user_id: userId,
+          character_id: characterId,
+          correct_count: correctCount,
+          incorrect_count: incorrectCount,
+          last_practiced_at: new Date().toISOString()
+        });
+        
+      if (insertError) throw insertError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating kana progress:', error);
+    return false;
+  }
+};
