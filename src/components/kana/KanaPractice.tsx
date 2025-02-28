@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -250,22 +249,16 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
       }
       
       // Save the updated progress
-      const result = await kanaService.updateKanaProgress({
+      await kanaService.updateKanaProgress({
         userId: user.id,
         characterId,
         proficiency,
         mistakeCount,
-        totalPracticeCount
+        totalPracticeCount,
+        lastPracticed: new Date(),
+        reviewDue: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3) // 3 days from now
       });
       
-      if (!result && !progressSyncError) {
-        setProgressSyncError(true);
-        toast({
-          title: "Progress Sync",
-          description: "Your progress is being tracked for this session, but we're having trouble syncing it to your account.",
-          variant: "warning"
-        });
-      }
     } catch (error) {
       console.error('Error updating progress:', error);
       if (!progressSyncError) {
