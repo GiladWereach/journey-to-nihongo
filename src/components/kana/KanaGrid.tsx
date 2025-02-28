@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, Info, X } from 'lucide-react';
 
 interface KanaGridProps {
   kanaList: KanaCharacter[];
@@ -33,7 +33,9 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   const [selectedType, setSelectedType] = useState<KanaType | 'all'>('all');
   const [expandedKana, setExpandedKana] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const gridRef = useRef<HTMLDivElement>(null);
   
   // Filter kana by selected type
   const filteredKana = selectedType === 'all' 
@@ -63,14 +65,16 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   // Update active section based on scroll position
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100;
+      if (!gridRef.current) return;
+      
+      const scrollPosition = window.scrollY + 150;
       
       // Find the section that is currently in view
       for (const section of sectionKeys) {
         const element = sectionRefs.current[section];
         if (element) {
           const { top, bottom } = element.getBoundingClientRect();
-          if (top <= 150 && bottom > 0) {
+          if (top <= 180 && bottom > 0) {
             if (activeSection !== section) {
               setActiveSection(section);
             }
@@ -90,9 +94,9 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   };
 
   return (
-    <div className={cn("space-y-6", className)}>
-      <div className="sticky top-0 z-20 bg-background pt-4 pb-2 shadow-md border-b">
-        <div className="flex justify-center mb-4">
+    <div className={cn("space-y-6", className)} ref={gridRef}>
+      <div className="sticky top-[124px] z-20 bg-background pt-4 pb-2 shadow-md border-b">
+        <div className="flex justify-between items-center mb-4">
           <RadioGroup
             className="flex space-x-4"
             defaultValue="all"
@@ -111,7 +115,35 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
               <Label htmlFor="katakana">Katakana</Label>
             </div>
           </RadioGroup>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowHelp(!showHelp)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Info size={18} />
+          </Button>
         </div>
+        
+        {showHelp && (
+          <div className="bg-muted p-3 mb-4 rounded-md relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-1 top-1 h-6 w-6" 
+              onClick={() => setShowHelp(false)}
+            >
+              <X size={14} />
+            </Button>
+            <h3 className="text-sm font-medium mb-1">Navigation Help</h3>
+            <p className="text-xs text-muted-foreground">
+              • Use the section buttons below to quickly navigate to different kana groups<br />
+              • Click on any card to see pronunciation details<br />
+              • Use the radio buttons above to filter by kana type
+            </p>
+          </div>
+        )}
         
         {/* Apple-style section navigator */}
         <div className="overflow-x-auto hide-scrollbar py-2">
@@ -141,9 +173,10 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         <div 
           key={section}
           ref={el => sectionRefs.current[section] = el}
-          className="scroll-mt-32"
+          className="scroll-mt-56"
+          id={`section-${section}`}
         >
-          <div className="sticky top-[104px] z-10 bg-background/95 backdrop-blur-sm">
+          <div className="sticky top-[210px] z-10 bg-background/95 backdrop-blur-sm">
             <h2 className="text-2xl font-bold text-indigo mb-4 pt-2 pb-1 border-b border-indigo/20">
               {section}
             </h2>

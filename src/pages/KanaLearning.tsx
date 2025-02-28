@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,8 +8,9 @@ import KanaPractice, { PracticeResult } from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
 import { KanaType, UserKanaProgress } from '@/types/kana';
 import { Button } from '@/components/ui/button';
-import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft } from 'lucide-react';
+import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft, GraduationCap, Bookmark } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
+import { Link } from 'react-router-dom';
 
 const KanaLearning = () => {
   const { user } = useAuth();
@@ -103,9 +103,95 @@ const KanaLearning = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold mb-6 text-indigo flex items-center gap-3 justify-center">
-        <Book className="h-8 w-8" /> Kana Learning
-      </h1>
+      {/* Learning Module Navigation Bar */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md shadow-sm pb-2 border-b mb-6">
+        <div className="flex items-center justify-between py-2">
+          <Link to="/" className="flex items-center">
+            <span className="text-xl font-montserrat font-bold text-indigo tracking-tight">
+              Nihongo Journey
+            </span>
+          </Link>
+          
+          <div className="overflow-x-auto hide-scrollbar">
+            <div className="flex space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 bg-indigo/10 text-indigo font-medium"
+                asChild
+              >
+                <Link to="/kana-learning">
+                  <Book size={16} />
+                  Kana
+                </Link>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon",
+                    description: "Kanji learning module is under development",
+                  });
+                }}
+              >
+                <GraduationCap size={16} />
+                Kanji
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon",
+                    description: "Grammar module is under development",
+                  });
+                }}
+              >
+                <Bookmark size={16} />
+                Grammar
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon",
+                    description: "Vocabulary module is under development",
+                  });
+                }}
+              >
+                <Layers size={16} />
+                Vocabulary
+              </Button>
+            </div>
+          </div>
+
+          {user ? (
+            <Link to="/dashboard">
+              <Button size="sm" variant="outline" className="flex items-center gap-1">
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/auth">
+              <Button size="sm" variant="outline" className="flex items-center gap-1">
+                Sign In
+              </Button>
+            </Link>
+          )}
+        </div>
+        
+        <h1 className="text-2xl md:text-3xl font-bold my-2 text-indigo flex items-center gap-2 justify-center">
+          <Book className="h-7 w-7" /> Kana Learning
+        </h1>
+      </div>
       
       <div className="max-w-4xl mx-auto mb-8 bg-softgray p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-3 text-indigo">Getting Started with Japanese Writing</h2>
