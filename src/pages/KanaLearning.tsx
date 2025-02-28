@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,11 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft, GraduationCap, Bookmark } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { Link } from 'react-router-dom';
+import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 
 const KanaLearning = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('learn');
+  const [activeTab, setActiveTab] = useState('intro'); // Changed to start with intro
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType | 'all'>('all');
   const [practiceMode, setPracticeMode] = useState<'selection' | 'practice' | 'results'>('selection');
   const [practiceType, setPracticeType] = useState<'recognition' | 'matching'>('recognition');
@@ -30,21 +32,23 @@ const KanaLearning = () => {
 
   useEffect(() => {
     // Load user progress if user is logged in
-    const loadUserProgress = async () => {
-      if (user) {
-        try {
-          setIsLoadingProgress(true);
-          const progress = await kanaService.getUserKanaProgress(user.id);
-          setUserProgress(progress);
-          setIsLoadingProgress(false);
-        } catch (error) {
-          console.error('Error loading user progress:', error);
-          setIsLoadingProgress(false);
-        }
+    if (user) {
+      try {
+        setIsLoadingProgress(true);
+        kanaService.getUserKanaProgress(user.id)
+          .then(progress => {
+            setUserProgress(progress);
+            setIsLoadingProgress(false);
+          })
+          .catch(error => {
+            console.error('Error loading user progress:', error);
+            setIsLoadingProgress(false);
+          });
+      } catch (error) {
+        console.error('Error loading user progress:', error);
+        setIsLoadingProgress(false);
       }
-    };
-
-    loadUserProgress();
+    }
   }, [user, toast]);
 
   // Calculate overall progress
@@ -74,6 +78,7 @@ const KanaLearning = () => {
     setSelectedKanaType(type);
     setPracticeType(mode);
     setPracticeMode('practice');
+    setActiveTab('practice');
   };
 
   const handlePracticeComplete = (results: PracticeResult) => {
@@ -88,7 +93,6 @@ const KanaLearning = () => {
 
   const handlePracticeSimilar = () => {
     // For now, just restart with the same type
-    // In a production app, we'd use the mistakes to generate a targeted practice session
     setPracticeMode('practice');
   };
 
@@ -102,10 +106,10 @@ const KanaLearning = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Learning Module Navigation Bar */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md shadow-sm pb-2 border-b mb-6">
-        <div className="flex items-center justify-between py-2">
+    <div className="container mx-auto px-4 pb-6">
+      {/* Minimal Navigation Bar */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md shadow-sm py-2 border-b mb-2">
+        <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <span className="text-xl font-montserrat font-bold text-indigo tracking-tight">
               Nihongo Journey
@@ -155,21 +159,6 @@ const KanaLearning = () => {
                 <Bookmark size={16} />
                 Grammar
               </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-1"
-                onClick={() => {
-                  toast({
-                    title: "Coming Soon",
-                    description: "Vocabulary module is under development",
-                  });
-                }}
-              >
-                <Layers size={16} />
-                Vocabulary
-              </Button>
             </div>
           </div>
 
@@ -187,189 +176,214 @@ const KanaLearning = () => {
             </Link>
           )}
         </div>
-        
-        <h1 className="text-2xl md:text-3xl font-bold my-2 text-indigo flex items-center gap-2 justify-center">
-          <Book className="h-7 w-7" /> Kana Learning
-        </h1>
       </div>
       
-      <div className="max-w-4xl mx-auto mb-8 bg-softgray p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold mb-3 text-indigo">Getting Started with Japanese Writing</h2>
-        <p className="mb-4">
-          Japanese uses three writing systems: Hiragana, Katakana, and Kanji. We'll start with learning Hiragana and Katakana, which are the phonetic alphabets used in Japanese.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white p-4 rounded-md shadow-sm border">
-            <h3 className="font-medium text-lg flex items-center gap-2 text-indigo mb-2">
-              <Book size={18} /> Hiragana
-            </h3>
-            <p className="text-sm">Used for native Japanese words. This is the first writing system to learn.</p>
-            
-            {user && (
-              <div className="mt-3">
-                <ProgressIndicator 
-                  progress={calculateOverallProgress('hiragana')} 
-                  size="sm" 
-                  color="bg-indigo" 
-                  label="Your Progress" 
-                  showPercentage 
-                />
-              </div>
-            )}
-          </div>
-          <div className="bg-white p-4 rounded-md shadow-sm border">
-            <h3 className="font-medium text-lg flex items-center gap-2 text-indigo mb-2">
-              <Book size={18} /> Katakana
-            </h3>
-            <p className="text-sm">Used for foreign words and emphasis. Similar to Hiragana but with different characters.</p>
-            
-            {user && (
-              <div className="mt-3">
-                <ProgressIndicator 
-                  progress={calculateOverallProgress('katakana')} 
-                  size="sm" 
-                  color="bg-indigo" 
-                  label="Your Progress" 
-                  showPercentage 
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
       <Tabs 
-        defaultValue="learn" 
-        className="max-w-6xl mx-auto"
+        defaultValue="intro" 
+        className="max-w-5xl mx-auto"
         onValueChange={setActiveTab}
         value={activeTab}
       >
-        <TabsList className="grid grid-cols-3 mb-8 sticky top-0 z-30 bg-background shadow-md p-1 rounded-full max-w-md mx-auto">
+        <TabsList className="grid grid-cols-4 mb-4 sticky top-[53px] z-30 bg-background/95 backdrop-blur-sm shadow-sm p-1 rounded-full max-w-md mx-auto">
+          <TabsTrigger value="intro" className="flex items-center gap-2 rounded-full">
+            <BookOpen size={16} />
+            Intro
+          </TabsTrigger>
           <TabsTrigger value="learn" className="flex items-center gap-2 rounded-full">
-            <BookOpen size={16} /> Learn
+            <Book size={16} />
+            Learn
           </TabsTrigger>
           <TabsTrigger value="practice" className="flex items-center gap-2 rounded-full">
-            <PenTool size={16} /> Practice
+            <PenTool size={16} />
+            Practice
           </TabsTrigger>
           <TabsTrigger value="progress" className="flex items-center gap-2 rounded-full">
-            <Activity size={16} /> Progress
+            <BarChart size={16} />
+            Progress
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="learn" className="space-y-8">
+        {/* Introduction Tab */}
+        <TabsContent value="intro" className="space-y-6 animate-fade-in">
+          <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex justify-center mb-6">
+              <div className="flex items-center gap-4">
+                <JapaneseCharacter character="あ" size="lg" color="text-matcha" animated />
+                <JapaneseCharacter character="ア" size="lg" color="text-vermilion" animated />
+              </div>
+            </div>
+            
+            <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-indigo">
+              Japanese Writing Systems
+            </h1>
+            
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h2 className="font-semibold text-xl mb-2 text-indigo">The Three Writing Systems</h2>
+                <p className="mb-4">
+                  Japanese uses three writing systems: <strong>Hiragana</strong>, <strong>Katakana</strong>, and <strong>Kanji</strong>. 
+                  We'll start with learning Hiragana and Katakana, which are the phonetic alphabets.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-softgray/30 p-5 rounded-lg border border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <JapaneseCharacter character="あ" size="md" color="text-matcha" />
+                    <h3 className="text-lg font-medium text-matcha">Hiragana</h3>
+                  </div>
+                  <p className="text-sm mb-3">Used for native Japanese words and grammatical elements.</p>
+                  <p className="text-sm text-gray-600 mb-3">Example: <span className="japanese-text">あいうえお</span> (a-i-u-e-o)</p>
+                  
+                  {user && (
+                    <ProgressIndicator 
+                      progress={calculateOverallProgress('hiragana')} 
+                      size="sm" 
+                      color="bg-matcha" 
+                    />
+                  )}
+                </div>
+                
+                <div className="bg-softgray/30 p-5 rounded-lg border border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <JapaneseCharacter character="ア" size="md" color="text-vermilion" />
+                    <h3 className="text-lg font-medium text-vermilion">Katakana</h3>
+                  </div>
+                  <p className="text-sm mb-3">Used for foreign words, emphasis, and technical terms.</p>
+                  <p className="text-sm text-gray-600 mb-3">Example: <span className="japanese-text">アイウエオ</span> (a-i-u-e-o)</p>
+                  
+                  {user && (
+                    <ProgressIndicator 
+                      progress={calculateOverallProgress('katakana')} 
+                      size="sm" 
+                      color="bg-vermilion" 
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div className="text-center mt-8 pt-4 border-t border-gray-100">
+                <p className="mb-4 text-sm text-gray-600">Ready to start learning? Navigate to the Learn tab to explore kana characters or jump straight to practice.</p>
+                <div className="flex justify-center gap-4">
+                  <Button 
+                    onClick={() => setActiveTab('learn')}
+                    className="bg-indigo hover:bg-indigo/90"
+                  >
+                    Start Learning
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setActiveTab('practice');
+                      setPracticeMode('selection');
+                    }}
+                    className="text-indigo hover:bg-indigo/10 border-indigo/30"
+                  >
+                    Go to Practice
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="learn" className="space-y-4">
           <KanaGrid kanaList={allKana} />
         </TabsContent>
         
-        <TabsContent value="practice" className="space-y-8">
+        <TabsContent value="practice" className="space-y-6">
           {practiceMode === 'selection' && (
             <div className="text-center space-y-6">
-              <h2 className="text-2xl font-semibold">Practice Your Kana</h2>
-              <p className="max-w-2xl mx-auto">
-                Select which set of characters you want to practice and a practice mode.
-              </p>
+              <h2 className="text-2xl font-semibold text-indigo">Practice Your Kana</h2>
               
               <div className="mb-8 mt-6">
-                <h3 className="text-xl font-semibold mb-4">Recognition Practice</h3>
-                <p className="max-w-2xl mx-auto mb-4 text-sm text-gray-600">
-                  See a kana character and choose its correct pronunciation
-                </p>
+                <h3 className="text-lg font-medium mb-3 text-indigo">Recognition Practice</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-4">
                   <Button 
                     onClick={() => handlePracticeStart('hiragana', 'recognition')}
-                    className="h-auto py-6 bg-matcha hover:bg-matcha/90"
+                    className="h-auto py-5 bg-matcha hover:bg-matcha/90"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xl font-semibold mb-2">Hiragana</span>
-                      <span className="text-3xl mb-2">あいうえお</span>
-                      <span className="text-sm">Recognition practice</span>
+                      <span className="text-lg font-medium mb-2">Hiragana</span>
+                      <span className="text-3xl mb-3 japanese-text">あいう</span>
                     </div>
                   </Button>
                   
                   <Button 
                     onClick={() => handlePracticeStart('katakana', 'recognition')}
-                    className="h-auto py-6 bg-vermilion hover:bg-vermilion/90"
+                    className="h-auto py-5 bg-vermilion hover:bg-vermilion/90"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xl font-semibold mb-2">Katakana</span>
-                      <span className="text-3xl mb-2">アイウエオ</span>
-                      <span className="text-sm">Recognition practice</span>
+                      <span className="text-lg font-medium mb-2">Katakana</span>
+                      <span className="text-3xl mb-3 japanese-text">アイウ</span>
                     </div>
                   </Button>
                   
                   <Button 
                     onClick={() => handlePracticeStart('all', 'recognition')}
-                    className="h-auto py-6 bg-indigo hover:bg-indigo/90"
+                    className="h-auto py-5 bg-indigo hover:bg-indigo/90"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xl font-semibold mb-2">Both</span>
-                      <span className="text-3xl mb-2">あア</span>
-                      <span className="text-sm">Mixed practice</span>
+                      <span className="text-lg font-medium mb-2">Mixed</span>
+                      <span className="text-3xl mb-3 japanese-text">あア</span>
                     </div>
                   </Button>
                 </div>
               </div>
               
               <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Matching Practice</h3>
-                <p className="max-w-2xl mx-auto mb-4 text-sm text-gray-600">
-                  Match kana characters with their correct pronunciation
-                </p>
+                <h3 className="text-lg font-medium mb-3 text-indigo">Matching Practice</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-4">
                   <Button 
                     onClick={() => handlePracticeStart('hiragana', 'matching')}
-                    className="h-auto py-6 bg-matcha hover:bg-matcha/90"
+                    className="h-auto py-5 bg-matcha hover:bg-matcha/90"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xl font-semibold mb-2">Hiragana</span>
-                      <span className="text-3xl mb-2">あ=a</span>
-                      <span className="text-sm">Matching practice</span>
+                      <span className="text-lg font-medium mb-2">Hiragana</span>
+                      <span className="text-3xl mb-3">あ=a</span>
                     </div>
                   </Button>
                   
                   <Button 
                     onClick={() => handlePracticeStart('katakana', 'matching')}
-                    className="h-auto py-6 bg-vermilion hover:bg-vermilion/90"
+                    className="h-auto py-5 bg-vermilion hover:bg-vermilion/90"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xl font-semibold mb-2">Katakana</span>
-                      <span className="text-3xl mb-2">ア=a</span>
-                      <span className="text-sm">Matching practice</span>
+                      <span className="text-lg font-medium mb-2">Katakana</span>
+                      <span className="text-3xl mb-3">ア=a</span>
                     </div>
                   </Button>
                   
                   <Button 
                     onClick={() => handlePracticeStart('all', 'matching')}
-                    className="h-auto py-6 bg-indigo hover:bg-indigo/90"
+                    className="h-auto py-5 bg-indigo hover:bg-indigo/90"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xl font-semibold mb-2">Both</span>
-                      <span className="text-3xl mb-2">あア=a</span>
-                      <span className="text-sm">Mixed matching</span>
+                      <span className="text-lg font-medium mb-2">Mixed</span>
+                      <span className="text-3xl mb-3">あア=a</span>
                     </div>
                   </Button>
                 </div>
               </div>
               
-              <div className="mt-8 pt-4 border-t">
-                <h3 className="text-xl font-semibold mb-4">Coming Soon</h3>
+              <div className="mt-8 pt-4 border-t border-gray-100">
+                <h3 className="text-lg font-medium mb-3 text-muted-foreground">Coming Soon</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto opacity-60">
                   <Button 
                     disabled
-                    className="h-auto py-6"
+                    className="h-auto py-4"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-lg font-semibold mb-2">Writing Practice</span>
-                      <span className="text-sm">Draw kana characters and get feedback</span>
+                      <span className="text-lg font-medium">Writing Practice</span>
                     </div>
                   </Button>
                   
                   <Button 
                     disabled
-                    className="h-auto py-6"
+                    className="h-auto py-4"
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-lg font-semibold mb-2">Word Formation</span>
-                      <span className="text-sm">Create words from kana characters</span>
+                      <span className="text-lg font-medium">Word Formation</span>
                     </div>
                   </Button>
                 </div>
@@ -386,17 +400,26 @@ const KanaLearning = () => {
                   onClick={handlePracticeCancel}
                   className="flex items-center gap-1"
                 >
-                  <ChevronLeft size={16} /> Back to Selection
+                  <ChevronLeft size={16} />
                 </Button>
-                <div className="text-right">
-                  <h2 className="text-xl font-bold">
-                    {practiceType === 'recognition' ? 'Recognition Practice' : 'Matching Practice'}
+                <div className="text-center">
+                  <h2 className="text-xl font-bold text-indigo">
+                    {practiceType === 'recognition' ? 'Recognition' : 'Matching'}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedKanaType === 'hiragana' ? 'Hiragana' : 
-                     selectedKanaType === 'katakana' ? 'Katakana' : 'Mixed Kana'}
-                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    {selectedKanaType === 'hiragana' ? (
+                      <JapaneseCharacter character="あ" size="sm" color="text-matcha" />
+                    ) : selectedKanaType === 'katakana' ? (
+                      <JapaneseCharacter character="ア" size="sm" color="text-vermilion" />
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <JapaneseCharacter character="あ" size="sm" color="text-matcha" />
+                        <JapaneseCharacter character="ア" size="sm" color="text-vermilion" />
+                      </div>
+                    )}
+                  </div>
                 </div>
+                <div className="w-10"></div> {/* Spacer for alignment */}
               </div>
               <KanaPractice 
                 practiceType={practiceType}
@@ -416,11 +439,12 @@ const KanaLearning = () => {
                   onClick={handleFinishPractice}
                   className="flex items-center gap-1"
                 >
-                  <ChevronLeft size={16} /> Back to Practice Menu
+                  <ChevronLeft size={16} />
                 </Button>
-                <div className="text-right">
-                  <h2 className="text-xl font-bold">Practice Results</h2>
+                <div className="text-center">
+                  <h2 className="text-xl font-bold text-indigo">Results</h2>
                 </div>
+                <div className="w-10"></div> {/* Spacer for alignment */}
               </div>
               <KanaPracticeResults 
                 results={practiceResults}
@@ -434,7 +458,7 @@ const KanaLearning = () => {
         
         <TabsContent value="progress" className="space-y-8">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-2xl font-semibold mb-6">Your Progress</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-indigo">Progress</h2>
             
             {user ? (
               isLoadingProgress ? (
@@ -443,52 +467,54 @@ const KanaLearning = () => {
                 </div>
               ) : userProgress.length > 0 ? (
                 <div className="space-y-8">
-                  <div className="bg-white p-6 rounded-lg shadow-md border">
-                    <h3 className="text-xl font-medium mb-4 flex items-center justify-center gap-2">
-                      <BarChart size={20} /> Overall Progress
-                    </h3>
-                    
+                  <div className="bg-white p-6 rounded-lg shadow-sm border">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Hiragana</h4>
-                        <div className="text-2xl font-bold text-matcha mb-2">
-                          {calculateOverallProgress('hiragana').toFixed(0)}%
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <JapaneseCharacter character="あ" size="sm" color="text-matcha" />
+                          <h4 className="font-medium text-matcha">Hiragana</h4>
                         </div>
                         <ProgressIndicator 
                           progress={calculateOverallProgress('hiragana')} 
                           size="md" 
                           color="bg-matcha" 
+                          showPercentage
                         />
                       </div>
                       
                       <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Katakana</h4>
-                        <div className="text-2xl font-bold text-vermilion mb-2">
-                          {calculateOverallProgress('katakana').toFixed(0)}%
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <JapaneseCharacter character="ア" size="sm" color="text-vermilion" />
+                          <h4 className="font-medium text-vermilion">Katakana</h4>
                         </div>
                         <ProgressIndicator 
                           progress={calculateOverallProgress('katakana')} 
                           size="md" 
                           color="bg-vermilion" 
+                          showPercentage
                         />
                       </div>
                       
                       <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">All Kana</h4>
-                        <div className="text-2xl font-bold text-indigo mb-2">
-                          {calculateOverallProgress('all').toFixed(0)}%
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <div className="flex">
+                            <JapaneseCharacter character="あ" size="sm" color="text-matcha" />
+                            <JapaneseCharacter character="ア" size="sm" color="text-vermilion" />
+                          </div>
+                          <h4 className="font-medium text-indigo">All</h4>
                         </div>
                         <ProgressIndicator 
                           progress={calculateOverallProgress('all')} 
                           size="md" 
                           color="bg-indigo" 
+                          showPercentage
                         />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow-md border text-left">
-                    <h3 className="text-xl font-medium mb-4">Recently Practiced Characters</h3>
+                  <div className="bg-white p-6 rounded-lg shadow-sm border text-left">
+                    <h3 className="text-lg font-medium mb-4 text-indigo">Recent Practice</h3>
                     
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
@@ -497,8 +523,6 @@ const KanaLearning = () => {
                             <th className="px-4 py-2 text-left">Character</th>
                             <th className="px-4 py-2 text-left">Reading</th>
                             <th className="px-4 py-2 text-left">Proficiency</th>
-                            <th className="px-4 py-2 text-left">Practices</th>
-                            <th className="px-4 py-2 text-left">Mistakes</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -511,9 +535,9 @@ const KanaLearning = () => {
                               
                               return (
                                 <tr key={progress.characterId} className="border-b hover:bg-gray-50">
-                                  <td className="px-4 py-3 text-xl">{kana.character}</td>
+                                  <td className="px-4 py-3 text-xl japanese-text">{kana.character}</td>
                                   <td className="px-4 py-3">{kana.romaji}</td>
-                                  <td className="px-4 py-3">
+                                  <td className="px-4 py-3 w-1/3">
                                     <ProgressIndicator 
                                       progress={progress.proficiency} 
                                       size="sm" 
@@ -522,30 +546,19 @@ const KanaLearning = () => {
                                         progress.proficiency >= 50 ? "bg-yellow-500" : 
                                         "bg-red-500"
                                       } 
-                                      showPercentage 
                                     />
                                   </td>
-                                  <td className="px-4 py-3">{progress.totalPracticeCount}</td>
-                                  <td className="px-4 py-3">{progress.mistakeCount}</td>
                                 </tr>
                               );
                             })}
                         </tbody>
                       </table>
                     </div>
-                    
-                    {userProgress.length > 5 && (
-                      <div className="mt-4 text-center">
-                        <Button variant="outline">View All Characters</Button>
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : (
-                <div className="bg-white p-6 rounded-lg shadow-md border">
-                  <p className="mb-8">
-                    Start practicing kana characters to see your progress here!
-                  </p>
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
+                  <p className="mb-8">Start practicing to see your progress here!</p>
                   
                   <Button 
                     onClick={() => {
@@ -559,11 +572,16 @@ const KanaLearning = () => {
                 </div>
               )
             ) : (
-              <div className="bg-white p-6 rounded-lg shadow-md border">
+              <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <p className="mb-4 text-amber-600">Sign in to track your progress</p>
-                <p>
-                  Create an account or sign in to save your learning progress and track your improvement over time.
+                <p className="mb-4">
+                  Create an account or sign in to save your learning progress.
                 </p>
+                <Link to="/auth">
+                  <Button className="bg-indigo hover:bg-indigo/90">
+                    Sign In
+                  </Button>
+                </Link>
               </div>
             )}
           </div>

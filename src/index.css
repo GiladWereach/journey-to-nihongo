@@ -35,7 +35,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -149,20 +149,25 @@
     stroke-dashoffset: 1000;
   }
   
-  /* Dark mode animations */
-  .dark-transition {
-    transition: background-color 0.3s ease, 
-                color 0.3s ease, 
-                border-color 0.3s ease,
-                opacity 0.3s ease;
+  /* Minimal Japanese style utilities */
+  .jp-container {
+    @apply max-w-4xl mx-auto px-4 py-8 space-y-8;
   }
   
-  /* Navigation utilities for kana learning */
+  .jp-card {
+    @apply bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .jp-heading {
+    @apply text-xl font-medium text-indigo mb-4 border-b border-indigo/10 pb-2;
+  }
+  
+  /* Navigation utilities */
   .sticky-nav {
-    @apply sticky top-0 z-30 bg-background/95 backdrop-blur-sm shadow-md;
+    @apply sticky top-0 z-30 bg-background/95 backdrop-blur-sm shadow-sm;
   }
   
   .section-header {
-    @apply sticky top-16 z-20 bg-background/95 backdrop-blur-sm py-2 border-b;
+    @apply sticky top-16 z-20 bg-background/95 backdrop-blur-sm py-1 border-b border-border/30;
   }
 }

@@ -95,8 +95,8 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
 
   return (
     <div className={cn("space-y-6", className)} ref={gridRef}>
-      <div className="sticky top-[124px] z-20 bg-background pt-4 pb-2 shadow-md border-b">
-        <div className="flex justify-between items-center mb-4">
+      <div className="sticky top-[124px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
+        <div className="flex justify-between items-center mb-2">
           <RadioGroup
             className="flex space-x-4"
             defaultValue="all"
@@ -120,14 +120,14 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
             variant="ghost" 
             size="icon" 
             onClick={() => setShowHelp(!showHelp)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-indigo transition-colors"
           >
             <Info size={18} />
           </Button>
         </div>
         
         {showHelp && (
-          <div className="bg-muted p-3 mb-4 rounded-md relative">
+          <div className="bg-muted/50 p-3 mb-3 rounded-md relative">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -138,15 +138,14 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
             </Button>
             <h3 className="text-sm font-medium mb-1">Navigation Help</h3>
             <p className="text-xs text-muted-foreground">
-              • Use the section buttons below to quickly navigate to different kana groups<br />
-              • Click on any card to see pronunciation details<br />
-              • Use the radio buttons above to filter by kana type
+              • Click on section buttons below to navigate<br />
+              • Click on any card to see pronunciation details
             </p>
           </div>
         )}
         
-        {/* Apple-style section navigator */}
-        <div className="overflow-x-auto hide-scrollbar py-2">
+        {/* Minimalist section navigator */}
+        <div className="overflow-x-auto hide-scrollbar py-1 mt-1">
           <div className="flex space-x-1 px-2 justify-center">
             {sectionKeys.map(section => (
               <Button
@@ -154,10 +153,10 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
                 variant={activeSection === section ? "default" : "outline"}
                 size="sm"
                 className={cn(
-                  "rounded-full px-3 transition-all",
+                  "rounded-full px-3 py-1 h-7 text-sm transition-all",
                   activeSection === section 
                     ? "bg-indigo text-white" 
-                    : "text-muted-foreground hover:bg-indigo/10"
+                    : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
                 )}
                 onClick={() => scrollToSection(section)}
               >
@@ -173,11 +172,11 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         <div 
           key={section}
           ref={el => sectionRefs.current[section] = el}
-          className="scroll-mt-56"
+          className="scroll-mt-40"
           id={`section-${section}`}
         >
-          <div className="sticky top-[210px] z-10 bg-background/95 backdrop-blur-sm">
-            <h2 className="text-2xl font-bold text-indigo mb-4 pt-2 pb-1 border-b border-indigo/20">
+          <div className="sticky top-[175px] z-10 bg-background/95 backdrop-blur-sm pb-1">
+            <h2 className="text-2xl font-bold text-indigo border-b border-indigo/10 pb-1 mb-3">
               {section}
             </h2>
           </div>
@@ -196,7 +195,6 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
                   }
                 }}
                 onPractice={() => {
-                  // Will implement in the next component
                   console.log(`Practice ${kana.character}`);
                 }}
               />
@@ -212,7 +210,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
           className="rounded-full bg-indigo hover:bg-indigo/90 shadow-lg"
           onClick={scrollToTop}
         >
-          <ChevronUp size={22} />
+          <ChevronUp size={20} />
         </Button>
       </div>
       
