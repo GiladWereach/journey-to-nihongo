@@ -77,19 +77,16 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       console.log('Filter bar bottom:', filterBarBottom);
       console.log('Show dock:', showDock);
       console.log('Window scrollY:', window.scrollY);
-      console.log('Filter bar height:', filterBarRect.height);
       
       // Show dock when filter bar is scrolled out of view
-      // Using a more reliable condition and forcing state update
       if (filterBarBottom < 50) {
-        // Only update state if it's changing to avoid re-renders
         if (!showDock) {
-          console.log('SHOULD SHOW DOCK: Setting to visible');
+          console.log('Setting dock to visible');
           setShowDock(true);
         }
       } else {
         if (showDock) {
-          console.log('SHOULD HIDE DOCK: Setting to hidden');
+          console.log('Setting dock to hidden');
           setShowDock(false);
         }
       }
@@ -219,7 +216,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
 
       {/* Dock navigation that appears when scrolling - enhanced styling and z-index */}
       {showDock && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] w-auto bg-background shadow-xl rounded-full border border-indigo/20 py-2 px-4 backdrop-blur-lg pointer-events-auto">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-auto bg-background shadow-xl rounded-full border border-indigo/20 py-2 px-4 backdrop-blur-lg pointer-events-auto">
           <div className="flex space-x-2 items-center">
             {sectionKeys.map(section => (
               <Button
@@ -278,7 +275,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       ))}
 
       {/* Scroll to top button - enhanced z-index and visibility */}
-      <div className="fixed right-6 bottom-6 z-[100] pointer-events-auto">
+      <div className="fixed right-6 bottom-6 z-50 pointer-events-auto">
         <Button 
           size="icon" 
           className="rounded-full bg-indigo hover:bg-indigo/90 shadow-xl h-12 w-12"
