@@ -15,14 +15,17 @@ const DarkModeToggle: React.FC<DarkModeToggleProps> = ({ className }) => {
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <Sun size={16} className={cn('text-yellow-500', isDark && 'opacity-50')} />
+      <Sun size={20} className={cn('text-yellow-500', isDark && 'opacity-40')} />
       <Switch
         checked={isDark}
         onCheckedChange={toggleTheme}
-        className="data-[state=checked]:bg-indigo"
+        className={cn(
+          "data-[state=checked]:bg-indigo dark:data-[state=checked]:bg-vermilion",
+          "data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
+        )}
         aria-label="Toggle dark mode"
       />
-      <Moon size={16} className={cn('text-indigo', !isDark && 'opacity-50')} />
+      <Moon size={20} className={cn('text-indigo dark:text-vermilion', !isDark && 'opacity-40')} />
     </div>
   );
 };

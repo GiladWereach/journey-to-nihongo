@@ -32,7 +32,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
       {user ? (
         <Button 
           variant="outline" 
-          className="border-indigo text-indigo hover:bg-indigo hover:text-white"
+          className="border-indigo dark:border-white text-indigo dark:text-white hover:bg-indigo hover:text-white dark:hover:bg-white/20"
           onClick={handleSignOut}
         >
           Sign Out
@@ -41,7 +41,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
         <>
           <Button 
             variant="outline" 
-            className="border-indigo text-indigo hover:bg-indigo hover:text-white"
+            className="border-indigo dark:border-white text-indigo dark:text-white hover:bg-indigo hover:text-white dark:hover:bg-white/20"
             onClick={() => {
               navigate('/auth');
               if (onActionComplete) onActionComplete();
