@@ -30,6 +30,10 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
 
   useEffect(() => {
     if (animated && charRef.current) {
+      // Add the animation class immediately
+      charRef.current.classList.add('animate-scale-in');
+      
+      // For intersection observer functionality (for elements that come into view later)
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -54,10 +58,11 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
     <div 
       ref={charRef}
       className={cn(
-        'japanese-text font-semibold flex items-center justify-center opacity-0',
+        'japanese-text font-semibold flex items-center justify-center',
         sizeClasses[size],
         color,
         'transition-all duration-500 ease-out',
+        animated ? 'opacity-0' : 'opacity-100',
         className
       )}
       style={style}

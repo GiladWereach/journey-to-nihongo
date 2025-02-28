@@ -9,7 +9,7 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ className }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
         'relative py-20 md:py-32 overflow-hidden transition-all duration-500',
         className
       )}
-      style={{ opacity: 0, transform: 'translateY(0px)' }}
+      style={{ opacity: 1, transform: 'translateY(0px)' }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white to-softgray z-[-1]" />
       
