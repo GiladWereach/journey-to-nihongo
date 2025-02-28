@@ -182,7 +182,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
 
       {/* Dock navigation that appears when scrolling */}
       {showDock && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-auto max-w-md">
           <div className="bg-background/95 backdrop-blur-lg shadow-lg rounded-full border border-border/40 py-2 px-3">
             <div className="flex space-x-1 items-center">
               {sectionKeys.map(section => (
@@ -242,8 +242,8 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       ))}
 
-      {/* Scroll to top button */}
-      <div className="fixed right-6 bottom-6">
+      {/* Scroll to top button - increased z-index */}
+      <div className="fixed right-6 bottom-6 z-50">
         <Button 
           size="icon" 
           className="rounded-full bg-indigo hover:bg-indigo/90 shadow-lg"
