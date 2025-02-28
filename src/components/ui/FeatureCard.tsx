@@ -1,5 +1,6 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 import { cn } from '@/lib/utils';
 
 interface FeatureCardProps {
@@ -7,62 +8,41 @@ interface FeatureCardProps {
   description: string;
   icon: React.ReactNode;
   delay?: number;
-  className?: string;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({
-  title,
-  description,
+const FeatureCard: React.FC<FeatureCardProps> = ({ 
+  title, 
+  description, 
   icon,
-  delay = 0,
-  className,
+  delay = 0
 }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (cardRef.current) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setTimeout(() => {
-                entry.target.classList.add('animate-scale-in');
-                entry.target.classList.remove('opacity-0');
-              }, delay);
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-      
-      observer.observe(cardRef.current);
-      
-      return () => {
-        if (cardRef.current) observer.unobserve(cardRef.current);
-      };
-    }
-  }, [delay]);
-
+  const { isDark } = useDarkMode();
+  
   return (
     <div 
-      ref={cardRef}
       className={cn(
-        'flex flex-col p-6 rounded-2xl transition-all duration-300 opacity-0',
-        'hover:shadow-elevated hover:-translate-y-1 bg-white',
-        'border border-gray-100',
-        className
+        "p-6 rounded-2xl card-hover",
+        isDark ? "bg-white/10 backdrop-blur-sm" : "bg-white shadow-lg",
+        "animate-fade-in opacity-0"
       )}
+      style={{ 
+        animationDelay: `${delay}ms`, 
+        animationFillMode: 'forwards' 
+      }}
     >
-      <div className="mb-4 text-vermilion p-3 rounded-full w-fit bg-vermilion/5">
+      <div className={cn(
+        "w-12 h-12 rounded-full flex items-center justify-center mb-4",
+        isDark ? "bg-vermilion/20 text-vermilion" : "bg-vermilion/10 text-vermilion"
+      )}>
         {icon}
       </div>
-      <h3 className="text-xl font-semibold text-indigo mb-2">
-        {title}
-      </h3>
-      <p className="text-gray-600 text-sm">
-        {description}
-      </p>
+      <h3 className={cn(
+        "text-xl font-bold mb-2",
+        isDark ? "text-white" : "text-indigo"
+      )}>{title}</h3>
+      <p className={cn(
+        isDark ? "text-gray-300" : "text-gray-600"
+      )}>{description}</p>
     </div>
   );
 };

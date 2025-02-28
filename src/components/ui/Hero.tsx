@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import JapaneseCharacter from './JapaneseCharacter';
 import { cn } from '@/lib/utils';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 interface HeroProps {
   className?: string;
@@ -11,6 +12,7 @@ interface HeroProps {
 const Hero: React.FC<HeroProps> = ({ className }) => {
   const [isVisible, setIsVisible] = useState(true);
   const heroRef = useRef<HTMLDivElement>(null);
+  const { isDark } = useDarkMode();
 
   useEffect(() => {
     setIsVisible(true);
@@ -38,7 +40,7 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
       )}
       style={{ opacity: 1, transform: 'translateY(0px)' }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-white to-softgray z-[-1]" />
+      <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-b from-indigo/95 to-indigo/90' : 'bg-gradient-to-b from-white to-softgray'} z-[-1]`} />
       
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center space-y-6 relative">
@@ -49,7 +51,7 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
                   key={index}
                   character={char}
                   size="lg"
-                  color={index === 2 ? "text-vermilion" : "text-indigo"}
+                  color={index === 2 ? "text-vermilion" : isDark ? "text-white" : "text-indigo"}
                   className={cn(
                     isVisible ? 'animate-fade-in opacity-100' : 'opacity-0',
                     'animation-delay-' + (index * 150)
@@ -62,7 +64,8 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
 
           <h1 
             className={cn(
-              "text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-indigo",
+              "text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight",
+              isDark ? "text-white" : "text-indigo",
               isVisible ? 'animate-fade-in opacity-100' : 'opacity-0',
               'animation-delay-500'
             )}
@@ -73,7 +76,8 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
           
           <p 
             className={cn(
-              "text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto",
+              "text-xl md:text-2xl max-w-3xl mx-auto",
+              isDark ? "text-gray-300" : "text-gray-600", 
               isVisible ? 'animate-fade-in opacity-100' : 'opacity-0',
               'animation-delay-700'
             )}
@@ -97,7 +101,10 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
             </Button>
             <Button 
               variant="outline" 
-              className="border-indigo text-indigo hover:bg-indigo hover:text-white px-8 py-6 rounded-full text-lg"
+              className={cn(
+                "px-8 py-6 rounded-full text-lg",
+                isDark ? "border-white text-white hover:bg-white/20" : "border-indigo text-indigo hover:bg-indigo hover:text-white"
+              )}
             >
               Explore Lessons
             </Button>

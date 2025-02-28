@@ -1,14 +1,24 @@
 
 import React from 'react';
 import FeatureCard from '@/components/ui/FeatureCard';
+import { useDarkMode } from '@/contexts/DarkModeContext';
+import { cn } from '@/lib/utils';
 
 const FeaturesSection = () => {
+  const { isDark } = useDarkMode();
+  
   return (
-    <section className="py-20">
+    <section className={cn("py-20", isDark ? "bg-indigo/90" : "bg-white")}>
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-indigo mb-4">The Nihongo Journey Difference</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <h2 className={cn(
+            "text-3xl md:text-4xl font-bold mb-4",
+            isDark ? "text-white" : "text-indigo"
+          )}>The Nihongo Journey Difference</h2>
+          <p className={cn(
+            "max-w-2xl mx-auto",
+            isDark ? "text-gray-300" : "text-gray-600"
+          )}>
             Our scientifically-backed approach combines proven learning methods with engaging content to help you achieve real language proficiency.
           </p>
         </div>

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/ui/Hero';
@@ -9,8 +10,10 @@ import TestimonialSection from '@/components/sections/TestimonialSection';
 import CtaSection from '@/components/sections/CtaSection';
 
 const Index = () => {
+  const { isDark } = useDarkMode();
+  
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${isDark ? 'dark bg-indigo/95' : 'bg-white'}`}>
       <Navbar />
       
       {/* Hero Section */}

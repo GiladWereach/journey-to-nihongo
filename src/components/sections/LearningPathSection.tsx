@@ -2,14 +2,27 @@
 import React from 'react';
 import LearningPathCard from '@/components/ui/LearningPathCard';
 import { Button } from '@/components/ui/button';
+import { useDarkMode } from '@/contexts/DarkModeContext';
+import { cn } from '@/lib/utils';
 
 const LearningPathSection = () => {
+  const { isDark } = useDarkMode();
+  
   return (
-    <section className="py-20 bg-softgray">
+    <section className={cn(
+      "py-20",
+      isDark ? "bg-indigo/80" : "bg-softgray"
+    )}>
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-indigo mb-4">Your Path to Japanese Fluency</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <h2 className={cn(
+            "text-3xl md:text-4xl font-bold mb-4",
+            isDark ? "text-white" : "text-indigo"
+          )}>Your Path to Japanese Fluency</h2>
+          <p className={cn(
+            "max-w-2xl mx-auto",
+            isDark ? "text-gray-300" : "text-gray-600"
+          )}>
             Choose your learning path based on your goals and interests. Each path is designed to build practical language skills.
           </p>
         </div>
@@ -56,7 +69,9 @@ const LearningPathSection = () => {
         </div>
         
         <div className="text-center mt-12">
-          <Button variant="outline" className="border-indigo text-indigo hover:bg-indigo hover:text-white">
+          <Button variant="outline" className={cn(
+            isDark ? "border-white text-white hover:bg-white/20" : "border-indigo text-indigo hover:bg-indigo hover:text-white"
+          )}>
             View All Learning Paths
           </Button>
         </div>
