@@ -191,16 +191,16 @@ export const kanaService = {
   getUserKanaProgress: async (userId: string): Promise<UserKanaProgress[]> => {
     try {
       const { data, error } = await supabase
-        .from('user_kana_progress' as any)
+        .from('user_kana_progress')
         .select('*')
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Supabase error details:', error);
-        throw new Error(`Database error: ${error.message} (Code: ${error.code})`);
+        console.error('Error fetching user kana progress:', error);
+        return []; // Return empty array instead of throwing
       }
       
-      if (!data) {
+      if (!data || data.length === 0) {
         return [];
       }
       
@@ -217,8 +217,8 @@ export const kanaService = {
         totalPracticeCount: item.total_practice_count
       }));
     } catch (error) {
-      console.error('Error fetching user kana progress:', error);
-      throw error; // Re-throw to allow component to handle it
+      console.error('Error in getUserKanaProgress:', error);
+      return []; // Return empty array for all errors
     }
   },
 
@@ -229,7 +229,7 @@ export const kanaService = {
       const reviewDue = calculateNextReviewDate(progress.proficiency);
       
       const { data, error } = await supabase
-        .from('user_kana_progress' as any)
+        .from('user_kana_progress')
         .upsert({
           user_id: progress.userId,
           character_id: progress.characterId,
@@ -238,19 +238,19 @@ export const kanaService = {
           review_due: reviewDue,
           mistake_count: progress.mistakeCount,
           total_practice_count: progress.totalPracticeCount
-        } as any, {
+        }, {
           onConflict: 'user_id,character_id'
         });
 
       if (error) {
-        console.error('Supabase update error details:', error);
-        throw new Error(`Database update error: ${error.message} (Code: ${error.code})`);
+        console.error('Error updating user kana progress:', error);
+        return null; // Return null instead of throwing
       }
       
       return data;
     } catch (error) {
-      console.error('Error updating user kana progress:', error);
-      throw error; // Re-throw to allow component to handle it
+      console.error('Error in updateUserKanaProgress:', error);
+      return null; // Return null for all errors
     }
   }
 };

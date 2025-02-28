@@ -22,7 +22,6 @@ const KanaLearning = () => {
   const [practiceResults, setPracticeResults] = useState<PracticeResult | null>(null);
   const [userProgress, setUserProgress] = useState<UserKanaProgress[]>([]);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
-  const [databaseError, setDatabaseError] = useState(false);
 
   // Get kana data
   const hiragana = kanaService.getKanaByType('hiragana');
@@ -35,24 +34,12 @@ const KanaLearning = () => {
       if (user) {
         try {
           setIsLoadingProgress(true);
-          setDatabaseError(false);
           const progress = await kanaService.getUserKanaProgress(user.id);
           setUserProgress(progress);
           setIsLoadingProgress(false);
         } catch (error) {
           console.error('Error loading user progress:', error);
           setIsLoadingProgress(false);
-          
-          // Check if error is due to missing table
-          const errorMessage = String(error);
-          if (errorMessage.includes('does not exist') || errorMessage.includes('42P01')) {
-            setDatabaseError(true);
-            toast({
-              title: "Database setup incomplete",
-              description: "The database tables for kana learning haven't been created yet. Please contact an administrator.",
-              variant: "destructive"
-            });
-          }
         }
       }
     };
@@ -130,7 +117,7 @@ const KanaLearning = () => {
             </h3>
             <p className="text-sm">Used for native Japanese words. This is the first writing system to learn.</p>
             
-            {user && !databaseError && (
+            {user && (
               <div className="mt-3">
                 <ProgressIndicator 
                   progress={calculateOverallProgress('hiragana')} 
@@ -148,7 +135,7 @@ const KanaLearning = () => {
             </h3>
             <p className="text-sm">Used for foreign words and emphasis. Similar to Hiragana but with different characters.</p>
             
-            {user && !databaseError && (
+            {user && (
               <div className="mt-3">
                 <ProgressIndicator 
                   progress={calculateOverallProgress('katakana')} 
@@ -162,19 +149,6 @@ const KanaLearning = () => {
           </div>
         </div>
       </div>
-
-      {databaseError && user && (
-        <div className="max-w-4xl mx-auto mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <h3 className="font-medium text-lg text-amber-800 mb-2">Database Setup Required</h3>
-          <p className="mb-2">
-            The database tables for tracking your kana learning progress haven't been set up yet. 
-            You can still practice kana, but your progress won't be saved until this is resolved.
-          </p>
-          <p className="text-sm text-amber-700">
-            This usually happens when the Supabase migration hasn't been applied. Please contact the administrator.
-          </p>
-        </div>
-      )}
 
       <Tabs 
         defaultValue="learn" 
@@ -342,25 +316,6 @@ const KanaLearning = () => {
               isLoadingProgress ? (
                 <div className="flex justify-center items-center h-32">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
-                </div>
-              ) : databaseError ? (
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <p className="mb-4 text-amber-600">
-                    Database setup required to track progress
-                  </p>
-                  <p className="mb-6">
-                    The database tables for tracking your kana learning progress haven't been set up yet.
-                    You can still practice kana, but your progress won't be saved until this is resolved.
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setActiveTab('practice');
-                      setPracticeMode('selection');
-                    }}
-                    className="bg-indigo hover:bg-indigo/90"
-                  >
-                    Continue to Practice
-                  </Button>
                 </div>
               ) : userProgress.length > 0 ? (
                 <div className="space-y-8">

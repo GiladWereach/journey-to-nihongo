@@ -42,6 +42,50 @@ export type Database = {
         }
         Relationships: []
       }
+      kana_learning_sessions: {
+        Row: {
+          accuracy: number | null
+          characters_studied: string[]
+          completed: boolean | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          kana_type: string
+          start_time: string | null
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          characters_studied?: string[]
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          kana_type: string
+          start_time?: string | null
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          characters_studied?: string[]
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          kana_type?: string
+          start_time?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kana_learning_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_settings: {
         Row: {
           display_furigana: boolean | null
@@ -195,6 +239,47 @@ export type Database = {
           },
           {
             foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_kana_progress: {
+        Row: {
+          character_id: string
+          id: string
+          last_practiced: string | null
+          mistake_count: number
+          proficiency: number
+          review_due: string | null
+          total_practice_count: number
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          id?: string
+          last_practiced?: string | null
+          mistake_count?: number
+          proficiency?: number
+          review_due?: string | null
+          total_practice_count?: number
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          id?: string
+          last_practiced?: string | null
+          mistake_count?: number
+          proficiency?: number
+          review_due?: string | null
+          total_practice_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_kana_progress_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

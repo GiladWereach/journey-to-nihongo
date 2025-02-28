@@ -56,7 +56,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
   const [matchCharacters, setMatchCharacters] = useState<{char: string, romaji: string, id: string, selected: boolean}[]>([]);
   const [currentMatching, setCurrentMatching] = useState<{char: string, romaji: string, id: string} | null>(null);
   const [matchingPairs, setMatchingPairs] = useState<{char: string, romaji: string, id: string, correct: boolean}[]>([]);
-  const [databaseError, setDatabaseError] = useState(false);
+  const [progressSyncError, setProgressSyncError] = useState(false);
 
   // Generate random options for multiple choice
   const generateOptions = (correctAnswer: string, allItems: KanaCharacter[]) => {
@@ -229,9 +229,11 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
   };
 
   const updateUserProgress = async (characterId: string, wasCorrect: boolean) => {
+    if (!user) return;
+    
     try {
       // Get existing progress for this character
-      const allProgress = await kanaService.getUserKanaProgress(user!.id);
+      const allProgress = await kanaService.getUserKanaProgress(user.id);
       const existingProgress = allProgress.find(p => p.characterId === characterId);
       
       let proficiency = existingProgress ? existingProgress.proficiency : 0;
@@ -248,34 +250,30 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
       }
       
       // Save the updated progress
-      await kanaService.updateUserKanaProgress({
-        userId: user!.id,
+      const result = await kanaService.updateUserKanaProgress({
+        userId: user.id,
         characterId,
         proficiency,
         mistakeCount,
         totalPracticeCount
       });
       
+      if (!result && !progressSyncError) {
+        setProgressSyncError(true);
+        toast({
+          title: "Progress Sync",
+          description: "Your progress is being tracked for this session, but we're having trouble syncing it to your account.",
+          variant: "warning"
+        });
+      }
     } catch (error) {
       console.error('Error updating progress:', error);
-      
-      // Check if it's a database not found error
-      const errorMessage = String(error);
-      if (errorMessage.includes('does not exist') || errorMessage.includes('42P01')) {
-        if (!databaseError) {
-          setDatabaseError(true);
-          toast({
-            title: "Database setup incomplete",
-            description: "Your progress is tracked locally but won't be saved to your account.",
-            variant: "warning"
-          });
-        }
-      } else {
-        // Only show error toast for non-database-existence errors to avoid spamming
+      if (!progressSyncError) {
+        setProgressSyncError(true);
         toast({
-          title: 'Progress Tracking Error',
-          description: 'Your progress for this session won\'t be saved.',
-          variant: 'destructive'
+          title: "Progress Sync",
+          description: "Your progress is being tracked for this session, but we're having trouble syncing it to your account.",
+          variant: "warning"
         });
       }
     }
@@ -490,13 +488,10 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
         </Card>
       )}
       
-      {databaseError && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-          <h3 className="text-amber-800 font-medium flex items-center gap-2">
-            <AlertCircle className="h-4 w-4" /> Progress Not Saved
-          </h3>
-          <p className="text-sm text-amber-700 mt-1">
-            Your results for this session won't be saved to your account due to a database setup issue.
+      {progressSyncError && user && (
+        <div className="p-4 border border-amber-200 rounded-lg mb-4 bg-amber-50">
+          <p className="text-sm text-amber-800">
+            <span className="font-medium">Note:</span> Your progress for this session is being tracked locally. We'll try to sync it to your account later.
           </p>
         </div>
       )}
