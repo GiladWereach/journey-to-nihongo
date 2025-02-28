@@ -34,10 +34,8 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   const [expandedKana, setExpandedKana] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
-  const [showDock, setShowDock] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement>(null);
-  const filterBarRef = useRef<HTMLDivElement>(null);
   
   // Filter kana by selected type
   const filteredKana = selectedType === 'all' 
@@ -64,32 +62,10 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
     });
   };
   
-  // Update active section based on scroll position and control dock visibility
+  // Update active section based on scroll position
   useEffect(() => {
     const handleScroll = () => {
-      if (!gridRef.current || !filterBarRef.current) return;
-      
-      // Check if filter bar is scrolled out of view to show dock
-      const filterBarRect = filterBarRef.current.getBoundingClientRect();
-      const filterBarBottom = filterBarRect.bottom;
-      
-      // Debug
-      console.log('Filter bar bottom:', filterBarBottom);
-      console.log('Show dock:', showDock);
-      console.log('Window scrollY:', window.scrollY);
-      
-      // Show dock when filter bar is scrolled out of view
-      if (filterBarBottom < 50) {
-        if (!showDock) {
-          console.log('Setting dock to visible');
-          setShowDock(true);
-        }
-      } else {
-        if (showDock) {
-          console.log('Setting dock to hidden');
-          setShowDock(false);
-        }
-      }
+      if (!gridRef.current) return;
       
       // Find the section that is currently in view
       for (const section of sectionKeys) {
@@ -107,19 +83,16 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
     };
     
     // Delay the initial check to ensure layout is properly calculated
-    setTimeout(() => {
-      handleScroll();
-      console.log('Initial scroll check completed');
-    }, 100);
+    setTimeout(handleScroll, 100);
     
     // Add scroll event listener
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     // Force multiple checks after layout stabilizes at different intervals
     const timers = [
-      setTimeout(() => { handleScroll(); console.log('Check 1'); }, 300),
-      setTimeout(() => { handleScroll(); console.log('Check 2'); }, 600),
-      setTimeout(() => { handleScroll(); console.log('Check 3'); }, 1000),
+      setTimeout(handleScroll, 300),
+      setTimeout(handleScroll, 600),
+      setTimeout(handleScroll, 1000),
     ];
     
     // Force a check when window is resized
@@ -133,7 +106,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       window.removeEventListener('resize', handleResize);
       timers.forEach(timer => clearTimeout(timer));
     };
-  }, [sectionKeys, activeSection, showDock]);
+  }, [sectionKeys, activeSection]);
   
   // Scroll to top button
   const scrollToTop = () => {
@@ -141,11 +114,24 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   };
 
   return (
-    <div className={cn("space-y-6", className)} ref={gridRef}>
-      <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40" ref={filterBarRef}>
-        <div className="flex justify-between items-center mb-2">
+    <div className={cn("space-y-6 relative", className)} ref={gridRef}>
+      {/* Fixed floating filter panel on the right side */}
+      <div className="fixed right-6 top-[100px] z-50 bg-background/95 backdrop-blur-lg rounded-xl shadow-lg border border-border/40 p-4 max-w-[220px] transition-all">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium">Filter Kana</h3>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowHelp(!showHelp)}
+              className="h-6 w-6 text-muted-foreground hover:text-indigo transition-colors"
+            >
+              <Info size={16} />
+            </Button>
+          </div>
+          
           <RadioGroup
-            className="flex space-x-4"
+            className="flex flex-col space-y-2"
             defaultValue="all"
             onValueChange={(value) => setSelectedType(value as KanaType | 'all')}
           >
@@ -163,36 +149,19 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
             </div>
           </RadioGroup>
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowHelp(!showHelp)}
-            className="text-muted-foreground hover:text-indigo transition-colors"
-          >
-            <Info size={18} />
-          </Button>
+          {showHelp && (
+            <div className="bg-muted/50 p-3 rounded-md text-xs text-muted-foreground">
+              <h4 className="font-medium text-xs mb-1">Navigation Help</h4>
+              <p className="mb-1">• Click section buttons to navigate</p>
+              <p>• Click any card to see details</p>
+            </div>
+          )}
         </div>
-        
-        {showHelp && (
-          <div className="bg-muted/50 p-3 mb-3 rounded-md relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute right-1 top-1 h-6 w-6" 
-              onClick={() => setShowHelp(false)}
-            >
-              <X size={14} />
-            </Button>
-            <h3 className="text-sm font-medium mb-1">Navigation Help</h3>
-            <p className="text-xs text-muted-foreground">
-              • Click on section buttons below to navigate<br />
-              • Click on any card to see pronunciation details
-            </p>
-          </div>
-        )}
-        
-        {/* Section navigator visible at the top */}
-        <div className="overflow-x-auto hide-scrollbar py-1 mt-1">
+      </div>
+
+      {/* Section navigation - positioned below the tabs */}
+      <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
+        <div className="overflow-x-auto hide-scrollbar py-1">
           <div className="flex space-x-1 px-2 justify-center">
             {sectionKeys.map(section => (
               <Button
@@ -213,30 +182,6 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
           </div>
         </div>
       </div>
-
-      {/* Dock navigation that appears when scrolling - enhanced styling and z-index */}
-      {showDock && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-auto bg-background shadow-xl rounded-full border border-indigo/20 py-2 px-4 backdrop-blur-lg pointer-events-auto">
-          <div className="flex space-x-2 items-center">
-            {sectionKeys.map(section => (
-              <Button
-                key={`dock-${section}`}
-                variant={activeSection === section ? "default" : "ghost"}
-                size="sm"
-                className={cn(
-                  "rounded-full w-8 h-8 p-0 min-w-0",
-                  activeSection === section 
-                    ? "bg-indigo text-white" 
-                    : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
-                )}
-                onClick={() => scrollToSection(section)}
-              >
-                {section}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Kana sections */}
       {sectionKeys.map(section => (
