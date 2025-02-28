@@ -71,12 +71,24 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       
       // Check if filter bar is scrolled out of view to show dock
       const filterBarBottom = filterBarRef.current.getBoundingClientRect().bottom;
+      const scrollY = window.scrollY;
       
-      // Show dock when filter bar is scrolled out of view
-      if (filterBarBottom <= 0 && !showDock) {
-        setShowDock(true);
-      } else if (filterBarBottom > 0 && showDock) {
-        setShowDock(false);
+      // Debug
+      console.log('Filter bar bottom:', filterBarBottom);
+      console.log('Show dock:', showDock);
+      console.log('Scroll Y:', scrollY);
+      
+      // Show dock when filter bar is scrolled out of view (using stricter condition)
+      if (filterBarBottom < 0) {
+        if (!showDock) {
+          console.log('Setting dock to visible');
+          setShowDock(true);
+        }
+      } else {
+        if (showDock) {
+          console.log('Setting dock to hidden');
+          setShowDock(false);
+        }
       }
       
       // Find the section that is currently in view
@@ -94,11 +106,21 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       }
     };
     
-    // Initial call to set correct state on page load
+    // Initial call to set correct state on mount
     handleScroll();
     
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Force another check after a short delay (for layout to stabilize)
+    const timer = setTimeout(() => {
+      handleScroll();
+    }, 500);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
   }, [sectionKeys, activeSection, showDock]);
   
   // Scroll to top button
@@ -180,11 +202,11 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       </div>
 
-      {/* Dock navigation that appears when scrolling */}
+      {/* Dock navigation that appears when scrolling - fixed z-index and styling for better visibility */}
       {showDock && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-auto max-w-md">
-          <div className="bg-background/95 backdrop-blur-lg shadow-lg rounded-full border border-border/40 py-2 px-3">
-            <div className="flex space-x-1 items-center">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-auto max-w-md pointer-events-auto">
+          <div className="bg-background shadow-xl rounded-full border border-indigo/20 py-2 px-4 backdrop-blur-lg">
+            <div className="flex space-x-2 items-center">
               {sectionKeys.map(section => (
                 <Button
                   key={`dock-${section}`}
@@ -242,14 +264,14 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       ))}
 
-      {/* Scroll to top button - increased z-index */}
-      <div className="fixed right-6 bottom-6 z-50">
+      {/* Scroll to top button - fixed z-index and enhanced visibility */}
+      <div className="fixed right-6 bottom-6 z-50 pointer-events-auto">
         <Button 
           size="icon" 
-          className="rounded-full bg-indigo hover:bg-indigo/90 shadow-lg"
+          className="rounded-full bg-indigo hover:bg-indigo/90 shadow-xl h-12 w-12"
           onClick={scrollToTop}
         >
-          <ChevronUp size={20} />
+          <ChevronUp size={24} />
         </Button>
       </div>
       
