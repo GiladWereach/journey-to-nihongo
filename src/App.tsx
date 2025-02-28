@@ -1,66 +1,47 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { DarkModeProvider } from "@/contexts/DarkModeContext";
-import RequireAuth from "@/components/auth/RequireAuth";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import EditProfile from "./pages/EditProfile";
-import Assessment from "./pages/Assessment";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { Toaster } from './components/ui/toaster';
+import { DarkModeProvider } from './contexts/DarkModeContext';
+import RequireAuth from './components/auth/RequireAuth';
 
-const queryClient = new QueryClient();
+// Pages
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import EditProfile from './pages/EditProfile';
+import Assessment from './pages/Assessment';
+import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
+import Achievements from './pages/Achievements';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+function App() {
+  return (
+    <DarkModeProvider>
       <AuthProvider>
-        <DarkModeProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <RequireAuth>
-                    <Dashboard />
-                  </RequireAuth>
-                } 
-              />
-              <Route 
-                path="/edit-profile" 
-                element={
-                  <RequireAuth>
-                    <EditProfile />
-                  </RequireAuth>
-                } 
-              />
-              <Route 
-                path="/assessment" 
-                element={
-                  <RequireAuth>
-                    <Assessment />
-                  </RequireAuth>
-                } 
-              />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </DarkModeProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Protected routes */}
+            <Route element={<RequireAuth />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
+              <Route path="/assessment" element={<Assessment />} />
+              <Route path="/achievements" element={<Achievements />} />
+            </Route>
+            
+            {/* Fallback routes */}
+            <Route path="/index.html" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+        <Toaster />
       </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </DarkModeProvider>
+  );
+}
 
 export default App;
