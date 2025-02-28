@@ -153,6 +153,18 @@ const kanaGroups: KanaGroup[] = [
   }
 ];
 
+// Type for raw database response
+type SupabaseUserKanaProgress = {
+  id: string;
+  user_id: string;
+  character_id: string;
+  proficiency: number;
+  last_practiced: string;
+  review_due: string;
+  mistake_count: number;
+  total_practice_count: number;
+};
+
 // Service functions
 export const kanaService = {
   // Get all kana characters
@@ -185,7 +197,18 @@ export const kanaService = {
 
       if (error) throw error;
       
-      return data || [];
+      // Convert from DB format to our internal type
+      const progressData = data as SupabaseUserKanaProgress[] || [];
+      
+      return progressData.map(item => ({
+        userId: item.user_id,
+        characterId: item.character_id,
+        proficiency: item.proficiency,
+        lastPracticed: new Date(item.last_practiced),
+        reviewDue: new Date(item.review_due),
+        mistakeCount: item.mistake_count,
+        totalPracticeCount: item.total_practice_count
+      }));
     } catch (error) {
       console.error('Error fetching user kana progress:', error);
       return [];
@@ -195,6 +218,9 @@ export const kanaService = {
   // Update user's kana progress
   updateUserKanaProgress: async (progress: Omit<UserKanaProgress, 'lastPracticed' | 'reviewDue'>) => {
     try {
+      // Calculate the next review date
+      const reviewDue = calculateNextReviewDate(progress.proficiency);
+      
       const { data, error } = await supabase
         .from('user_kana_progress')
         .upsert({
@@ -202,7 +228,7 @@ export const kanaService = {
           character_id: progress.characterId,
           proficiency: progress.proficiency,
           last_practiced: new Date().toISOString(),
-          review_due: calculateNextReviewDate(progress.proficiency),
+          review_due: reviewDue,
           mistake_count: progress.mistakeCount,
           total_practice_count: progress.totalPracticeCount
         });
