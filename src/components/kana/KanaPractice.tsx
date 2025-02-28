@@ -56,6 +56,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
   const [matchCharacters, setMatchCharacters] = useState<{char: string, romaji: string, id: string, selected: boolean}[]>([]);
   const [currentMatching, setCurrentMatching] = useState<{char: string, romaji: string, id: string} | null>(null);
   const [matchingPairs, setMatchingPairs] = useState<{char: string, romaji: string, id: string, correct: boolean}[]>([]);
+  const [databaseError, setDatabaseError] = useState(false);
 
   // Generate random options for multiple choice
   const generateOptions = (correctAnswer: string, allItems: KanaCharacter[]) => {
@@ -257,7 +258,26 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
       
     } catch (error) {
       console.error('Error updating progress:', error);
-      // Don't notify user to avoid disrupting the practice flow
+      
+      // Check if it's a database not found error
+      const errorMessage = String(error);
+      if (errorMessage.includes('does not exist') || errorMessage.includes('42P01')) {
+        if (!databaseError) {
+          setDatabaseError(true);
+          toast({
+            title: "Database setup incomplete",
+            description: "Your progress is tracked locally but won't be saved to your account.",
+            variant: "warning"
+          });
+        }
+      } else {
+        // Only show error toast for non-database-existence errors to avoid spamming
+        toast({
+          title: 'Progress Tracking Error',
+          description: 'Your progress for this session won\'t be saved.',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
@@ -468,6 +488,17 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
             </Button>
           </CardFooter>
         </Card>
+      )}
+      
+      {databaseError && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+          <h3 className="text-amber-800 font-medium flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" /> Progress Not Saved
+          </h3>
+          <p className="text-sm text-amber-700 mt-1">
+            Your results for this session won't be saved to your account due to a database setup issue.
+          </p>
+        </div>
       )}
     </div>
   );

@@ -195,7 +195,14 @@ export const kanaService = {
         .select('*')
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw new Error(`Database error: ${error.message} (Code: ${error.code})`);
+      }
+      
+      if (!data) {
+        return [];
+      }
       
       // Convert from DB format to our internal type
       const progressData = data as unknown as SupabaseUserKanaProgress[];
@@ -211,7 +218,7 @@ export const kanaService = {
       }));
     } catch (error) {
       console.error('Error fetching user kana progress:', error);
-      return [];
+      throw error; // Re-throw to allow component to handle it
     }
   },
 
@@ -231,13 +238,19 @@ export const kanaService = {
           review_due: reviewDue,
           mistake_count: progress.mistakeCount,
           total_practice_count: progress.totalPracticeCount
-        } as any);
+        } as any, {
+          onConflict: 'user_id,character_id'
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error details:', error);
+        throw new Error(`Database update error: ${error.message} (Code: ${error.code})`);
+      }
+      
       return data;
     } catch (error) {
       console.error('Error updating user kana progress:', error);
-      return null;
+      throw error; // Re-throw to allow component to handle it
     }
   }
 };
