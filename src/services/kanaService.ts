@@ -963,58 +963,52 @@ const katakanaAdvanced: KanaCharacter[] = [
 const kanaGroups: KanaGroup[] = [
   {
     id: 'hiragana-basic',
-    title: 'Basic Hiragana',
-    description: 'The first characters you should learn',
+    name: 'Basic Hiragana',
     characters: hiraganaBasic,
     type: 'hiragana'
   },
   {
     id: 'hiragana-secondary',
-    title: 'Secondary Hiragana',
-    description: 'Continue your hiragana journey',
+    name: 'Secondary Hiragana',
     characters: hiraganaSecondary,
     type: 'hiragana'
   },
   {
     id: 'hiragana-advanced',
-    title: 'Advanced Hiragana',
-    description: 'Complete your hiragana knowledge',
+    name: 'Advanced Hiragana',
     characters: hiraganaAdvanced,
     type: 'hiragana'
   },
   {
     id: 'katakana-basic',
-    title: 'Basic Katakana',
-    description: 'Start learning katakana',
+    name: 'Basic Katakana',
     characters: katakanaBasic, 
     type: 'katakana'
   },
   {
     id: 'katakana-secondary',
-    title: 'Secondary Katakana',
-    description: 'Build your katakana skills',
+    name: 'Secondary Katakana',
     characters: katakanaSecondary,
     type: 'katakana'
   },
   {
     id: 'katakana-advanced',
-    title: 'Advanced Katakana',
-    description: 'Master katakana completely',
+    name: 'Advanced Katakana',
     characters: katakanaAdvanced,
     type: 'katakana'
   }
 ];
 
 // Service functions
-export const getKanaGroups = (): KanaGroup[] => {
+const getKanaGroups = (): KanaGroup[] => {
   return kanaGroups;
 };
 
-export const getKanaGroup = (groupId: string): KanaGroup | undefined => {
+const getKanaGroup = (groupId: string): KanaGroup | undefined => {
   return kanaGroups.find(group => group.id === groupId);
 };
 
-export const getKanaCharacter = (characterId: string): KanaCharacter | undefined => {
+const getKanaCharacter = (characterId: string): KanaCharacter | undefined => {
   for (const group of kanaGroups) {
     const character = group.characters.find(char => char.id === characterId);
     if (character) return character;
@@ -1022,60 +1016,93 @@ export const getKanaCharacter = (characterId: string): KanaCharacter | undefined
   return undefined;
 };
 
-export const getAllKanaCharacters = (type?: KanaType): KanaCharacter[] => {
+const getAllKana = (): KanaCharacter[] => {
   const allCharacters: KanaCharacter[] = [];
   
   for (const group of kanaGroups) {
-    if (!type || group.type === type) {
-      allCharacters.push(...group.characters);
-    }
+    allCharacters.push(...group.characters);
   }
   
   return allCharacters;
 };
 
-export const getUserKanaProgress = async (userId: string): Promise<UserKanaProgress[]> => {
+const getKanaByType = (type: KanaType): KanaCharacter[] => {
+  const filteredKana: KanaCharacter[] = [];
+  
+  for (const group of kanaGroups) {
+    if (group.type === type) {
+      filteredKana.push(...group.characters);
+    }
+  }
+  
+  return filteredKana;
+};
+
+const getUserKanaProgress = async (userId: string): Promise<UserKanaProgress[]> => {
   try {
     const { data, error } = await supabase
-      .from('kana_progress')
+      .from('user_kana_progress')
       .select('*')
       .eq('user_id', userId);
     
     if (error) throw error;
     
-    return data || [];
+    if (!data) return [];
+    
+    // Convert to our internal format
+    return data.map(item => ({
+      userId: item.user_id,
+      characterId: item.character_id,
+      proficiency: item.proficiency,
+      lastPracticed: new Date(item.last_practiced),
+      reviewDue: new Date(item.review_due),
+      mistakeCount: item.mistake_count,
+      totalPracticeCount: item.total_practice_count
+    }));
   } catch (error) {
     console.error('Error fetching kana progress:', error);
     return [];
   }
 };
 
-export const updateKanaProgress = async (
-  userId: string,
-  characterId: string,
-  correctCount: number,
-  incorrectCount: number
-): Promise<boolean> => {
+interface UpdateProgressParams {
+  userId: string;
+  characterId: string;
+  proficiency: number;
+  mistakeCount: number;
+  totalPracticeCount: number;
+}
+
+const updateUserKanaProgress = async (params: UpdateProgressParams): Promise<boolean> => {
   try {
+    const { userId, characterId, proficiency, mistakeCount, totalPracticeCount } = params;
+    
     const { data: existing, error: fetchError } = await supabase
-      .from('kana_progress')
+      .from('user_kana_progress')
       .select('*')
       .eq('user_id', userId)
       .eq('character_id', characterId)
-      .single();
+      .maybeSingle();
     
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError) {
       throw fetchError;
     }
+    
+    const now = new Date();
+    // Calculate review due date (simple algorithm - in a production app this would be more sophisticated)
+    const reviewDue = new Date();
+    reviewDue.setDate(now.getDate() + (proficiency > 80 ? 7 : proficiency > 50 ? 3 : 1));
     
     if (existing) {
       // Update existing record
       const { error: updateError } = await supabase
-        .from('kana_progress')
+        .from('user_kana_progress')
         .update({
-          correct_count: existing.correct_count + correctCount,
-          incorrect_count: existing.incorrect_count + incorrectCount,
-          last_practiced_at: new Date().toISOString()
+          proficiency,
+          mistake_count: mistakeCount,
+          total_practice_count: totalPracticeCount,
+          last_practiced: now.toISOString(),
+          review_due: reviewDue.toISOString()
         })
         .eq('id', existing.id);
       
@@ -1083,13 +1110,15 @@ export const updateKanaProgress = async (
     } else {
       // Insert new record
       const { error: insertError } = await supabase
-        .from('kana_progress')
+        .from('user_kana_progress')
         .insert({
           user_id: userId,
           character_id: characterId,
-          correct_count: correctCount,
-          incorrect_count: incorrectCount,
-          last_practiced_at: new Date().toISOString()
+          proficiency,
+          mistake_count: mistakeCount,
+          total_practice_count: totalPracticeCount,
+          last_practiced: now.toISOString(),
+          review_due: reviewDue.toISOString()
         });
         
       if (insertError) throw insertError;
@@ -1100,4 +1129,15 @@ export const updateKanaProgress = async (
     console.error('Error updating kana progress:', error);
     return false;
   }
+};
+
+// Export the service functions as an object
+export const kanaService = {
+  getKanaGroups,
+  getKanaGroup,
+  getKanaCharacter,
+  getAllKana,
+  getKanaByType,
+  getUserKanaProgress,
+  updateUserKanaProgress
 };

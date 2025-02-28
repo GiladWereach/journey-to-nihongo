@@ -22,6 +22,7 @@ export interface KanaGroup {
   id: string;
   name: string;
   characters: KanaCharacter[];
+  type?: KanaType;
 }
 
 export interface UserKanaProgress {
