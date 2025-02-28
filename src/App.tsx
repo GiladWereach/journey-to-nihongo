@@ -14,6 +14,7 @@ import Assessment from './pages/Assessment';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import Achievements from './pages/Achievements';
+import KanaLearning from './pages/KanaLearning';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/kana-learning" element={<KanaLearning />} />
             
             {/* Protected routes */}
             <Route path="/" element={<RequireAuth />}>
