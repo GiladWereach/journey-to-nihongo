@@ -34,8 +34,10 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   const [expandedKana, setExpandedKana] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showDock, setShowDock] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement>(null);
+  const filterBarRef = useRef<HTMLDivElement>(null);
   
   // Filter kana by selected type
   const filteredKana = selectedType === 'all' 
@@ -62,12 +64,20 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
     });
   };
   
-  // Update active section based on scroll position
+  // Update active section based on scroll position and control dock visibility
   useEffect(() => {
     const handleScroll = () => {
-      if (!gridRef.current) return;
+      if (!gridRef.current || !filterBarRef.current) return;
       
-      const scrollPosition = window.scrollY + 150;
+      const scrollPosition = window.scrollY;
+      const filterBarBottom = filterBarRef.current.getBoundingClientRect().bottom;
+      
+      // Show dock when filter bar is scrolled out of view
+      if (filterBarBottom <= 0 && !showDock) {
+        setShowDock(true);
+      } else if (filterBarBottom > 0 && showDock) {
+        setShowDock(false);
+      }
       
       // Find the section that is currently in view
       for (const section of sectionKeys) {
@@ -86,7 +96,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [sectionKeys, activeSection]);
+  }, [sectionKeys, activeSection, showDock]);
   
   // Scroll to top button
   const scrollToTop = () => {
@@ -95,7 +105,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
 
   return (
     <div className={cn("space-y-6", className)} ref={gridRef}>
-      <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
+      <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40" ref={filterBarRef}>
         <div className="flex justify-between items-center mb-2">
           <RadioGroup
             className="flex space-x-4"
@@ -144,7 +154,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
           </div>
         )}
         
-        {/* Minimalist section navigator */}
+        {/* Section navigator visible at the top */}
         <div className="overflow-x-auto hide-scrollbar py-1 mt-1">
           <div className="flex space-x-1 px-2 justify-center">
             {sectionKeys.map(section => (
@@ -166,6 +176,32 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
           </div>
         </div>
       </div>
+
+      {/* Dock navigation that appears when scrolling */}
+      {showDock && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="bg-background/95 backdrop-blur-lg shadow-lg rounded-full border border-border/40 py-2 px-3">
+            <div className="flex space-x-1 items-center">
+              {sectionKeys.map(section => (
+                <Button
+                  key={`dock-${section}`}
+                  variant={activeSection === section ? "default" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "rounded-full w-8 h-8 p-0 min-w-0",
+                    activeSection === section 
+                      ? "bg-indigo text-white" 
+                      : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
+                  )}
+                  onClick={() => scrollToSection(section)}
+                >
+                  {section}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Kana sections */}
       {sectionKeys.map(section => (
