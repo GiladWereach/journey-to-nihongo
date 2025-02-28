@@ -1,4 +1,4 @@
-<lov-code>
+
 import { supabase } from '@/integrations/supabase/client';
 import { KanaCharacter, KanaGroup, KanaType, UserKanaProgress } from '@/types/kana';
 
@@ -826,3 +826,587 @@ const katakanaBasic: KanaCharacter[] = [
     type: 'katakana',
     strokeCount: 3,
     strokeOrder: ['horizontal stroke', 'vertical stroke', 'diagonal stroke'],
+    mnemonic: 'Resembles a sideways "sa" sound',
+    examples: [
+      { word: 'サイト', romaji: 'saito', meaning: 'website' },
+      { word: 'サッカー', romaji: 'sakkā', meaning: 'soccer' }
+    ]
+  },
+  {
+    id: 'katakana-shi',
+    character: 'シ',
+    romaji: 'shi',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['top right small stroke', 'middle right stroke', 'bottom left stroke'],
+    mnemonic: 'Looks like a smiling face saying "she"',
+    examples: [
+      { word: 'シャツ', romaji: 'shatsu', meaning: 'shirt' },
+      { word: 'シーツ', romaji: 'shītsu', meaning: 'sheets' }
+    ]
+  },
+  {
+    id: 'katakana-su',
+    character: 'ス',
+    romaji: 'su',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['top right to bottom left diagonal', 'curved right diagonal'],
+    mnemonic: 'Resembles a swimmer doing the backstroke',
+    examples: [
+      { word: 'スープ', romaji: 'sūpu', meaning: 'soup' },
+      { word: 'スカート', romaji: 'sukāto', meaning: 'skirt' }
+    ]
+  },
+  {
+    id: 'katakana-se',
+    character: 'セ',
+    romaji: 'se',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['horizontal stroke', 'vertical stroke', 'bottom right diagonal'],
+    mnemonic: 'Looks like a seat seen from the side',
+    examples: [
+      { word: 'セーター', romaji: 'sētā', meaning: 'sweater' },
+      { word: 'センター', romaji: 'sentā', meaning: 'center' }
+    ]
+  },
+  {
+    id: 'katakana-so',
+    character: 'ソ',
+    romaji: 'so',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['diagonal curved stroke'],
+    mnemonic: 'Looks like a bent needle and thread for sewing',
+    examples: [
+      { word: 'ソファ', romaji: 'sofa', meaning: 'sofa' },
+      { word: 'ソース', romaji: 'sōsu', meaning: 'sauce' }
+    ]
+  },
+  // T-row (タ行)
+  {
+    id: 'katakana-ta',
+    character: 'タ',
+    romaji: 'ta',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'curved vertical stroke'],
+    mnemonic: 'Looks like a fishing tackle box',
+    examples: [
+      { word: 'タクシー', romaji: 'takushī', meaning: 'taxi' },
+      { word: 'タオル', romaji: 'taoru', meaning: 'towel' }
+    ]
+  },
+  {
+    id: 'katakana-chi',
+    character: 'チ',
+    romaji: 'chi',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['diagonal stroke down-right', 'diagonal stroke down-left'],
+    mnemonic: 'Resembles a check mark',
+    examples: [
+      { word: 'チーズ', romaji: 'chīzu', meaning: 'cheese' },
+      { word: 'チーム', romaji: 'chīmu', meaning: 'team' }
+    ]
+  },
+  {
+    id: 'katakana-tsu',
+    character: 'ツ',
+    romaji: 'tsu',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['top right small stroke', 'middle right stroke', 'bottom left stroke'],
+    mnemonic: 'Looks like a mountain peak covered with two clouds',
+    examples: [
+      { word: 'ツアー', romaji: 'tsuā', meaning: 'tour' },
+      { word: 'ツール', romaji: 'tsūru', meaning: 'tool' }
+    ]
+  },
+  {
+    id: 'katakana-te',
+    character: 'テ',
+    romaji: 'te',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'vertical stroke with hook'],
+    mnemonic: 'Looks like a hand (te) hanging onto something',
+    examples: [
+      { word: 'テレビ', romaji: 'terebi', meaning: 'television' },
+      { word: 'テスト', romaji: 'tesuto', meaning: 'test' }
+    ]
+  },
+  {
+    id: 'katakana-to',
+    character: 'ト',
+    romaji: 'to',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'horizontal stroke'],
+    mnemonic: 'Looks like a door (to means door in Japanese)',
+    examples: [
+      { word: 'トマト', romaji: 'tomato', meaning: 'tomato' },
+      { word: 'トイレ', romaji: 'toire', meaning: 'toilet' }
+    ]
+  },
+  // N-row (ナ行)
+  {
+    id: 'katakana-na',
+    character: 'ナ',
+    romaji: 'na',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'diagonal stroke with hook'],
+    mnemonic: 'Looks like a number "7" with a hook',
+    examples: [
+      { word: 'ナイフ', romaji: 'naifu', meaning: 'knife' },
+      { word: 'ナッツ', romaji: 'nattsu', meaning: 'nuts' }
+    ]
+  },
+  {
+    id: 'katakana-ni',
+    character: 'ニ',
+    romaji: 'ni',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['top horizontal stroke', 'bottom horizontal stroke'],
+    mnemonic: 'Looks like two (ni) parallel lines',
+    examples: [
+      { word: 'ニュース', romaji: 'nyūsu', meaning: 'news' },
+      { word: 'ニット', romaji: 'nitto', meaning: 'knit' }
+    ]
+  },
+  {
+    id: 'katakana-nu',
+    character: 'ヌ',
+    romaji: 'nu',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'curved stroke with hook'],
+    mnemonic: 'Looks like a bent new fishing hook',
+    examples: [
+      { word: 'ヌガー', romaji: 'nugā', meaning: 'nougat' },
+      { word: 'ヌード', romaji: 'nūdo', meaning: 'nude' }
+    ]
+  },
+  {
+    id: 'katakana-ne',
+    character: 'ネ',
+    romaji: 'ne',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'zigzag stroke'],
+    mnemonic: 'Looks like a zigzag spring in a net',
+    examples: [
+      { word: 'ネクタイ', romaji: 'nekutai', meaning: 'necktie' },
+      { word: 'ネズミ', romaji: 'nezumi', meaning: 'mouse/rat' }
+    ]
+  },
+  {
+    id: 'katakana-no',
+    character: 'ノ',
+    romaji: 'no',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['diagonal stroke'],
+    mnemonic: 'Looks like a curved musical note',
+    examples: [
+      { word: 'ノート', romaji: 'nōto', meaning: 'notebook' },
+      { word: 'ノー', romaji: 'nō', meaning: 'no' }
+    ]
+  }
+];
+
+// Add Katakana Secondary
+const katakanaSecondary: KanaCharacter[] = [
+  // H-row (ハ行)
+  {
+    id: 'katakana-ha',
+    character: 'ハ',
+    romaji: 'ha',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['left diagonal stroke', 'right diagonal stroke'],
+    mnemonic: 'Looks like the letter H without the middle bar',
+    examples: [
+      { word: 'ハンバーガー', romaji: 'hanbāgā', meaning: 'hamburger' },
+      { word: 'ハワイ', romaji: 'hawai', meaning: 'Hawaii' }
+    ]
+  },
+  {
+    id: 'katakana-hi',
+    character: 'ヒ',
+    romaji: 'hi',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['vertical stroke with left hook'],
+    mnemonic: 'Looks like a match stick burning (hi means fire)',
+    examples: [
+      { word: 'ヒント', romaji: 'hinto', meaning: 'hint' },
+      { word: 'ヒーター', romaji: 'hītā', meaning: 'heater' }
+    ]
+  },
+  {
+    id: 'katakana-fu',
+    character: 'フ',
+    romaji: 'fu',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['curved hook stroke'],
+    mnemonic: 'Looks like a hook for hanging food',
+    examples: [
+      { word: 'フード', romaji: 'fūdo', meaning: 'food' },
+      { word: 'フランス', romaji: 'furansu', meaning: 'France' }
+    ]
+  },
+  {
+    id: 'katakana-he',
+    character: 'ヘ',
+    romaji: 'he',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['curved horizontal stroke'],
+    mnemonic: 'Looks like a helmet from the side',
+    examples: [
+      { word: 'ヘア', romaji: 'hea', meaning: 'hair' },
+      { word: 'ヘルプ', romaji: 'herupu', meaning: 'help' }
+    ]
+  },
+  {
+    id: 'katakana-ho',
+    character: 'ホ',
+    romaji: 'ho',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'horizontal cross stroke'],
+    mnemonic: 'Looks like a telephone pole with a crossbar',
+    examples: [
+      { word: 'ホテル', romaji: 'hoteru', meaning: 'hotel' },
+      { word: 'ホーム', romaji: 'hōmu', meaning: 'home/platform' }
+    ]
+  }
+];
+
+// Add Katakana Advanced
+const katakanaAdvanced: KanaCharacter[] = [
+  // M-row (マ行)
+  {
+    id: 'katakana-ma',
+    character: 'マ',
+    romaji: 'ma',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'angled stroke'],
+    mnemonic: 'Looks like a mountain peak with snow',
+    examples: [
+      { word: 'マンガ', romaji: 'manga', meaning: 'comic/manga' },
+      { word: 'マスク', romaji: 'masuku', meaning: 'mask' }
+    ]
+  },
+  {
+    id: 'katakana-mi',
+    character: 'ミ',
+    romaji: 'mi',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['top horizontal stroke', 'middle horizontal stroke', 'bottom horizontal stroke'],
+    mnemonic: 'Looks like three little mirrors stacked',
+    examples: [
+      { word: 'ミルク', romaji: 'miruku', meaning: 'milk' },
+      { word: 'ミサイル', romaji: 'misairu', meaning: 'missile' }
+    ]
+  },
+  {
+    id: 'katakana-mu',
+    character: 'ム',
+    romaji: 'mu',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'curved bottom'],
+    mnemonic: 'Looks like a moose head from the front',
+    examples: [
+      { word: 'ムード', romaji: 'mūdo', meaning: 'mood' },
+      { word: 'ムービー', romaji: 'mūbī', meaning: 'movie' }
+    ]
+  },
+  {
+    id: 'katakana-me',
+    character: 'メ',
+    romaji: 'me',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['horizontal stroke', 'crossed diagonal'],
+    mnemonic: 'Looks like a pair of crossed eyes (me means eye)',
+    examples: [
+      { word: 'メール', romaji: 'mēru', meaning: 'mail/email' },
+      { word: 'メニュー', romaji: 'menyū', meaning: 'menu' }
+    ]
+  },
+  {
+    id: 'katakana-mo',
+    character: 'モ',
+    romaji: 'mo',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['top horizontal stroke', 'vertical stroke', 'bottom horizontal stroke'],
+    mnemonic: 'Looks like a mobile device with buttons',
+    examples: [
+      { word: 'モデル', romaji: 'moderu', meaning: 'model' },
+      { word: 'モーター', romaji: 'mōtā', meaning: 'motor' }
+    ]
+  },
+  // Y-row (ヤ行)
+  {
+    id: 'katakana-ya',
+    character: 'ヤ',
+    romaji: 'ya',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'diagonal stroke with hook'],
+    mnemonic: 'Looks like a person with one arm raised saying "Yahoo!"',
+    examples: [
+      { word: 'ヤギ', romaji: 'yagi', meaning: 'goat' },
+      { word: 'ヤクルト', romaji: 'yakuruto', meaning: 'Yakult' }
+    ]
+  },
+  {
+    id: 'katakana-yu',
+    character: 'ユ',
+    romaji: 'yu',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'curved horizontal hook'],
+    mnemonic: 'Looks like a fish hook for catching tuna',
+    examples: [
+      { word: 'ユーモア', romaji: 'yūmoa', meaning: 'humor' },
+      { word: 'ユニーク', romaji: 'yunīku', meaning: 'unique' }
+    ]
+  },
+  {
+    id: 'katakana-yo',
+    character: 'ヨ',
+    romaji: 'yo',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['top horizontal stroke', 'vertical stroke', 'bottom horizontal stroke'],
+    mnemonic: 'Looks like a yoga mat rolled up',
+    examples: [
+      { word: 'ヨーグルト', romaji: 'yōguruto', meaning: 'yogurt' },
+      { word: 'ヨット', romaji: 'yotto', meaning: 'yacht' }
+    ]
+  },
+  // R-row (ラ行)
+  {
+    id: 'katakana-ra',
+    character: 'ラ',
+    romaji: 'ra',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'diagonal hook'],
+    mnemonic: 'Looks like a hockey stick or a rabbit ear',
+    examples: [
+      { word: 'ラーメン', romaji: 'rāmen', meaning: 'ramen' },
+      { word: 'ラジオ', romaji: 'rajio', meaning: 'radio' }
+    ]
+  },
+  {
+    id: 'katakana-ri',
+    character: 'リ',
+    romaji: 'ri',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['left diagonal stroke', 'right diagonal stroke'],
+    mnemonic: 'Looks like a ribbon tied in a bow',
+    examples: [
+      { word: 'リンゴ', romaji: 'ringo', meaning: 'apple' },
+      { word: 'リズム', romaji: 'rizumu', meaning: 'rhythm' }
+    ]
+  },
+  {
+    id: 'katakana-ru',
+    character: 'ル',
+    romaji: 'ru',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['curved loop stroke'],
+    mnemonic: 'Looks like a loop or a shoe',
+    examples: [
+      { word: 'ルーム', romaji: 'rūmu', meaning: 'room' },
+      { word: 'ルール', romaji: 'rūru', meaning: 'rule' }
+    ]
+  },
+  {
+    id: 'katakana-re',
+    character: 'レ',
+    romaji: 're',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['angled stroke'],
+    mnemonic: 'Looks like a check mark',
+    examples: [
+      { word: 'レストラン', romaji: 'resutoran', meaning: 'restaurant' },
+      { word: 'レモン', romaji: 'remon', meaning: 'lemon' }
+    ]
+  },
+  {
+    id: 'katakana-ro',
+    character: 'ロ',
+    romaji: 'ro',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['square shape'],
+    mnemonic: 'Looks like a square road sign',
+    examples: [
+      { word: 'ロボット', romaji: 'robotto', meaning: 'robot' },
+      { word: 'ロック', romaji: 'rokku', meaning: 'rock/lock' }
+    ]
+  },
+  // W-row (ワ行)
+  {
+    id: 'katakana-wa',
+    character: 'ワ',
+    romaji: 'wa',
+    type: 'katakana',
+    strokeCount: 2,
+    strokeOrder: ['vertical stroke', 'curved right stroke'],
+    mnemonic: 'Looks like a water drop splashing',
+    examples: [
+      { word: 'ワイン', romaji: 'wain', meaning: 'wine' },
+      { word: 'ワット', romaji: 'watto', meaning: 'watt' }
+    ]
+  },
+  {
+    id: 'katakana-wo',
+    character: 'ヲ',
+    romaji: 'wo',
+    type: 'katakana',
+    strokeCount: 3,
+    strokeOrder: ['vertical stroke', 'curved right stroke', 'small diagonal stroke'],
+    mnemonic: 'Looks like ワ (wa) with an extra stroke, like a whistle',
+    examples: [
+      { word: 'ヲタク', romaji: 'wotaku', meaning: 'otaku/geek' },
+      { word: '～ヲ', romaji: '~wo', meaning: '(object particle)' }
+    ]
+  },
+  // N (ン)
+  {
+    id: 'katakana-n',
+    character: 'ン',
+    romaji: 'n',
+    type: 'katakana',
+    strokeCount: 1,
+    strokeOrder: ['curved stroke'],
+    mnemonic: 'Looks like a check mark or the letter n',
+    examples: [
+      { word: 'アンコール', romaji: 'ankōru', meaning: 'encore' },
+      { word: 'パン', romaji: 'pan', meaning: 'bread' }
+    ]
+  }
+];
+
+// Service functions
+export const kanaService = {
+  getAllKana: (): KanaCharacter[] => {
+    return [
+      ...hiraganaBasic,
+      ...hiraganaSecondary,
+      ...hiraganaAdvanced,
+      ...katakanaBasic,
+      ...katakanaSecondary,
+      ...katakanaAdvanced
+    ];
+  },
+
+  getKanaByType: (type: KanaType): KanaCharacter[] => {
+    if (type === 'hiragana') {
+      return [...hiraganaBasic, ...hiraganaSecondary, ...hiraganaAdvanced];
+    } else {
+      return [...katakanaBasic, ...katakanaSecondary, ...katakanaAdvanced];
+    }
+  },
+
+  getKanaGroups: (): KanaGroup[] => {
+    return [
+      {
+        id: 'hiragana-basic',
+        name: 'Basic Hiragana (あ行, か行, さ行, た行)',
+        characters: hiraganaBasic,
+        type: 'hiragana'
+      },
+      {
+        id: 'hiragana-secondary',
+        name: 'Secondary Hiragana (な行, は行, ま行)',
+        characters: hiraganaSecondary,
+        type: 'hiragana'
+      },
+      {
+        id: 'hiragana-advanced',
+        name: 'Advanced Hiragana (や行, ら行, わ行, ん)',
+        characters: hiraganaAdvanced,
+        type: 'hiragana'
+      },
+      {
+        id: 'katakana-basic',
+        name: 'Basic Katakana (ア行, カ行, サ行, タ行)',
+        characters: katakanaBasic,
+        type: 'katakana'
+      },
+      {
+        id: 'katakana-secondary',
+        name: 'Secondary Katakana (ナ行, ハ行)',
+        characters: katakanaSecondary,
+        type: 'katakana'
+      },
+      {
+        id: 'katakana-advanced',
+        name: 'Advanced Katakana (マ行, ヤ行, ラ行, ワ行, ン)',
+        characters: katakanaAdvanced,
+        type: 'katakana'
+      }
+    ];
+  },
+
+  getKanaById: (id: string): KanaCharacter | undefined => {
+    return [
+      ...hiraganaBasic,
+      ...hiraganaSecondary,
+      ...hiraganaAdvanced,
+      ...katakanaBasic,
+      ...katakanaSecondary,
+      ...katakanaAdvanced
+    ].find(kana => kana.id === id);
+  },
+
+  getUserKanaProgress: async (userId: string): Promise<UserKanaProgress[]> => {
+    try {
+      // In a real app, this would fetch from Supabase
+      // For now, return some mock data
+      const allKana = kanaService.getAllKana();
+      const mockProgress: UserKanaProgress[] = allKana.slice(0, 10).map(kana => ({
+        userId,
+        characterId: kana.id,
+        proficiency: Math.floor(Math.random() * 100),
+        lastPracticed: new Date(),
+        reviewDue: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3), // 3 days from now
+        mistakeCount: Math.floor(Math.random() * 5),
+        totalPracticeCount: Math.floor(Math.random() * 20) + 1
+      }));
+      
+      return mockProgress;
+    } catch (error) {
+      console.error('Error fetching user kana progress:', error);
+      throw error;
+    }
+  },
+
+  updateKanaProgress: async (progress: UserKanaProgress): Promise<void> => {
+    try {
+      // In a real app, this would update Supabase
+      console.log('Updating kana progress:', progress);
+    } catch (error) {
+      console.error('Error updating kana progress:', error);
+      throw error;
+    }
+  }
+};
