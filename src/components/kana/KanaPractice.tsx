@@ -218,7 +218,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
             <div className="mt-6 flex justify-center">
               <JapaneseCharacter 
                 character={currentKana.character} 
-                size="2xl" 
+                size="xl" 
                 animated={true} 
                 className="text-indigo" 
               />
