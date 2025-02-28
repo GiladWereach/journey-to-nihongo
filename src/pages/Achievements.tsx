@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +10,7 @@ import { Award, ArrowLeft, Medal, Trophy, BadgeCheck, Star, AlertCircle } from '
 import Navbar from '@/components/layout/Navbar';
 import { Achievement, UserAchievement } from '@/types/achievements';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { achievementService } from '@/services/achievementService';
 
 // Map of icon names to Lucide icon components
 const achievementIcons: Record<string, React.ReactNode> = {
@@ -89,23 +89,13 @@ const AchievementsPage = () => {
         setLoading(true);
         
         // Fetch all achievements
-        const { data: achievementsData, error: achievementsError } = await supabase
-          .from('achievements')
-          .select('*')
-          .order('category', { ascending: true });
-          
-        if (achievementsError) throw achievementsError;
+        const achievementsData = await achievementService.getAllAchievements();
         
         // Fetch user's earned achievements
-        const { data: userAchievementsData, error: userAchievementsError } = await supabase
-          .from('user_achievements')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        if (userAchievementsError) throw userAchievementsError;
+        const userAchievementsData = await achievementService.getUserAchievements(user.id);
         
-        setAchievements(achievementsData || []);
-        setUserAchievements(userAchievementsData || []);
+        setAchievements(achievementsData);
+        setUserAchievements(userAchievementsData);
       } catch (error: any) {
         console.error('Error fetching achievements:', error.message);
         toast({
