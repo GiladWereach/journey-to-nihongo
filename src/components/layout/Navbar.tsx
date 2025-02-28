@@ -1,12 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +25,11 @@ const Navbar: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header
@@ -66,16 +74,43 @@ const Navbar: React.FC = () => {
           >
             Contact
           </Link>
+          {user && (
+            <Link
+              to="/dashboard"
+              className="text-indigo font-medium hover:text-vermilion transition-colors duration-200"
+            >
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         {/* Login/Signup buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" className="border-indigo text-indigo hover:bg-indigo hover:text-white">
-            Log In
-          </Button>
-          <Button className="bg-vermilion hover:bg-vermilion/90 text-white">
-            Sign Up
-          </Button>
+          {user ? (
+            <Button 
+              variant="outline" 
+              className="border-indigo text-indigo hover:bg-indigo hover:text-white"
+              onClick={handleSignOut}
+            >
+              Sign Out
+            </Button>
+          ) : (
+            <>
+              <Button 
+                variant="outline" 
+                className="border-indigo text-indigo hover:bg-indigo hover:text-white"
+                onClick={() => navigate('/auth')}
+              >
+                Log In
+              </Button>
+              <Button 
+                className="bg-vermilion hover:bg-vermilion/90 text-white"
+                onClick={() => navigate('/auth', { state: { tab: 'register' } })}
+              >
+                Sign Up
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -102,7 +137,7 @@ const Navbar: React.FC = () => {
       <div
         className={cn(
           'md:hidden fixed left-0 right-0 bg-white shadow-lg transition-all duration-300 ease-in-out overflow-hidden',
-          isMobileMenuOpen ? 'max-h-[400px] py-4' : 'max-h-0 py-0',
+          isMobileMenuOpen ? 'max-h-[500px] py-4' : 'max-h-0 py-0',
         )}
       >
         <div className="max-w-7xl mx-auto px-4 space-y-4">
@@ -134,13 +169,50 @@ const Navbar: React.FC = () => {
           >
             Contact
           </Link>
+          {user && (
+            <Link
+              to="/dashboard"
+              className="block py-2 text-indigo font-medium"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+          )}
           <div className="pt-4 pb-2 flex flex-col space-y-3">
-            <Button variant="outline" className="w-full border-indigo text-indigo hover:bg-indigo hover:text-white">
-              Log In
-            </Button>
-            <Button className="w-full bg-vermilion hover:bg-vermilion/90 text-white">
-              Sign Up
-            </Button>
+            {user ? (
+              <Button 
+                variant="outline" 
+                className="w-full border-indigo text-indigo hover:bg-indigo hover:text-white"
+                onClick={() => {
+                  handleSignOut();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                Sign Out
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-indigo text-indigo hover:bg-indigo hover:text-white"
+                  onClick={() => {
+                    navigate('/auth');
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Log In
+                </Button>
+                <Button 
+                  className="w-full bg-vermilion hover:bg-vermilion/90 text-white"
+                  onClick={() => {
+                    navigate('/auth', { state: { tab: 'register' } });
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
