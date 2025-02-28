@@ -1,9 +1,9 @@
 
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 
 interface RequireAuthProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
@@ -23,7 +23,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default RequireAuth;

@@ -26,11 +26,11 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Protected routes */}
-            <Route element={<RequireAuth />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/edit-profile" element={<EditProfile />} />
-              <Route path="/assessment" element={<Assessment />} />
-              <Route path="/achievements" element={<Achievements />} />
+            <Route path="/" element={<RequireAuth />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="edit-profile" element={<EditProfile />} />
+              <Route path="assessment" element={<Assessment />} />
+              <Route path="achievements" element={<Achievements />} />
             </Route>
             
             {/* Fallback routes */}
