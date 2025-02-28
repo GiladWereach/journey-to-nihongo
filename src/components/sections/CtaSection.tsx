@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { Link } from 'react-router-dom';
 
 const CtaSection = () => {
   return (
@@ -31,11 +32,18 @@ const CtaSection = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button className="bg-vermilion hover:bg-vermilion/90 text-white px-8 py-6 text-lg rounded-full">
-              Sign Up Free
+            <Button 
+              className="bg-vermilion hover:bg-vermilion/90 text-white px-8 py-6 text-lg rounded-full"
+              asChild
+            >
+              <Link to="/auth">Sign Up Free</Link>
             </Button>
-            <Button variant="outline" className="border-white text-white hover:bg-white hover:text-indigo px-8 py-6 text-lg rounded-full">
-              Explore Plans
+            <Button 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-indigo px-8 py-6 text-lg rounded-full"
+              asChild
+            >
+              <Link to="/dashboard">Explore Plans</Link>
             </Button>
           </div>
         </div>

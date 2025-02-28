@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import JapaneseCharacter from './JapaneseCharacter';
 import { cn } from '@/lib/utils';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { Link } from 'react-router-dom';
 
 interface HeroProps {
   className?: string;
@@ -96,8 +97,9 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
           >
             <Button 
               className="bg-vermilion hover:bg-vermilion/90 text-white px-8 py-6 rounded-full text-lg"
+              asChild
             >
-              Start Your Journey
+              <Link to="/auth">Start Your Journey</Link>
             </Button>
             <Button 
               variant="outline" 
@@ -105,8 +107,9 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
                 "px-8 py-6 rounded-full text-lg",
                 isDark ? "border-white text-white hover:bg-white/20" : "border-indigo text-indigo hover:bg-indigo hover:text-white"
               )}
+              asChild
             >
-              Explore Lessons
+              <Link to="/dashboard">Explore Lessons</Link>
             </Button>
           </div>
         </div>
