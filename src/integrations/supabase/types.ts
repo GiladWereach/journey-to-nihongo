@@ -9,7 +9,130 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profile_settings: {
+        Row: {
+          display_furigana: boolean | null
+          email_notifications: boolean | null
+          id: string
+          notifications_enabled: boolean | null
+          preferred_study_time: string | null
+          prior_knowledge: string | null
+          study_reminder_frequency: string | null
+          theme: string | null
+          updated_at: string
+        }
+        Insert: {
+          display_furigana?: boolean | null
+          email_notifications?: boolean | null
+          id: string
+          notifications_enabled?: boolean | null
+          preferred_study_time?: string | null
+          prior_knowledge?: string | null
+          study_reminder_frequency?: string | null
+          theme?: string | null
+          updated_at?: string
+        }
+        Update: {
+          display_furigana?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          notifications_enabled?: boolean | null
+          preferred_study_time?: string | null
+          prior_knowledge?: string | null
+          study_reminder_frequency?: string | null
+          theme?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_settings_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          daily_goal_minutes: number | null
+          full_name: string | null
+          id: string
+          learning_goal: string | null
+          learning_level: string | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          daily_goal_minutes?: number | null
+          full_name?: string | null
+          id: string
+          learning_goal?: string | null
+          learning_level?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          daily_goal_minutes?: number | null
+          full_name?: string | null
+          id?: string
+          learning_goal?: string | null
+          learning_level?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          completed: boolean | null
+          duration_minutes: number
+          id: string
+          module: string
+          notes: string | null
+          performance_score: number | null
+          session_date: string
+          topics: string[]
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          duration_minutes: number
+          id?: string
+          module: string
+          notes?: string | null
+          performance_score?: number | null
+          session_date?: string
+          topics: string[]
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          duration_minutes?: number
+          id?: string
+          module?: string
+          notes?: string | null
+          performance_score?: number | null
+          session_date?: string
+          topics?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
