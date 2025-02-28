@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DarkModeProvider } from "@/contexts/DarkModeContext";
 import RequireAuth from "@/components/auth/RequireAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -22,39 +23,41 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <RequireAuth>
-                  <Dashboard />
-                </RequireAuth>
-              } 
-            />
-            <Route 
-              path="/edit-profile" 
-              element={
-                <RequireAuth>
-                  <EditProfile />
-                </RequireAuth>
-              } 
-            />
-            <Route 
-              path="/assessment" 
-              element={
-                <RequireAuth>
-                  <Assessment />
-                </RequireAuth>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <DarkModeProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <RequireAuth>
+                    <Dashboard />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/edit-profile" 
+                element={
+                  <RequireAuth>
+                    <EditProfile />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/assessment" 
+                element={
+                  <RequireAuth>
+                    <Assessment />
+                  </RequireAuth>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </DarkModeProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
