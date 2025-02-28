@@ -9,7 +9,7 @@ import KanaPractice, { PracticeResult } from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
 import { KanaType, UserKanaProgress } from '@/types/kana';
 import { Button } from '@/components/ui/button';
-import { Book, PenTool, BookOpen, Activity, BarChart } from 'lucide-react';
+import { Book, PenTool, BookOpen, Activity, BarChart, Layers } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 
 const KanaLearning = () => {
@@ -177,42 +177,89 @@ const KanaLearning = () => {
             <div className="text-center space-y-6">
               <h2 className="text-2xl font-semibold">Practice Your Kana</h2>
               <p className="max-w-2xl mx-auto">
-                Select which set of characters you want to practice. You'll be shown characters and asked to identify them or match them with their sounds.
+                Select which set of characters you want to practice and a practice mode.
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-8">
-                <Button 
-                  onClick={() => handlePracticeStart('hiragana', 'recognition')}
-                  className="h-auto py-6 bg-matcha hover:bg-matcha/90"
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold mb-2">Hiragana</span>
-                    <span className="text-3xl mb-2">あいうえお</span>
-                    <span className="text-sm">Recognition practice</span>
-                  </div>
-                </Button>
-                
-                <Button 
-                  onClick={() => handlePracticeStart('katakana', 'recognition')}
-                  className="h-auto py-6 bg-vermilion hover:bg-vermilion/90"
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold mb-2">Katakana</span>
-                    <span className="text-3xl mb-2">アイウエオ</span>
-                    <span className="text-sm">Recognition practice</span>
-                  </div>
-                </Button>
-                
-                <Button 
-                  onClick={() => handlePracticeStart('all', 'recognition')}
-                  className="h-auto py-6 bg-indigo hover:bg-indigo/90"
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold mb-2">Both</span>
-                    <span className="text-3xl mb-2">あア</span>
-                    <span className="text-sm">Mixed practice</span>
-                  </div>
-                </Button>
+              <div className="mb-8 mt-6">
+                <h3 className="text-xl font-semibold mb-4">Recognition Practice</h3>
+                <p className="max-w-2xl mx-auto mb-4 text-sm text-gray-600">
+                  See a kana character and choose its correct pronunciation
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-4">
+                  <Button 
+                    onClick={() => handlePracticeStart('hiragana', 'recognition')}
+                    className="h-auto py-6 bg-matcha hover:bg-matcha/90"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-semibold mb-2">Hiragana</span>
+                      <span className="text-3xl mb-2">あいうえお</span>
+                      <span className="text-sm">Recognition practice</span>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => handlePracticeStart('katakana', 'recognition')}
+                    className="h-auto py-6 bg-vermilion hover:bg-vermilion/90"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-semibold mb-2">Katakana</span>
+                      <span className="text-3xl mb-2">アイウエオ</span>
+                      <span className="text-sm">Recognition practice</span>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => handlePracticeStart('all', 'recognition')}
+                    className="h-auto py-6 bg-indigo hover:bg-indigo/90"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-semibold mb-2">Both</span>
+                      <span className="text-3xl mb-2">あア</span>
+                      <span className="text-sm">Mixed practice</span>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4">Matching Practice</h3>
+                <p className="max-w-2xl mx-auto mb-4 text-sm text-gray-600">
+                  Match kana characters with their correct pronunciation
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-4">
+                  <Button 
+                    onClick={() => handlePracticeStart('hiragana', 'matching')}
+                    className="h-auto py-6 bg-matcha hover:bg-matcha/90"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-semibold mb-2">Hiragana</span>
+                      <span className="text-3xl mb-2">あ=a</span>
+                      <span className="text-sm">Matching practice</span>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => handlePracticeStart('katakana', 'matching')}
+                    className="h-auto py-6 bg-vermilion hover:bg-vermilion/90"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-semibold mb-2">Katakana</span>
+                      <span className="text-3xl mb-2">ア=a</span>
+                      <span className="text-sm">Matching practice</span>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => handlePracticeStart('all', 'matching')}
+                    className="h-auto py-6 bg-indigo hover:bg-indigo/90"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-semibold mb-2">Both</span>
+                      <span className="text-3xl mb-2">あア=a</span>
+                      <span className="text-sm">Mixed matching</span>
+                    </div>
+                  </Button>
+                </div>
               </div>
               
               <div className="mt-8 pt-4 border-t">

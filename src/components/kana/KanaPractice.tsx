@@ -51,6 +51,11 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
   });
   const [isLoading, setIsLoading] = useState(true);
   const [options, setOptions] = useState<string[]>([]);
+  
+  // For matching mode
+  const [matchCharacters, setMatchCharacters] = useState<{char: string, romaji: string, id: string, selected: boolean}[]>([]);
+  const [currentMatching, setCurrentMatching] = useState<{char: string, romaji: string, id: string} | null>(null);
+  const [matchingPairs, setMatchingPairs] = useState<{char: string, romaji: string, id: string, correct: boolean}[]>([]);
 
   // Generate random options for multiple choice
   const generateOptions = (correctAnswer: string, allItems: KanaCharacter[]) => {
@@ -62,6 +67,17 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
     
     const allOptions = [...otherOptions, correctAnswer];
     return allOptions.sort(() => 0.5 - Math.random());
+  };
+
+  // Generate matching pairs for matching mode
+  const generateMatchingPairs = (items: KanaCharacter[]) => {
+    // Create a shuffled array of characters for matching
+    return items.map(item => ({
+      char: item.character,
+      romaji: item.romaji,
+      id: item.id,
+      selected: false
+    })).sort(() => 0.5 - Math.random());
   };
 
   useEffect(() => {
@@ -83,7 +99,12 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
         setPracticeItems(shuffledItems);
         
         if (shuffledItems.length > 0) {
-          setOptions(generateOptions(shuffledItems[0].romaji, items));
+          if (practiceType === 'recognition') {
+            setOptions(generateOptions(shuffledItems[0].romaji, items));
+          } else if (practiceType === 'matching') {
+            // Initialize matching pairs
+            setMatchCharacters(generateMatchingPairs(shuffledItems));
+          }
         }
         
         setIsLoading(false);
@@ -99,10 +120,84 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
     };
     
     loadPracticeItems();
-  }, [kanaType, toast]);
+  }, [kanaType, practiceType, toast]);
 
   const handleAnswerSelect = (answer: string) => {
     setSelectedAnswer(answer);
+  };
+
+  const handleMatchingSelect = (item: {char: string, romaji: string, id: string, selected: boolean}) => {
+    if (item.selected) return; // Already matched
+    
+    if (!currentMatching) {
+      // First selection of the pair
+      setCurrentMatching({
+        char: item.char,
+        romaji: item.romaji,
+        id: item.id
+      });
+      
+      // Mark this item as temporarily selected
+      setMatchCharacters(prev => prev.map(c => 
+        c.id === item.id ? {...c, selected: true} : c
+      ));
+    } else {
+      // Second selection - check if it's a match
+      const isMatch = currentMatching.romaji === item.romaji;
+      
+      // Create a new matched pair
+      const newPair = {
+        char: isMatch ? currentMatching.char : item.char,
+        romaji: isMatch ? currentMatching.romaji : item.romaji,
+        id: isMatch ? currentMatching.id : item.id,
+        correct: isMatch
+      };
+      
+      // Update results
+      const updatedResults = { ...results };
+      updatedResults.totalQuestions++;
+      if (isMatch) updatedResults.correctAnswers++;
+      updatedResults.accuracy = (updatedResults.correctAnswers / updatedResults.totalQuestions) * 100;
+      
+      // Add to character results
+      const charToUpdate = isMatch ? currentMatching.id : item.id;
+      updatedResults.characterResults.push({
+        characterId: charToUpdate,
+        character: isMatch ? currentMatching.char : item.char,
+        correct: isMatch
+      });
+      
+      setResults(updatedResults);
+      
+      // Add to matching pairs
+      setMatchingPairs(prev => [...prev, newPair]);
+      
+      // Mark both items as selected
+      setMatchCharacters(prev => prev.map(c => 
+        c.id === item.id || c.id === currentMatching.id ? {...c, selected: true} : c
+      ));
+      
+      // Reset current matching
+      setCurrentMatching(null);
+      
+      // Update user progress in database if user is logged in
+      if (user) {
+        updateUserProgress(charToUpdate, isMatch);
+      }
+      
+      // Check if all pairs are matched
+      const updatedMatchChars = matchCharacters.map(c => 
+        c.id === item.id || c.id === currentMatching?.id ? {...c, selected: true} : c
+      );
+      
+      const allMatched = updatedMatchChars.every(c => c.selected);
+      if (allMatched) {
+        // All items are matched, move to results
+        setTimeout(() => {
+          onComplete(updatedResults);
+        }, 1500); // Give time to see the last pair result
+      }
+    }
   };
 
   const checkAnswer = () => {
@@ -202,13 +297,25 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <ProgressIndicator 
-          progress={progress} 
-          size="sm" 
-          color="bg-indigo" 
-          label={`Question ${currentStep + 1} of ${practiceItems.length}`} 
-          showPercentage 
-        />
+        {practiceType === 'recognition' && (
+          <ProgressIndicator 
+            progress={progress} 
+            size="sm" 
+            color="bg-indigo" 
+            label={`Question ${currentStep + 1} of ${practiceItems.length}`} 
+            showPercentage 
+          />
+        )}
+        
+        {practiceType === 'matching' && (
+          <ProgressIndicator 
+            progress={(matchingPairs.length / practiceItems.length) * 100} 
+            size="sm" 
+            color="bg-indigo" 
+            label={`Pairs matched: ${matchingPairs.length} of ${practiceItems.length}`} 
+            showPercentage 
+          />
+        )}
       </div>
       
       {practiceType === 'recognition' && (
@@ -290,6 +397,75 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
                 </Button>
               </div>
             )}
+          </CardFooter>
+        </Card>
+      )}
+      
+      {practiceType === 'matching' && (
+        <Card className="mb-8">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Match the Kana with their Sounds</CardTitle>
+            <CardDescription>
+              Click on a character and then click on its matching pronunciation.
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+              {matchCharacters.map((item, index) => (
+                <Button
+                  key={`${item.id}-${index}`}
+                  onClick={() => handleMatchingSelect(item)}
+                  disabled={item.selected}
+                  variant="outline"
+                  className={cn(
+                    "h-16 text-xl font-semibold",
+                    item.selected && "opacity-50 cursor-not-allowed",
+                    currentMatching?.id === item.id && "border-2 border-indigo bg-indigo/10"
+                  )}
+                >
+                  {index % 2 === 0 ? item.char : item.romaji}
+                </Button>
+              ))}
+            </div>
+            
+            {matchingPairs.length > 0 && (
+              <div className="mt-8 pt-4 border-t">
+                <h3 className="text-lg font-medium mb-2">Matched Pairs:</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {matchingPairs.map((pair, index) => (
+                    <div 
+                      key={index}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-md border",
+                        pair.correct ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                      )}
+                    >
+                      <span className="text-xl">{pair.char}</span>
+                      <span className="text-sm px-2">=</span>
+                      <span>{pair.romaji}</span>
+                      {pair.correct ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 ml-2" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-red-500 ml-2" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
+            
+            <Button 
+              onClick={() => onComplete(results)}
+              className="bg-indigo hover:bg-indigo/90"
+              disabled={matchingPairs.length < practiceItems.length}
+            >
+              Complete Practice
+            </Button>
           </CardFooter>
         </Card>
       )}
