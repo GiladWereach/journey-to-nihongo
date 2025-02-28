@@ -69,7 +69,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
     const handleScroll = () => {
       if (!gridRef.current || !filterBarRef.current) return;
       
-      const scrollPosition = window.scrollY;
+      // Check if filter bar is scrolled out of view to show dock
       const filterBarBottom = filterBarRef.current.getBoundingClientRect().bottom;
       
       // Show dock when filter bar is scrolled out of view
@@ -93,6 +93,9 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         }
       }
     };
+    
+    // Initial call to set correct state on page load
+    handleScroll();
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
