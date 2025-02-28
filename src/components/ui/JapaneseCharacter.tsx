@@ -15,7 +15,7 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
   character,
   size = 'md',
   color = 'text-indigo',
-  animated = false, // Default to false to prevent flickering
+  animated = false,
   className,
   style,
 }) => {
@@ -34,7 +34,7 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
       charRef.current.style.opacity = '1';
       
       // Add the animation class with a slight delay to ensure it's visible first
-      setTimeout(() => {
+      const animationTimeout = setTimeout(() => {
         if (charRef.current) {
           charRef.current.classList.add('animate-scale-in');
         }
@@ -56,13 +56,18 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
         { threshold: 0.3 }
       );
       
-      observer.observe(charRef.current);
+      if (charRef.current) {
+        observer.observe(charRef.current);
+      }
       
       return () => {
-        if (charRef.current) observer.unobserve(charRef.current);
+        clearTimeout(animationTimeout);
+        if (charRef.current) {
+          observer.unobserve(charRef.current);
+        }
       };
     }
-  }, [animated]);
+  }, [animated, character]); // Add character as a dependency to reset animation when character changes
 
   return (
     <div 
