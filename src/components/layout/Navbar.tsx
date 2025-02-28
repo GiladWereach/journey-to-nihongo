@@ -4,11 +4,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import NavLinks from './navbar/NavLinks';
+import AuthButtons from './navbar/AuthButtons';
+import MobileMenu from './navbar/MobileMenu';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,11 +28,6 @@ const Navbar: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
 
   return (
     <header
@@ -49,69 +47,14 @@ const Navbar: React.FC = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <Link
-            to="/courses"
-            className="text-gray-600 hover:text-indigo transition-colors duration-200"
-          >
-            Courses
-          </Link>
-          <Link
-            to="/resources"
-            className="text-gray-600 hover:text-indigo transition-colors duration-200"
-          >
-            Resources
-          </Link>
-          <Link
-            to="/about"
-            className="text-gray-600 hover:text-indigo transition-colors duration-200"
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="text-gray-600 hover:text-indigo transition-colors duration-200"
-          >
-            Contact
-          </Link>
-          {user && (
-            <Link
-              to="/dashboard"
-              className="text-indigo font-medium hover:text-vermilion transition-colors duration-200"
-            >
-              Dashboard
-            </Link>
-          )}
-        </nav>
+        <NavLinks user={user} className="hidden md:flex" />
 
         {/* Login/Signup buttons */}
-        <div className="hidden md:flex items-center space-x-4">
-          {user ? (
-            <Button 
-              variant="outline" 
-              className="border-indigo text-indigo hover:bg-indigo hover:text-white"
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </Button>
-          ) : (
-            <>
-              <Button 
-                variant="outline" 
-                className="border-indigo text-indigo hover:bg-indigo hover:text-white"
-                onClick={() => navigate('/auth')}
-              >
-                Log In
-              </Button>
-              <Button 
-                className="bg-vermilion hover:bg-vermilion/90 text-white"
-                onClick={() => navigate('/auth', { state: { tab: 'register' } })}
-              >
-                Sign Up
-              </Button>
-            </>
-          )}
-        </div>
+        <AuthButtons 
+          user={user} 
+          className="hidden md:flex" 
+          navigate={navigate} 
+        />
 
         {/* Mobile menu button */}
         <button
@@ -134,88 +77,12 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile menu */}
-      <div
-        className={cn(
-          'md:hidden fixed left-0 right-0 bg-white shadow-lg transition-all duration-300 ease-in-out overflow-hidden',
-          isMobileMenuOpen ? 'max-h-[500px] py-4' : 'max-h-0 py-0',
-        )}
-      >
-        <div className="max-w-7xl mx-auto px-4 space-y-4">
-          <Link
-            to="/courses"
-            className="block py-2 text-gray-600 hover:text-indigo"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Courses
-          </Link>
-          <Link
-            to="/resources"
-            className="block py-2 text-gray-600 hover:text-indigo"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Resources
-          </Link>
-          <Link
-            to="/about"
-            className="block py-2 text-gray-600 hover:text-indigo"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="block py-2 text-gray-600 hover:text-indigo"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Contact
-          </Link>
-          {user && (
-            <Link
-              to="/dashboard"
-              className="block py-2 text-indigo font-medium"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-          )}
-          <div className="pt-4 pb-2 flex flex-col space-y-3">
-            {user ? (
-              <Button 
-                variant="outline" 
-                className="w-full border-indigo text-indigo hover:bg-indigo hover:text-white"
-                onClick={() => {
-                  handleSignOut();
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                Sign Out
-              </Button>
-            ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-indigo text-indigo hover:bg-indigo hover:text-white"
-                  onClick={() => {
-                    navigate('/auth');
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  Log In
-                </Button>
-                <Button 
-                  className="w-full bg-vermilion hover:bg-vermilion/90 text-white"
-                  onClick={() => {
-                    navigate('/auth', { state: { tab: 'register' } });
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        setIsOpen={setIsMobileMenuOpen} 
+        user={user} 
+        navigate={navigate} 
+      />
     </header>
   );
 };
