@@ -1,3 +1,4 @@
+<lov-code>
 import { supabase } from '@/integrations/supabase/client';
 import { KanaCharacter, KanaGroup, KanaType, UserKanaProgress } from '@/types/kana';
 
@@ -825,4 +826,3 @@ const katakanaBasic: KanaCharacter[] = [
     type: 'katakana',
     strokeCount: 3,
     strokeOrder: ['horizontal stroke', 'vertical stroke', 'diagonal stroke'],
-    mnemonic
