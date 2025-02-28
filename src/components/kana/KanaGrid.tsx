@@ -70,23 +70,26 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       if (!gridRef.current || !filterBarRef.current) return;
       
       // Check if filter bar is scrolled out of view to show dock
-      const filterBarBottom = filterBarRef.current.getBoundingClientRect().bottom;
-      const scrollY = window.scrollY;
+      const filterBarRect = filterBarRef.current.getBoundingClientRect();
+      const filterBarBottom = filterBarRect.bottom;
       
       // Debug
       console.log('Filter bar bottom:', filterBarBottom);
       console.log('Show dock:', showDock);
-      console.log('Scroll Y:', scrollY);
+      console.log('Window scrollY:', window.scrollY);
+      console.log('Filter bar height:', filterBarRect.height);
       
-      // Show dock when filter bar is scrolled out of view (using stricter condition)
-      if (filterBarBottom < 0) {
+      // Show dock when filter bar is scrolled out of view
+      // Using a more reliable condition and forcing state update
+      if (filterBarBottom < 50) {
+        // Only update state if it's changing to avoid re-renders
         if (!showDock) {
-          console.log('Setting dock to visible');
+          console.log('SHOULD SHOW DOCK: Setting to visible');
           setShowDock(true);
         }
       } else {
         if (showDock) {
-          console.log('Setting dock to hidden');
+          console.log('SHOULD HIDE DOCK: Setting to hidden');
           setShowDock(false);
         }
       }
@@ -106,20 +109,32 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       }
     };
     
-    // Initial call to set correct state on mount
-    handleScroll();
+    // Delay the initial check to ensure layout is properly calculated
+    setTimeout(() => {
+      handleScroll();
+      console.log('Initial scroll check completed');
+    }, 100);
     
     // Add scroll event listener
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Force another check after a short delay (for layout to stabilize)
-    const timer = setTimeout(() => {
-      handleScroll();
-    }, 500);
+    // Force multiple checks after layout stabilizes at different intervals
+    const timers = [
+      setTimeout(() => { handleScroll(); console.log('Check 1'); }, 300),
+      setTimeout(() => { handleScroll(); console.log('Check 2'); }, 600),
+      setTimeout(() => { handleScroll(); console.log('Check 3'); }, 1000),
+    ];
+    
+    // Force a check when window is resized
+    const handleResize = () => {
+      setTimeout(handleScroll, 100);
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+      timers.forEach(timer => clearTimeout(timer));
     };
   }, [sectionKeys, activeSection, showDock]);
   
@@ -202,28 +217,26 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       </div>
 
-      {/* Dock navigation that appears when scrolling - fixed z-index and styling for better visibility */}
+      {/* Dock navigation that appears when scrolling - enhanced styling and z-index */}
       {showDock && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-auto max-w-md pointer-events-auto">
-          <div className="bg-background shadow-xl rounded-full border border-indigo/20 py-2 px-4 backdrop-blur-lg">
-            <div className="flex space-x-2 items-center">
-              {sectionKeys.map(section => (
-                <Button
-                  key={`dock-${section}`}
-                  variant={activeSection === section ? "default" : "ghost"}
-                  size="sm"
-                  className={cn(
-                    "rounded-full w-8 h-8 p-0 min-w-0",
-                    activeSection === section 
-                      ? "bg-indigo text-white" 
-                      : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
-                  )}
-                  onClick={() => scrollToSection(section)}
-                >
-                  {section}
-                </Button>
-              ))}
-            </div>
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] w-auto bg-background shadow-xl rounded-full border border-indigo/20 py-2 px-4 backdrop-blur-lg pointer-events-auto">
+          <div className="flex space-x-2 items-center">
+            {sectionKeys.map(section => (
+              <Button
+                key={`dock-${section}`}
+                variant={activeSection === section ? "default" : "ghost"}
+                size="sm"
+                className={cn(
+                  "rounded-full w-8 h-8 p-0 min-w-0",
+                  activeSection === section 
+                    ? "bg-indigo text-white" 
+                    : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
+                )}
+                onClick={() => scrollToSection(section)}
+              >
+                {section}
+              </Button>
+            ))}
           </div>
         </div>
       )}
@@ -264,8 +277,8 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       ))}
 
-      {/* Scroll to top button - fixed z-index and enhanced visibility */}
-      <div className="fixed right-6 bottom-6 z-50 pointer-events-auto">
+      {/* Scroll to top button - enhanced z-index and visibility */}
+      <div className="fixed right-6 bottom-6 z-[100] pointer-events-auto">
         <Button 
           size="icon" 
           className="rounded-full bg-indigo hover:bg-indigo/90 shadow-xl h-12 w-12"
