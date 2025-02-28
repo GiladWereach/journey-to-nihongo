@@ -95,7 +95,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
 
   return (
     <div className={cn("space-y-6", className)} ref={gridRef}>
-      <div className="sticky top-[124px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
+      <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
         <div className="flex justify-between items-center mb-2">
           <RadioGroup
             className="flex space-x-4"
@@ -175,7 +175,7 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
           className="scroll-mt-40"
           id={`section-${section}`}
         >
-          <div className="sticky top-[175px] z-10 bg-background/95 backdrop-blur-sm pb-1">
+          <div className="sticky top-[106px] z-10 bg-background/95 backdrop-blur-sm pb-1">
             <h2 className="text-2xl font-bold text-indigo border-b border-indigo/10 pb-1 mb-3">
               {section}
             </h2>

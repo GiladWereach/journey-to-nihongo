@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,7 +16,7 @@ import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 const KanaLearning = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('intro'); // Changed to start with intro
+  const [activeTab, setActiveTab] = useState('intro');
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType | 'all'>('all');
   const [practiceMode, setPracticeMode] = useState<'selection' | 'practice' | 'results'>('selection');
   const [practiceType, setPracticeType] = useState<'recognition' | 'matching'>('recognition');
@@ -25,13 +24,11 @@ const KanaLearning = () => {
   const [userProgress, setUserProgress] = useState<UserKanaProgress[]>([]);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
 
-  // Get kana data
   const hiragana = kanaService.getKanaByType('hiragana');
   const katakana = kanaService.getKanaByType('katakana');
   const allKana = kanaService.getAllKana();
 
   useEffect(() => {
-    // Load user progress if user is logged in
     if (user) {
       try {
         setIsLoadingProgress(true);
@@ -51,7 +48,6 @@ const KanaLearning = () => {
     }
   }, [user, toast]);
 
-  // Calculate overall progress
   const calculateOverallProgress = (type: KanaType | 'all'): number => {
     if (!userProgress.length) return 0;
     
@@ -62,14 +58,12 @@ const KanaLearning = () => {
       relevantKana = type === 'hiragana' ? hiragana : katakana;
     }
     
-    // Find progress entries for relevant kana
     const relevantProgress = userProgress.filter(progress => 
       relevantKana.some(kana => kana.id === progress.characterId)
     );
     
     if (relevantProgress.length === 0) return 0;
     
-    // Calculate average proficiency
     const totalProficiency = relevantProgress.reduce((sum, progress) => sum + progress.proficiency, 0);
     return totalProficiency / relevantProgress.length;
   };
@@ -92,7 +86,6 @@ const KanaLearning = () => {
   };
 
   const handlePracticeSimilar = () => {
-    // For now, just restart with the same type
     setPracticeMode('practice');
   };
 
@@ -107,8 +100,7 @@ const KanaLearning = () => {
 
   return (
     <div className="container mx-auto px-4 pb-6">
-      {/* Minimal Navigation Bar */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md shadow-sm py-2 border-b mb-2">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md shadow-sm py-2 border-b">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <span className="text-xl font-montserrat font-bold text-indigo tracking-tight">
@@ -203,7 +195,6 @@ const KanaLearning = () => {
           </TabsTrigger>
         </TabsList>
         
-        {/* Introduction Tab */}
         <TabsContent value="intro" className="space-y-6 animate-fade-in">
           <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex justify-center mb-6">
@@ -419,7 +410,7 @@ const KanaLearning = () => {
                     )}
                   </div>
                 </div>
-                <div className="w-10"></div> {/* Spacer for alignment */}
+                <div className="w-10"></div>
               </div>
               <KanaPractice 
                 practiceType={practiceType}
@@ -444,7 +435,7 @@ const KanaLearning = () => {
                 <div className="text-center">
                   <h2 className="text-xl font-bold text-indigo">Results</h2>
                 </div>
-                <div className="w-10"></div> {/* Spacer for alignment */}
+                <div className="w-10"></div>
               </div>
               <KanaPracticeResults 
                 results={practiceResults}
