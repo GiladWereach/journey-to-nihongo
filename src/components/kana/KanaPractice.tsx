@@ -250,7 +250,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({
       }
       
       // Save the updated progress
-      const result = await kanaService.updateUserKanaProgress({
+      const result = await kanaService.updateKanaProgress({
         userId: user.id,
         characterId,
         proficiency,
