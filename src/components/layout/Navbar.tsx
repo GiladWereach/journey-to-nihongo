@@ -16,19 +16,28 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Set a throttled scroll handler to prevent excessive state updates
+    let ticking = false;
+    
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (window.scrollY > 20) {
+            if (!isScrolled) setIsScrolled(true);
+          } else {
+            if (isScrolled) setIsScrolled(false);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isScrolled]);
 
   return (
     <header
@@ -38,6 +47,10 @@ const Navbar: React.FC = () => {
           ? 'py-3 bg-white/95 dark:bg-indigo/95 backdrop-blur-md shadow-subtle' 
           : 'py-5 bg-transparent'
       )}
+      style={{
+        willChange: 'transform, opacity, background',
+        transform: 'translateZ(0)',
+      }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center">
