@@ -8,6 +8,7 @@ interface JapaneseCharacterProps {
   color?: string;
   animated?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
@@ -16,6 +17,7 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
   color = 'text-indigo',
   animated = true,
   className,
+  style,
 }) => {
   const charRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +60,7 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
         'transition-all duration-500 ease-out',
         className
       )}
+      style={style}
     >
       {character}
     </div>
