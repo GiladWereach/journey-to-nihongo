@@ -191,14 +191,14 @@ export const kanaService = {
   getUserKanaProgress: async (userId: string): Promise<UserKanaProgress[]> => {
     try {
       const { data, error } = await supabase
-        .from('user_kana_progress')
+        .from('user_kana_progress' as any)
         .select('*')
         .eq('user_id', userId);
 
       if (error) throw error;
       
       // Convert from DB format to our internal type
-      const progressData = data as SupabaseUserKanaProgress[] || [];
+      const progressData = data as unknown as SupabaseUserKanaProgress[];
       
       return progressData.map(item => ({
         userId: item.user_id,
@@ -222,7 +222,7 @@ export const kanaService = {
       const reviewDue = calculateNextReviewDate(progress.proficiency);
       
       const { data, error } = await supabase
-        .from('user_kana_progress')
+        .from('user_kana_progress' as any)
         .upsert({
           user_id: progress.userId,
           character_id: progress.characterId,
@@ -231,7 +231,7 @@ export const kanaService = {
           review_due: reviewDue,
           mistake_count: progress.mistakeCount,
           total_practice_count: progress.totalPracticeCount
-        });
+        } as any);
 
       if (error) throw error;
       return data;
