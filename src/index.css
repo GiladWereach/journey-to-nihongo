@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
 
 @tailwind base;
@@ -154,5 +155,14 @@
                 color 0.3s ease, 
                 border-color 0.3s ease,
                 opacity 0.3s ease;
+  }
+  
+  /* Navigation utilities for kana learning */
+  .sticky-nav {
+    @apply sticky top-0 z-30 bg-background/95 backdrop-blur-sm shadow-md;
+  }
+  
+  .section-header {
+    @apply sticky top-16 z-20 bg-background/95 backdrop-blur-sm py-2 border-b;
   }
 }

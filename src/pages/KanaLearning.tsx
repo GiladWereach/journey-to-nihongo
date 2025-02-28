@@ -9,7 +9,7 @@ import KanaPractice, { PracticeResult } from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
 import { KanaType, UserKanaProgress } from '@/types/kana';
 import { Button } from '@/components/ui/button';
-import { Book, PenTool, BookOpen, Activity, BarChart, Layers } from 'lucide-react';
+import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 
 const KanaLearning = () => {
@@ -102,16 +102,18 @@ const KanaLearning = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center text-indigo">Kana Learning</h1>
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-3xl font-bold mb-6 text-indigo flex items-center gap-3 justify-center">
+        <Book className="h-8 w-8" /> Kana Learning
+      </h1>
       
-      <div className="max-w-4xl mx-auto mb-8 bg-softgray p-6 rounded-lg">
-        <h2 className="text-xl font-semibold mb-3">Getting Started with Japanese Writing</h2>
+      <div className="max-w-4xl mx-auto mb-8 bg-softgray p-6 rounded-lg shadow-sm">
+        <h2 className="text-xl font-semibold mb-3 text-indigo">Getting Started with Japanese Writing</h2>
         <p className="mb-4">
           Japanese uses three writing systems: Hiragana, Katakana, and Kanji. We'll start with learning Hiragana and Katakana, which are the phonetic alphabets used in Japanese.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white p-4 rounded-md shadow">
+          <div className="bg-white p-4 rounded-md shadow-sm border">
             <h3 className="font-medium text-lg flex items-center gap-2 text-indigo mb-2">
               <Book size={18} /> Hiragana
             </h3>
@@ -129,7 +131,7 @@ const KanaLearning = () => {
               </div>
             )}
           </div>
-          <div className="bg-white p-4 rounded-md shadow">
+          <div className="bg-white p-4 rounded-md shadow-sm border">
             <h3 className="font-medium text-lg flex items-center gap-2 text-indigo mb-2">
               <Book size={18} /> Katakana
             </h3>
@@ -156,14 +158,14 @@ const KanaLearning = () => {
         onValueChange={setActiveTab}
         value={activeTab}
       >
-        <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="learn" className="flex items-center gap-2">
+        <TabsList className="grid grid-cols-3 mb-8 sticky top-0 z-30 bg-background shadow-md p-1 rounded-full max-w-md mx-auto">
+          <TabsTrigger value="learn" className="flex items-center gap-2 rounded-full">
             <BookOpen size={16} /> Learn
           </TabsTrigger>
-          <TabsTrigger value="practice" className="flex items-center gap-2">
+          <TabsTrigger value="practice" className="flex items-center gap-2 rounded-full">
             <PenTool size={16} /> Practice
           </TabsTrigger>
-          <TabsTrigger value="progress" className="flex items-center gap-2">
+          <TabsTrigger value="progress" className="flex items-center gap-2 rounded-full">
             <Activity size={16} /> Progress
           </TabsTrigger>
         </TabsList>
@@ -290,21 +292,57 @@ const KanaLearning = () => {
           )}
           
           {practiceMode === 'practice' && (
-            <KanaPractice 
-              practiceType={practiceType}
-              kanaType={selectedKanaType}
-              onComplete={handlePracticeComplete}
-              onCancel={handlePracticeCancel}
-            />
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handlePracticeCancel}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft size={16} /> Back to Selection
+                </Button>
+                <div className="text-right">
+                  <h2 className="text-xl font-bold">
+                    {practiceType === 'recognition' ? 'Recognition Practice' : 'Matching Practice'}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedKanaType === 'hiragana' ? 'Hiragana' : 
+                     selectedKanaType === 'katakana' ? 'Katakana' : 'Mixed Kana'}
+                  </p>
+                </div>
+              </div>
+              <KanaPractice 
+                practiceType={practiceType}
+                kanaType={selectedKanaType}
+                onComplete={handlePracticeComplete}
+                onCancel={handlePracticeCancel}
+              />
+            </>
           )}
           
           {practiceMode === 'results' && practiceResults && (
-            <KanaPracticeResults 
-              results={practiceResults}
-              onPracticeSimilar={handlePracticeSimilar}
-              onPracticeAgain={handlePracticeAgain}
-              onFinish={handleFinishPractice}
-            />
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleFinishPractice}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft size={16} /> Back to Practice Menu
+                </Button>
+                <div className="text-right">
+                  <h2 className="text-xl font-bold">Practice Results</h2>
+                </div>
+              </div>
+              <KanaPracticeResults 
+                results={practiceResults}
+                onPracticeSimilar={handlePracticeSimilar}
+                onPracticeAgain={handlePracticeAgain}
+                onFinish={handleFinishPractice}
+              />
+            </>
           )}
         </TabsContent>
         
@@ -319,7 +357,7 @@ const KanaLearning = () => {
                 </div>
               ) : userProgress.length > 0 ? (
                 <div className="space-y-8">
-                  <div className="bg-white p-6 rounded-lg shadow-md">
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
                     <h3 className="text-xl font-medium mb-4 flex items-center justify-center gap-2">
                       <BarChart size={20} /> Overall Progress
                     </h3>
@@ -363,7 +401,7 @@ const KanaLearning = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow-md text-left">
+                  <div className="bg-white p-6 rounded-lg shadow-md border text-left">
                     <h3 className="text-xl font-medium mb-4">Recently Practiced Characters</h3>
                     
                     <div className="overflow-x-auto">
@@ -418,7 +456,7 @@ const KanaLearning = () => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-white p-6 rounded-lg shadow-md border">
                   <p className="mb-8">
                     Start practicing kana characters to see your progress here!
                   </p>
@@ -435,7 +473,7 @@ const KanaLearning = () => {
                 </div>
               )
             ) : (
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md border">
                 <p className="mb-4 text-amber-600">Sign in to track your progress</p>
                 <p>
                   Create an account or sign in to save your learning progress and track your improvement over time.
