@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,6 +107,7 @@ const LearningPathCard: React.FC<LearningPathCardProps> = ({
             "w-full transition-all",
             isFeatured ? "bg-vermilion hover:bg-vermilion/90" : "text-indigo border-indigo hover:bg-indigo hover:text-white"
           )}
+          onClick={onClick}
         >
           {progress > 0 ? "Continue Learning" : "Start Learning"}
         </Button>

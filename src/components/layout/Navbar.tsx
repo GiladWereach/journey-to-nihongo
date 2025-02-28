@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,12 +32,21 @@ const Navbar: React.FC = () => {
       }
     };
 
+    // Add click handler to close dropdowns when clicking outside
+    const handleDocumentClick = () => {
+      // This will be picked up by NavLinks component to close dropdown
+      document.dispatchEvent(new CustomEvent('closeDropdowns'));
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('click', handleDocumentClick);
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('click', handleDocumentClick);
     };
   }, [isScrolled]);
-
+  
   return (
     <header
       className={cn(

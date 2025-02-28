@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +46,6 @@ const Dashboard = () => {
   const [showAssessmentPrompt, setShowAssessmentPrompt] = useState(false);
   const { toast } = useToast();
   
-  // Calculate total study time in last 7 days
   const totalStudyTime = studySessions
     .filter(session => {
       const sessionDate = new Date(session.session_date);
@@ -57,16 +55,13 @@ const Dashboard = () => {
     })
     .reduce((sum, session) => sum + session.duration_minutes, 0);
   
-  // Calculate streak (consecutive days with study sessions)
   const calculateStreak = () => {
     if (studySessions.length === 0) return 0;
     
-    // Sort sessions by date (newest first)
     const sortedSessions = [...studySessions].sort((a, b) => 
       new Date(b.session_date).getTime() - new Date(a.session_date).getTime()
     );
     
-    // Get unique dates
     const uniqueDates = new Set(
       sortedSessions.map(session => 
         new Date(session.session_date).toISOString().split('T')[0]
@@ -75,15 +70,13 @@ const Dashboard = () => {
     
     const dateArray = Array.from(uniqueDates);
     
-    // Check if most recent session is today or yesterday
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     
     if (dateArray[0] !== today && dateArray[0] !== yesterday) {
-      return 0; // Streak broken if no study in last two days
+      return 0;
     }
     
-    // Count consecutive days
     let streak = 1;
     for (let i = 1; i < dateArray.length; i++) {
       const current = new Date(dateArray[i-1]);
@@ -101,12 +94,23 @@ const Dashboard = () => {
     return streak;
   };
   
+  const handleModuleNavigation = (path: string, isReady: boolean = false) => {
+    if (isReady) {
+      navigate(path);
+    } else {
+      toast({
+        title: "Coming Soon",
+        description: "This learning module will be available soon!",
+        variant: "default",
+      });
+    }
+  };
+  
   useEffect(() => {
     const getProfile = async () => {
       if (!user) return;
       
       try {
-        // Get user profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -116,7 +120,6 @@ const Dashboard = () => {
         if (profileError) throw profileError;
         setProfile(profileData);
         
-        // Get user settings
         const { data: settingsData, error: settingsError } = await supabase
           .from('profile_settings')
           .select('*')
@@ -126,7 +129,6 @@ const Dashboard = () => {
         if (settingsError) throw settingsError;
         setSettings(settingsData);
         
-        // Get study sessions
         const { data: sessionsData, error: sessionsError } = await supabase
           .from('study_sessions')
           .select('*')
@@ -136,7 +138,6 @@ const Dashboard = () => {
         if (sessionsError) throw sessionsError;
         setStudySessions(sessionsData || []);
         
-        // Determine if we should show the assessment prompt
         const hasCompletedAssessment = (sessionsData || []).some(
           session => session.module === 'assessment'
         );
@@ -199,7 +200,6 @@ const Dashboard = () => {
             {profile && (
               <div className="w-full max-w-4xl">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  {/* Profile Card */}
                   <div className="md:col-span-1 bg-white rounded-xl shadow-md overflow-hidden">
                     <div className="p-6 flex flex-col items-center text-center">
                       <div className="h-24 w-24 rounded-full bg-gradient-to-br from-indigo to-vermilion/70 flex items-center justify-center text-white text-2xl font-bold mb-4">
@@ -237,7 +237,6 @@ const Dashboard = () => {
                     </div>
                   </div>
                   
-                  {/* Progress Overview */}
                   <div className="md:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
                     <div className="p-6">
                       <h2 className="text-2xl font-bold text-indigo mb-4 flex items-center">
@@ -333,12 +332,7 @@ const Dashboard = () => {
                         description="Learn all 46 basic hiragana characters with proper stroke order and pronunciation."
                         progress={settings?.prior_knowledge === 'hiragana' ? 100 : settings?.prior_knowledge === 'hiragana_katakana' || settings?.prior_knowledge === 'basic_kanji' ? 100 : 0}
                         isFeatured={profile.learning_level === 'beginner'}
-                        onClick={() => {
-                          toast({
-                            title: 'Coming Soon',
-                            description: 'The Hiragana module will be available soon!'
-                          });
-                        }}
+                        onClick={() => handleModuleNavigation('/kana-learning', true)}
                       />
                       
                       <LearningPathCard
@@ -346,12 +340,7 @@ const Dashboard = () => {
                         japaneseTitle="カタカナ"
                         description="Master the katakana syllabary used for foreign words and emphasis."
                         progress={settings?.prior_knowledge === 'hiragana_katakana' || settings?.prior_knowledge === 'basic_kanji' ? 100 : 0}
-                        onClick={() => {
-                          toast({
-                            title: 'Coming Soon',
-                            description: 'The Katakana module will be available soon!'
-                          });
-                        }}
+                        onClick={() => handleModuleNavigation('/kana-learning?type=katakana', true)}
                       />
                       
                       <LearningPathCard
@@ -359,12 +348,7 @@ const Dashboard = () => {
                         japaneseTitle="漢字"
                         description="Learn your first 100 essential kanji characters with readings and example words."
                         progress={settings?.prior_knowledge === 'basic_kanji' ? 30 : 0}
-                        onClick={() => {
-                          toast({
-                            title: 'Coming Soon',
-                            description: 'The Kanji module will be available soon!'
-                          });
-                        }}
+                        onClick={() => handleModuleNavigation('/kanji-basics')}
                       />
                     </div>
                   </div>
