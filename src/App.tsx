@@ -11,6 +11,8 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import EditProfile from "./pages/EditProfile";
+import Assessment from "./pages/Assessment";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,22 @@ const App = () => (
               element={
                 <RequireAuth>
                   <Dashboard />
+                </RequireAuth>
+              } 
+            />
+            <Route 
+              path="/edit-profile" 
+              element={
+                <RequireAuth>
+                  <EditProfile />
+                </RequireAuth>
+              } 
+            />
+            <Route 
+              path="/assessment" 
+              element={
+                <RequireAuth>
+                  <Assessment />
                 </RequireAuth>
               } 
             />
