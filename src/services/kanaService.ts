@@ -1,4 +1,3 @@
-<lov-code>
 import { supabaseClient } from '@/lib/supabase';
 import { KanaCharacter, KanaGroup, KanaGroupCharacter, KanaType, UserKanaProgress } from '@/types/kana';
 
@@ -1082,144 +1081,130 @@ const hiraganaCharacters: KanaCharacter[] = [
         reading: 'ほん'
       }
     ]
-  }
-];
+  },
 
-// Complete katakana character set
-const katakanaCharacters: KanaCharacter[] = [
-  // Basic vowels
+  // B-row (Variations of H-row with dakuten)
   {
-    id: 'a-katakana',
-    character: 'ア',
-    romaji: 'a',
-    type: 'katakana',
-    stroke_count: 2,
-    stroke_order: ['1', '2'],
-    mnemonic: 'Looks like a capital A',
+    id: 'ba',
+    character: 'ば',
+    romaji: 'ba',
+    type: 'hiragana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'は (ha) with two dots becomes ば (ba)',
     examples: [
       {
-        word: 'アメリカ',
-        romaji: 'amerika',
-        meaning: 'America',
-        reading: 'アメリカ'
+        word: 'ばか',
+        romaji: 'baka',
+        meaning: 'fool',
+        reading: 'ばか'
       },
       {
-        word: 'アニメ',
-        romaji: 'anime',
-        meaning: 'anime',
-        reading: 'アニメ'
+        word: 'ばなな',
+        romaji: 'banana',
+        meaning: 'banana',
+        reading: 'ばなな'
       }
     ]
   },
   {
-    id: 'i-katakana',
-    character: 'イ',
-    romaji: 'i',
-    type: 'katakana',
-    stroke_count: 2,
-    stroke_order: ['1', '2'],
-    mnemonic: 'Looks like two identical lines',
-    examples: [
-      {
-        word: 'イギリス',
-        romaji: 'igirisu',
-        meaning: 'England',
-        reading: 'イギリス'
-      },
-      {
-        word: 'イメージ',
-        romaji: 'imeeji',
-        meaning: 'image',
-        reading: 'イメージ'
-      }
-    ]
-  },
-  {
-    id: 'u-katakana',
-    character: 'ウ',
-    romaji: 'u',
-    type: 'katakana',
+    id: 'bi',
+    character: 'び',
+    romaji: 'bi',
+    type: 'hiragana',
     stroke_count: 3,
     stroke_order: ['1', '2', '3'],
-    mnemonic: 'Looks like a crown',
+    mnemonic: 'ひ (hi) with two dots becomes び (bi)',
     examples: [
       {
-        word: 'ウイルス',
-        romaji: 'uirusu',
-        meaning: 'virus',
-        reading: 'ウイルス'
+        word: 'びん',
+        romaji: 'bin',
+        meaning: 'bottle',
+        reading: 'びん'
       },
       {
-        word: 'ウーロン',
-        romaji: 'uuron',
-        meaning: 'oolong',
-        reading: 'ウーロン'
+        word: 'えんぴつ',
+        romaji: 'enpitsu',
+        meaning: 'pencil',
+        reading: 'えんぴつ'
       }
     ]
   },
   {
-    id: 'e-katakana',
-    character: 'エ',
-    romaji: 'e',
-    type: 'katakana',
-    stroke_count: 3,
-    stroke_order: ['1', '2', '3'],
-    mnemonic: 'Looks like a sideways E',
+    id: 'bu',
+    character: 'ぶ',
+    romaji: 'bu',
+    type: 'hiragana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'ふ (fu) with two dots becomes ぶ (bu)',
     examples: [
       {
-        word: 'エネルギー',
-        romaji: 'enerugii',
-        meaning: 'energy',
-        reading: 'エネルギー'
+        word: 'ぶた',
+        romaji: 'buta',
+        meaning: 'pig',
+        reading: 'ぶた'
       },
       {
-        word: 'エレベーター',
-        romaji: 'erebeetaa',
-        meaning: 'elevator',
-        reading: 'エレベーター'
+        word: 'ぶどう',
+        romaji: 'budou',
+        meaning: 'grape',
+        reading: 'ぶどう'
       }
     ]
   },
   {
-    id: 'o-katakana',
-    character: 'オ',
-    romaji: 'o',
-    type: 'katakana',
+    id: 'be',
+    character: 'べ',
+    romaji: 'be',
+    type: 'hiragana',
     stroke_count: 3,
     stroke_order: ['1', '2', '3'],
-    mnemonic: 'Looks like an open box',
+    mnemonic: 'へ (he) with two dots becomes べ (be)',
     examples: [
       {
-        word: 'オレンジ',
-        romaji: 'orenji',
-        meaning: 'orange',
-        reading: 'オレンジ'
+        word: 'べんきょう',
+        romaji: 'benkyou',
+        meaning: 'study',
+        reading: 'べんきょう'
       },
       {
-        word: 'オートバイ',
-        romaji: 'ootobai',
-        meaning: 'motorcycle',
-        reading: 'オートバイ'
+        word: 'へや',
+        romaji: 'heya',
+        meaning: 'room',
+        reading: 'へや'
+      }
+    ]
+  },
+  {
+    id: 'bo',
+    character: 'ぼ',
+    romaji: 'bo',
+    type: 'hiragana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'ほ (ho) with two dots becomes ぼ (bo)',
+    examples: [
+      {
+        word: 'ぼく',
+        romaji: 'boku',
+        meaning: 'I (male)',
+        reading: 'ぼく'
+      },
+      {
+        word: 'ぼうし',
+        romaji: 'boushi',
+        meaning: 'hat',
+        reading: 'ぼうし'
       }
     ]
   },
 
-  // K-row
+  // D-row (Variations of T-row with dakuten)
   {
-    id: 'ka-katakana',
-    character: 'カ',
-    romaji: 'ka',
-    type: 'katakana',
-    stroke_count: 2,
-    stroke_order: ['1', '2'],
-    mnemonic: 'Looks like a power symbol',
-    examples: [
-      {
-        word: 'カメラ',
-        romaji: 'kamera',
-        meaning: 'camera',
-        reading: 'カメラ'
-      },
-      {
-        word: 'カレンダー',
-        romaji:
+    id: 'da',
+    character: 'だ',
+    romaji: 'da',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2
