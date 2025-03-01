@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -31,13 +30,12 @@ interface KanaPracticeProps {
   onCancel: () => void;
 }
 
-// Proficiency thresholds
-const MASTERY_THRESHOLD = 95; // Consider a character mastered when proficiency reaches this value
-const PROFICIENCY_WEIGHT = {
-  LOW: 0.2,    // For characters with proficiency < 50
-  MEDIUM: 0.5, // For characters with proficiency between 50-80
-  HIGH: 0.8    // For characters with proficiency > 80
-};
+// Constants for our spaced repetition system
+const MASTERY_CONSECUTIVE_CORRECT = 8; // Consecutive correct answers needed
+const INITIAL_INTERVAL_DAYS = 3; // Initial interval after mastering (days)
+const INITIAL_INTERVAL_PRACTICES = 8; // Alternative interval measure (# of practices)
+const INTERVAL_MULTIPLIER = 1.5; // Multiplier for each subsequent interval
+const MISTAKE_PENALTY = 2; // How many percentage points to reduce for mistakes
 
 const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onComplete, onCancel }) => {
   const { user } = useAuth();
@@ -104,22 +102,39 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     let newKanaList = getKanaByType(kanaType);
     
     if (user && userProgress.length > 0) {
-      // Filter out completely mastered characters (proficiency >= MASTERY_THRESHOLD)
-      const notMasteredKana = newKanaList.filter(kana => {
+      const now = new Date();
+      
+      // Filter out characters that are in "disappearance" phase and not due for review
+      const availableKana = newKanaList.filter(kana => {
         const progress = userProgress.find((p: any) => p.character_id === kana.id);
-        return !progress || progress.proficiency < MASTERY_THRESHOLD;
+        
+        // If no progress or mastery_level is 0, always include
+        if (!progress || !progress.mastery_level) return true;
+        
+        // If character is in mastery phase, only include if review_due date has passed
+        return new Date(progress.review_due) <= now;
       });
       
-      // If we have at least some non-mastered characters, use them
-      if (notMasteredKana.length > 0) {
-        newKanaList = notMasteredKana;
+      // If we have at least some available characters, use them
+      if (availableKana.length > 0) {
+        newKanaList = availableKana;
       }
       
-      // Sort characters by proficiency (lowest first)
+      // Sort characters by priority (review_due first, then low proficiency)
       newKanaList = newKanaList.sort((a, b) => {
         const progressA = userProgress.find((p: any) => p.character_id === a.id);
         const progressB = userProgress.find((p: any) => p.character_id === b.id);
         
+        // If one has review_due and the other doesn't, prioritize the one with review_due
+        if (progressA?.review_due && !progressB?.review_due) return -1;
+        if (!progressA?.review_due && progressB?.review_due) return 1;
+        
+        // If both have review_due, compare the dates
+        if (progressA?.review_due && progressB?.review_due) {
+          return new Date(progressA.review_due).getTime() - new Date(progressB.review_due).getTime();
+        }
+        
+        // Otherwise sort by proficiency
         const proficiencyA = progressA ? progressA.proficiency : 0;
         const proficiencyB = progressB ? progressB.proficiency : 0;
         
@@ -127,7 +142,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       });
     }
     
-    // Add some randomization while still prioritizing lower proficiency characters
+    // Add some randomization while still prioritizing due reviews and lower proficiency characters
     newKanaList = weightedRandomSelection(newKanaList, userProgress);
     
     // Limit to 10 characters for practice
@@ -149,32 +164,49 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     // Calculate weights for each character
     const weightedList = kanaList.map(kana => {
       const progress = userProgress.find((p: any) => p.character_id === kana.id);
-      const proficiency = progress ? progress.proficiency : 0;
       
-      // Lower proficiency = higher weight
-      let weight;
-      if (proficiency < 50) {
-        weight = PROFICIENCY_WEIGHT.LOW;
-      } else if (proficiency < 80) {
-        weight = PROFICIENCY_WEIGHT.MEDIUM;
-      } else {
-        weight = PROFICIENCY_WEIGHT.HIGH;
+      // Characters due for review get highest weight
+      if (progress && new Date(progress.review_due) <= new Date()) {
+        return { kana, weight: 1.0 }; // Highest weight for due reviews
       }
       
-      // Inverse weight (1 - weight) so lower proficiency characters have higher chance
-      const selectionWeight = 1 - weight;
+      const proficiency = progress ? progress.proficiency : 0;
+      // Lower proficiency = higher weight
+      let weight = 0.5;
       
-      return {
-        kana,
-        weight: selectionWeight
-      };
+      if (proficiency < 30) {
+        weight = 0.8; // High weight for beginners
+      } else if (proficiency < 60) {
+        weight = 0.6; // Medium weight for intermediate
+      } else if (proficiency < 90) {
+        weight = 0.4; // Lower weight for advanced
+      } else {
+        weight = 0.2; // Lowest weight for mastered characters
+      }
+      
+      return { kana, weight };
     });
     
-    // Shuffle the list to avoid deterministic ordering
-    const shuffled = [...weightedList].sort(() => Math.random() - 0.5);
+    // Fisher-Yates shuffle with weighted randomization
+    const result: KanaCharacter[] = [];
+    const shuffled = [...weightedList];
     
-    // Select characters with weighted probability
-    return shuffled.map(item => item.kana);
+    while (shuffled.length > 0) {
+      let totalWeight = shuffled.reduce((sum, item) => sum + item.weight, 0);
+      let randomWeight = Math.random() * totalWeight;
+      let cumulativeWeight = 0;
+      
+      for (let i = 0; i < shuffled.length; i++) {
+        cumulativeWeight += shuffled[i].weight;
+        if (randomWeight <= cumulativeWeight) {
+          result.push(shuffled[i].kana);
+          shuffled.splice(i, 1);
+          break;
+        }
+      }
+    }
+    
+    return result;
   };
 
   useEffect(() => {
@@ -237,6 +269,25 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
 
     return simple[kanaItem.romaji as keyof typeof simple] || 
       `Think of the shape as ${kanaItem.character} for "${kanaItem.romaji}"`;
+  };
+
+  const calculateNextReviewInterval = (masteryLevel: number) => {
+    // Base interval in days
+    let intervalDays = INITIAL_INTERVAL_DAYS;
+    
+    // Apply multiplier based on mastery level
+    // masteryLevel 0 = learning, 1 = first disappearance, 2 = second disappearance, etc.
+    if (masteryLevel > 0) {
+      for (let i = 1; i < masteryLevel; i++) {
+        intervalDays *= INTERVAL_MULTIPLIER;
+      }
+    }
+    
+    const now = new Date();
+    const nextReview = new Date(now);
+    nextReview.setDate(now.getDate() + Math.round(intervalDays));
+    
+    return nextReview;
   };
 
   const handleAnswer = async (selectedRomaji: string) => {
@@ -318,37 +369,68 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     const existingProgress = userProgress.find((p: any) => p.character_id === kanaItem.id);
 
     if (existingProgress) {
-      const updatedMistakeCount = isCorrect
-        ? existingProgress.mistake_count
-        : existingProgress.mistake_count + 1;
-
+      // Update mistake count and total practice count
+      const updatedMistakeCount = isCorrect ? 
+        existingProgress.mistake_count : 
+        existingProgress.mistake_count + 1;
       const updatedTotalPracticeCount = existingProgress.total_practice_count + 1;
-
-      // Calculate new proficiency with stronger weight on recent performance
-      // Correct answers boost proficiency more significantly
-      const successRate = (updatedTotalPracticeCount - updatedMistakeCount) / updatedTotalPracticeCount;
-      const recentPerformanceFactor = isCorrect ? 1.2 : 0.8; // Boost for correct answers, penalty for mistakes
       
-      // Calculate new proficiency with consistency tracking
-      let newProficiency = Math.round(successRate * 100 * recentPerformanceFactor);
+      // Update consecutive correct answers
+      let consecutiveCorrect = isCorrect ? 
+        (existingProgress.consecutive_correct || 0) + 1 : 
+        0; // Reset to 0 on mistake
       
-      // Cap proficiency at 100
-      newProficiency = Math.min(newProficiency, 100);
+      // Check if we need to advance mastery level
+      let masteryLevel = existingProgress.mastery_level || 0;
+      let newReviewDue = new Date(existingProgress.review_due || new Date());
       
-      // Add streak bonus for consistently correct answers
-      if (isCorrect && existingProgress.proficiency >= 80) {
-        // Small bonus for maintaining mastery
-        newProficiency = Math.min(newProficiency + 2, 100);
+      // If consecutive correct reaches threshold and not already in mastery
+      if (consecutiveCorrect >= MASTERY_CONSECUTIVE_CORRECT && masteryLevel === 0) {
+        masteryLevel = 1; // First disappearance phase
+        newReviewDue = calculateNextReviewInterval(masteryLevel);
+      } 
+      // If already in mastery and correctly answered during a review
+      else if (masteryLevel > 0 && isCorrect && new Date(existingProgress.review_due) <= new Date()) {
+        masteryLevel += 1; // Advance to next mastery level
+        newReviewDue = calculateNextReviewInterval(masteryLevel);
+        consecutiveCorrect = 0; // Reset counter after advancing mastery level
       }
-
+      // If mistake during review of mastered character
+      else if (masteryLevel > 0 && !isCorrect && new Date(existingProgress.review_due) <= new Date()) {
+        masteryLevel = Math.max(masteryLevel - 1, 0); // Drop one mastery level, but not below 0
+        newReviewDue = calculateNextReviewInterval(masteryLevel);
+        consecutiveCorrect = 0;
+      }
+      
+      // Calculate new proficiency
+      let newProficiency = existingProgress.proficiency;
+      
+      if (isCorrect) {
+        // Small boost for correct answers based on current proficiency
+        const boost = Math.max(10 - Math.floor(newProficiency / 10), 2);
+        newProficiency = Math.min(newProficiency + boost, 100);
+      } else {
+        // Larger penalty for mistakes, especially if proficiency is high
+        const penalty = MISTAKE_PENALTY + Math.floor(newProficiency / 25); // Higher penalty for more advanced characters
+        newProficiency = Math.max(newProficiency - penalty, 0);
+        
+        // Additional penalty for consecutive mistakes
+        if (updatedMistakeCount > 1 && updatedMistakeCount % 3 === 0) {
+          newProficiency = Math.max(newProficiency - 5, 0); // Extra penalty for repeated mistakes
+        }
+      }
+      
+      // Update the database
       await supabaseClient
         .from('user_kana_progress')
         .update({
           proficiency: newProficiency,
           mistake_count: updatedMistakeCount,
           total_practice_count: updatedTotalPracticeCount,
+          consecutive_correct: consecutiveCorrect,
+          mastery_level: masteryLevel,
           last_practiced: new Date().toISOString(),
-          review_due: calculateNextReviewDate(newProficiency).toISOString()
+          review_due: newReviewDue.toISOString()
         })
         .eq('id', existingProgress.id);
     } else {
@@ -363,8 +445,10 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
           proficiency: initialProficiency,
           mistake_count: isCorrect ? 0 : 1,
           total_practice_count: 1,
+          consecutive_correct: isCorrect ? 1 : 0,
+          mastery_level: 0, // Start at learning phase
           last_practiced: new Date().toISOString(),
-          review_due: calculateNextReviewDate(initialProficiency).toISOString()
+          review_due: new Date().toISOString() // Immediately available for practice
         });
     }
   };

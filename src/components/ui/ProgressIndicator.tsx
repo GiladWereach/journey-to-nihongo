@@ -19,6 +19,8 @@ interface ProgressIndicatorProps {
   glowOnCompletion?: boolean;
   characterDisplay?: string;
   showCharacter?: boolean;
+  masteryLevel?: number; // New prop for mastery level
+  showMasteryBadge?: boolean; // Whether to show mastery badge
 }
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
@@ -38,6 +40,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   glowOnCompletion = false,
   characterDisplay,
   showCharacter = false,
+  masteryLevel = 0,
+  showMasteryBadge = false,
 }) => {
   // Ensure progress is between 0 and 100
   const normalizedProgress = Math.min(100, Math.max(0, progress));
@@ -52,17 +56,19 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   const getColorByProficiency = () => {
     if (color !== 'bg-vermilion') return color;
     
+    if (masteryLevel > 0) return 'bg-purple-500'; // Special color for mastered characters
     if (proficiencyLevel === 'mastered' || normalizedProgress >= 90) return 'bg-green-500';
     if (proficiencyLevel === 'advanced' || normalizedProgress >= 70) return 'bg-blue-500';
     if (proficiencyLevel === 'intermediate' || normalizedProgress >= 40) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
-  const progressColor = proficiencyLevel ? getColorByProficiency() : color;
+  const progressColor = proficiencyLevel || masteryLevel > 0 ? getColorByProficiency() : color;
 
   // Calculate the proficiency level if not provided
   const calculateProficiencyLevel = () => {
     if (proficiencyLevel) return proficiencyLevel;
+    if (masteryLevel > 0) return 'mastered';
     if (normalizedProgress >= 90) return 'mastered';
     if (normalizedProgress >= 70) return 'advanced';
     if (normalizedProgress >= 40) return 'intermediate';
@@ -115,12 +121,12 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
     beginner: 'Beginner',
     intermediate: 'Intermediate',
     advanced: 'Advanced',
-    mastered: 'Mastered',
+    mastered: masteryLevel > 0 ? `Mastered (Level ${masteryLevel})` : 'Mastered',
   };
 
   return (
     <div className={cn('w-full space-y-1', className)}>
-      {(label || showPercentage || (showLabel && proficiencyLevel) || showCharacter) && (
+      {(label || showPercentage || (showLabel && (proficiencyLevel || masteryLevel > 0)) || showCharacter) && (
         <div className="flex justify-between items-center text-sm">
           <div className="flex items-center gap-2">
             {showCharacter && characterDisplay && (
@@ -129,15 +135,16 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             {label && <span className="font-medium">{label}</span>}
           </div>
           <div className="flex items-center gap-2">
-            {showLabel && proficiencyLevel && (
+            {showLabel && (proficiencyLevel || masteryLevel > 0) && (
               <span className={cn(
                 'text-xs px-2 py-0.5 rounded-full',
+                masteryLevel > 0 ? 'bg-purple-100 text-purple-800' :
                 level === 'mastered' ? 'bg-green-100 text-green-800' :
                 level === 'advanced' ? 'bg-blue-100 text-blue-800' :
                 level === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-red-100 text-red-800'
               )}>
-                {proficiencyLabels[level]}
+                {masteryLevel > 0 ? `Level ${masteryLevel}` : proficiencyLabels[level]}
               </span>
             )}
             {showPercentage && <span className="text-sm text-muted-foreground">{normalizedProgress}%</span>}
@@ -147,7 +154,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       <div className={cn(
         'w-full bg-gray-100 rounded-full overflow-hidden relative', 
         sizeClasses[size],
-        glowOnCompletion && normalizedProgress >= 100 && 'shadow-glow'
+        glowOnCompletion && (normalizedProgress >= 100 || masteryLevel > 0) && 'shadow-glow'
       )}>
         {renderTicks()}
         {renderMilestones()}
@@ -156,16 +163,33 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             'transition-all duration-500 rounded-full', 
             progressColor,
             animated && 'animate-pulse',
-            glowOnCompletion && normalizedProgress >= 100 && 'animate-glow'
+            glowOnCompletion && (normalizedProgress >= 100 || masteryLevel > 0) && 'animate-glow'
           )} 
           style={{ width: `${normalizedProgress}%` }}
         />
       </div>
       
+      {/* Mastery badge */}
+      {showMasteryBadge && masteryLevel > 0 && (
+        <div className="text-xs text-center mt-1">
+          <span className={cn(
+            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+            masteryLevel === 1 ? "bg-purple-100 text-purple-800" :
+            masteryLevel === 2 ? "bg-indigo-100 text-indigo-800" :
+            masteryLevel >= 3 ? "bg-blue-100 text-blue-800" : ""
+          )}>
+            {masteryLevel === 1 && "⭐"} 
+            {masteryLevel === 2 && "⭐⭐"}
+            {masteryLevel >= 3 && "⭐⭐⭐"}
+            {` Level ${masteryLevel}`}
+          </span>
+        </div>
+      )}
+      
       {/* Optional animated celebration for completed progress */}
-      {glowOnCompletion && normalizedProgress >= 100 && (
+      {glowOnCompletion && (normalizedProgress >= 100 || masteryLevel > 0) && (
         <div className="text-xs text-center text-green-600 animate-bounce mt-1">
-          ✨ Completed! ✨
+          {masteryLevel > 0 ? "✨ Mastered! ✨" : "✨ Completed! ✨"}
         </div>
       )}
     </div>

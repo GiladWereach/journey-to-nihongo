@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.user_kana_progress (
   review_due TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   mistake_count INTEGER NOT NULL DEFAULT 0,
   total_practice_count INTEGER NOT NULL DEFAULT 0,
+  consecutive_correct INTEGER NOT NULL DEFAULT 0, -- Track consecutive correct answers
+  mastery_level INTEGER NOT NULL DEFAULT 0, -- 0=learning, 1=first interval, 2=second interval, etc.
   UNIQUE(user_id, character_id)
 );
 

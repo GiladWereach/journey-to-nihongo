@@ -1,7 +1,14 @@
+
 import { supabaseClient } from '@/lib/supabase';
 import { KanaCharacter, KanaType, UserKanaProgress, KanaPracticeResult } from '@/types/kana';
 import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
+import { calculateNextReviewDate } from '@/lib/utils';
+
+// Constants for spaced repetition
+const CONSECUTIVE_THRESHOLD = 8; // How many consecutive correct answers needed for mastery
+const INITIAL_INTERVAL_DAYS = 3; // Initial disappearance period in days
+const INTERVAL_MULTIPLIER = 1.5; // How much to multiply the interval for each level
 
 // Create and export the kanaService
 export const kanaService = {
@@ -57,6 +64,8 @@ export const kanaService = {
         proficiency: progress.proficiency,
         mistake_count: progress.mistake_count,
         total_practice_count: progress.total_practice_count,
+        consecutive_correct: progress.consecutive_correct || 0,
+        mastery_level: progress.mastery_level || 0,
         last_practiced: new Date(progress.last_practiced),
         review_due: new Date(progress.review_due)
       }));
@@ -66,7 +75,7 @@ export const kanaService = {
     }
   },
   
-  // Add or update user progress for a specific character
+  // Add or update user progress for a specific character with spaced repetition system
   updateKanaProgress: async (
     userId: string, 
     characterId: string, 
@@ -90,36 +99,83 @@ export const kanaService = {
       
       // If we already have a record, update it
       if (data) {
-        // Calculate new proficiency based on current value and whether the answer was correct
-        // Correct answers increase proficiency, incorrect answers decrease it
+        // Get current values or defaults
         const currentProficiency = data.proficiency || 0;
+        const currentConsecutiveCorrect = data.consecutive_correct || 0;
+        const currentMasteryLevel = data.mastery_level || 0;
         
-        // Adjust proficiency - correct answers give bigger boost for beginners,
-        // wrong answers have a smaller impact for more advanced users
+        // Update consecutive correct answers
+        let newConsecutiveCorrect = isCorrect ? 
+          currentConsecutiveCorrect + 1 : 0; // Reset on mistake
+        
+        // Check if character is due for review
+        const isDueForReview = new Date(data.review_due) <= new Date();
+        
+        // Determine new mastery level
+        let newMasteryLevel = currentMasteryLevel;
+        let newReviewDue = new Date(data.review_due);
+        
+        // Calculate new proficiency
         let proficiencyChange = 0;
+        
         if (isCorrect) {
-          // At lower proficiency levels, give bigger boosts (up to +15)
-          proficiencyChange = Math.max(15 - Math.floor(currentProficiency / 10), 5);
+          // Boost proficiency for correct answers
+          proficiencyChange = Math.max(10 - Math.floor(currentProficiency / 10), 2);
+          
+          // Handle mastery level transitions
+          if (newConsecutiveCorrect >= CONSECUTIVE_THRESHOLD && newMasteryLevel === 0) {
+            // Transition to first mastery level
+            newMasteryLevel = 1;
+            
+            // Calculate new review date based on mastery level
+            newReviewDue = new Date();
+            newReviewDue.setDate(newReviewDue.getDate() + INITIAL_INTERVAL_DAYS);
+            
+            // Reset consecutive counter after advancing
+            newConsecutiveCorrect = 0;
+          }
+          else if (newMasteryLevel > 0 && isDueForReview) {
+            // Correctly remembered after disappearance - advance to next level
+            newMasteryLevel += 1;
+            
+            // Calculate extended interval for next review
+            let intervalDays = INITIAL_INTERVAL_DAYS;
+            for (let i = 1; i < newMasteryLevel; i++) {
+              intervalDays *= INTERVAL_MULTIPLIER;
+            }
+            
+            newReviewDue = new Date();
+            newReviewDue.setDate(newReviewDue.getDate() + Math.round(intervalDays));
+            
+            // Reset consecutive counter after advancing
+            newConsecutiveCorrect = 0;
+          }
         } else {
-          // At higher proficiency levels, smaller penalties (down to -3)
-          proficiencyChange = Math.min(-3 - Math.floor((100 - currentProficiency) / 10), -10);
+          // Penalty for incorrect answers
+          proficiencyChange = -1 * (2 + Math.floor(currentProficiency / 25));
+          
+          // If in mastery mode and answer wrong during review, drop a level
+          if (newMasteryLevel > 0 && isDueForReview) {
+            newMasteryLevel = Math.max(0, newMasteryLevel - 1);
+            
+            // Calculate new review period
+            if (newMasteryLevel > 0) {
+              let intervalDays = INITIAL_INTERVAL_DAYS;
+              for (let i = 1; i < newMasteryLevel; i++) {
+                intervalDays *= INTERVAL_MULTIPLIER;
+              }
+              
+              newReviewDue = new Date();
+              newReviewDue.setDate(newReviewDue.getDate() + Math.round(intervalDays));
+            } else {
+              // Back to learning mode
+              newReviewDue = new Date(); // Available immediately
+            }
+          }
         }
         
-        // Calculate new proficiency, keeping it within 0-100 range
-        const newProficiency = Math.min(Math.max(currentProficiency + proficiencyChange, 0), 100);
-        
-        // Set review due date based on proficiency level
-        let reviewDueDate = new Date();
-        if (newProficiency < 30) {
-          // Beginner: review in a few hours
-          reviewDueDate.setHours(reviewDueDate.getHours() + 4);
-        } else if (newProficiency < 70) {
-          // Intermediate: review in a day
-          reviewDueDate.setDate(reviewDueDate.getDate() + 1);
-        } else {
-          // Advanced: review in a few days
-          reviewDueDate.setDate(reviewDueDate.getDate() + 3);
-        }
+        // Calculate new proficiency value
+        let newProficiency = Math.min(Math.max(currentProficiency + proficiencyChange, 0), 100);
         
         const { error: updateError } = await supabaseClient
           .from('user_kana_progress')
@@ -127,8 +183,10 @@ export const kanaService = {
             proficiency: newProficiency,
             total_practice_count: data.total_practice_count + 1,
             mistake_count: isCorrect ? data.mistake_count : data.mistake_count + 1,
+            consecutive_correct: newConsecutiveCorrect,
+            mastery_level: newMasteryLevel,
             last_practiced: now,
-            review_due: reviewDueDate.toISOString(),
+            review_due: newReviewDue.toISOString(),
             updated_at: now
           })
           .eq('id', data.id);
@@ -141,10 +199,6 @@ export const kanaService = {
         // Create a new record with initial values
         const initialProficiency = isCorrect ? 15 : 5;
         
-        // Set initial review due date
-        let reviewDueDate = new Date();
-        reviewDueDate.setHours(reviewDueDate.getHours() + 4); // Start with a 4-hour review period
-        
         const { error: insertError } = await supabaseClient
           .from('user_kana_progress')
           .insert({
@@ -153,8 +207,10 @@ export const kanaService = {
             proficiency: initialProficiency,
             total_practice_count: 1,
             mistake_count: isCorrect ? 0 : 1,
+            consecutive_correct: isCorrect ? 1 : 0,
+            mastery_level: 0, // Start at learning phase
             last_practiced: now,
-            review_due: reviewDueDate.toISOString()
+            review_due: now // Immediately available for practice
           });
           
         if (insertError) {
@@ -186,48 +242,6 @@ export const kanaService = {
       console.log(`Updated progress for ${results.length} characters`);
     } catch (error) {
       console.error('Error updating progress from results:', error);
-    }
-  },
-  
-  // Calculate overall proficiency for a kana type
-  calculateOverallProficiency: async (userId: string, kanaType: KanaType | 'all'): Promise<number> => {
-    try {
-      const userProgress = await kanaService.getUserKanaProgress(userId);
-      if (!userProgress || userProgress.length === 0) return 0;
-      
-      // Get all kana characters of the specified type
-      const targetKana = kanaType === 'all' 
-        ? kanaService.getAllKana() 
-        : kanaService.getKanaByType(kanaType);
-      
-      // Map character IDs for easier lookup
-      const kanaIds = targetKana.map(kana => kana.id);
-      
-      // Filter progress entries for the targeted kana type
-      const relevantProgress = userProgress.filter(
-        progress => kanaType === 'all' || progress.character_id.startsWith(kanaType)
-      );
-      
-      // Calculate total proficiency
-      let totalProficiency = 0;
-      
-      // First, count progress entries for characters that have been practiced
-      const practicedCharactersMap = new Map();
-      relevantProgress.forEach(progress => {
-        practicedCharactersMap.set(progress.character_id, progress.proficiency);
-        totalProficiency += progress.proficiency;
-      });
-      
-      // Account for characters with no progress
-      const unpracticedCharacterCount = kanaIds.length - practicedCharactersMap.size;
-      
-      // Calculate average proficiency (including unpracticed characters as 0%)
-      const overallProficiency = totalProficiency / (kanaIds.length || 1);
-      
-      return Math.min(Math.round(overallProficiency), 100);
-    } catch (error) {
-      console.error('Error calculating overall proficiency:', error);
-      return 0;
     }
   },
   
@@ -269,5 +283,114 @@ export const kanaService = {
       .map(progress => progress.character_id);
     
     return dueForReview.slice(0, limit);
+  },
+  
+  // Calculate overall proficiency for a kana type
+  calculateOverallProficiency: async (userId: string, kanaType: KanaType | 'all'): Promise<number> => {
+    try {
+      const userProgress = await kanaService.getUserKanaProgress(userId);
+      if (!userProgress || userProgress.length === 0) return 0;
+      
+      // Get all kana characters of the specified type
+      const targetKana = kanaType === 'all' 
+        ? kanaService.getAllKana() 
+        : kanaService.getKanaByType(kanaType);
+      
+      // Map character IDs for easier lookup
+      const kanaIds = targetKana.map(kana => kana.id);
+      
+      // Filter progress entries for the targeted kana type
+      const relevantProgress = userProgress.filter(
+        progress => kanaType === 'all' || progress.character_id.startsWith(kanaType)
+      );
+      
+      // Calculate total proficiency with mastery bonus
+      let totalScore = 0;
+      let totalPossibleScore = kanaIds.length * 100; // 100% for each character is max score
+      
+      // For each character, calculate its contribution to the total score
+      relevantProgress.forEach(progress => {
+        let characterScore = progress.proficiency;
+        
+        // Add bonus for mastery level
+        if (progress.mastery_level > 0) {
+          // Mastery levels effectively make progress worth more
+          characterScore = Math.min(characterScore + (progress.mastery_level * 20), 100);
+        }
+        
+        totalScore += characterScore;
+      });
+      
+      // Account for characters with no progress (0% proficiency)
+      const trackedCharacters = new Set(relevantProgress.map(p => p.character_id));
+      const untrackedCount = kanaIds.filter(id => !trackedCharacters.has(id)).length;
+      
+      // Calculate average proficiency across all characters
+      const overallProficiency = totalScore / totalPossibleScore * 100;
+      
+      return Math.min(Math.round(overallProficiency), 100);
+    } catch (error) {
+      console.error('Error calculating overall proficiency:', error);
+      return 0;
+    }
+  },
+  
+  // Get mastery statistics for kana characters
+  getMasteryStats: async (userId: string, kanaType: KanaType | 'all'): Promise<{
+    totalCharacters: number;
+    mastered: number;
+    masteryPercentage: number;
+    disappearing: number; // Characters in spaced repetition
+    learning: number; // Characters still being learned
+  }> => {
+    try {
+      const userProgress = await kanaService.getUserKanaProgress(userId);
+      const targetKana = kanaType === 'all' 
+        ? kanaService.getAllKana() 
+        : kanaService.getKanaByType(kanaType);
+      
+      const totalCharacters = targetKana.length;
+      
+      // If no progress yet, return zeros
+      if (!userProgress || userProgress.length === 0) {
+        return {
+          totalCharacters,
+          mastered: 0,
+          masteryPercentage: 0,
+          disappearing: 0,
+          learning: 0
+        };
+      }
+      
+      // Filter progress for the target kana type
+      const relevantProgress = userProgress.filter(
+        progress => kanaType === 'all' || progress.character_id.startsWith(kanaType)
+      );
+      
+      // Count characters in each category
+      const mastered = relevantProgress.filter(p => p.mastery_level >= 3).length;
+      const disappearing = relevantProgress.filter(p => p.mastery_level > 0 && p.mastery_level < 3).length;
+      const learning = relevantProgress.filter(p => p.mastery_level === 0).length;
+      
+      // Calculate mastery percentage
+      const masteryPercentage = (mastered / totalCharacters) * 100;
+      
+      return {
+        totalCharacters,
+        mastered,
+        masteryPercentage,
+        disappearing,
+        learning
+      };
+    } catch (error) {
+      console.error('Error calculating mastery stats:', error);
+      return {
+        totalCharacters: 0,
+        mastered: 0,
+        masteryPercentage: 0,
+        disappearing: 0,
+        learning: 0
+      };
+    }
   }
 };

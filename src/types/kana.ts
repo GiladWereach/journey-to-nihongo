@@ -1,3 +1,4 @@
+
 // Add or update types as needed to align with the database schema
 
 export interface KanaCharacter {
@@ -55,8 +56,10 @@ export interface UserKanaProgress {
   proficiency: number;
   mistake_count: number;
   total_practice_count: number;
+  consecutive_correct: number; // Track consecutive correct answers
   last_practiced: Date;
   review_due: Date;
+  mastery_level: number; // 0=learning, 1=first disappearance, 2=second disappearance, etc.
   created_at?: string;
   updated_at?: string;
 }
