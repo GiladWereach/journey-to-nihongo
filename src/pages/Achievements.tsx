@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -94,8 +93,8 @@ const AchievementsPage = () => {
         // Fetch user's earned achievements
         const userAchievementsData = await achievementService.getUserAchievements(user.id);
         
-        setAchievements(achievementsData);
-        setUserAchievements(userAchievementsData);
+        setAchievements(achievementsData as Achievement[]);
+        setUserAchievements(userAchievementsData as UserAchievement[]);
       } catch (error: any) {
         console.error('Error fetching achievements:', error.message);
         toast({

@@ -38,10 +38,15 @@ const AchievementsList = ({ limit = 3, showViewAll = true }: AchievementsListPro
         
         // Sort by earned_at (most recent first) and limit
         const sorted = userAchievements
-          .sort((a, b) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())
+          .filter(a => a.earned_at) // Only include achievements with earned_at property
+          .sort((a, b) => {
+            const dateA = a.earned_at ? new Date(a.earned_at).getTime() : 0;
+            const dateB = b.earned_at ? new Date(b.earned_at).getTime() : 0;
+            return dateB - dateA;
+          })
           .slice(0, limit);
           
-        setRecentAchievements(sorted);
+        setRecentAchievements(sorted as UserAchievement[]);
       } catch (error) {
         console.error('Error fetching recent achievements:', error);
       } finally {
@@ -86,7 +91,9 @@ const AchievementsList = ({ limit = 3, showViewAll = true }: AchievementsListPro
               <div>
                 <h4 className="font-medium">{userAchievement.achievement?.title}</h4>
                 <p className="text-sm text-gray-600">
-                  Earned on {new Date(userAchievement.earned_at).toLocaleDateString()}
+                  {userAchievement.earned_at && (
+                    <>Earned on {new Date(userAchievement.earned_at).toLocaleDateString()}</>
+                  )}
                 </p>
               </div>
             </div>

@@ -73,6 +73,9 @@ const EditProfile = () => {
           .single();
           
         if (settingsError) throw settingsError;
+
+        console.log('Profile data:', profile);
+        console.log('Settings data:', settings);
         
         // Update state with fetched data
         setProfileData({

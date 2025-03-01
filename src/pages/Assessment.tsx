@@ -150,6 +150,9 @@ const Assessment = () => {
         .from('user_settings')
         .update({
           prior_knowledge: priorKnowledge,
+          preferred_study_time: 'anytime',
+          notifications_enabled: true,
+          display_furigana: true
         })
         .eq('id', user.id);
         
@@ -157,15 +160,14 @@ const Assessment = () => {
       
       // Create a study session for the assessment completion
       await supabase
-        .from('kana_learning_sessions')
+        .from('study_sessions')
         .insert({
           user_id: user.id,
-          kana_type: 'both',
-          characters_studied: [],
-          accuracy: 100,
-          completed: true,
-          end_time: new Date().toISOString(),
-          start_time: new Date().toISOString()
+          module: 'assessment',
+          topics: ['initial-assessment'],
+          duration_minutes: 5,
+          session_date: new Date().toISOString(),
+          completed: true
         });
       
       toast({
