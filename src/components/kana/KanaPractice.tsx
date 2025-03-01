@@ -52,12 +52,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     return kanaService.getKanaByType(type);
   }
 
-  // Helper function to get random kana
-  function getRandomKana(type: KanaType | 'all'): KanaCharacter {
-    const kanaArray = getKanaByType(type);
-    return kanaArray[Math.floor(Math.random() * kanaArray.length)];
-  }
-
   useEffect(() => {
     const fetchUserProgress = async () => {
       setIsLoading(true);
@@ -290,53 +284,35 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="text-5xl font-bold japanese-text">
-          {kanaItem.character}
-        </div>
+        <JapaneseCharacter
+          character={kanaItem.character}
+          size="lg"
+          color={kanaType === 'hiragana' ? 'text-matcha' : kanaType === 'katakana' ? 'text-vermilion' : 'text-indigo'}
+          animated={false}
+          className="mx-auto mb-2"
+        />
         <p className="text-gray-500">
           {currentKanaIndex + 1} / {kanaList.length}
         </p>
       </div>
 
-      {practiceType === 'recognition' && (
-        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-          {options.map((option, index) => (
-            <Button
-              key={index}
-              onClick={() => handleAnswer(option)}
-              disabled={isCorrect !== null}
-              className={`transition-all duration-200 ${isCorrect === true && option === kanaItem.romaji
-                ? 'bg-green-500 hover:bg-green-700 text-white'
-                : isCorrect === false && option === kanaItem.romaji
-                  ? 'bg-red-500 hover:bg-red-700 text-white'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100'
-                }`}
-            >
-              {option}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {practiceType === 'matching' && (
-        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-          {options.map((option, index) => (
-            <Button
-              key={index}
-              onClick={() => handleAnswer(option)}
-              disabled={isCorrect !== null}
-              className={`transition-all duration-200 ${isCorrect === true && option === kanaItem.romaji
-                ? 'bg-green-500 hover:bg-green-700 text-white'
-                : isCorrect === false && option === kanaItem.romaji
-                  ? 'bg-red-500 hover:bg-red-700 text-white'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100'
-                }`}
-            >
-              {option}
-            </Button>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+        {options.map((option, index) => (
+          <Button
+            key={index}
+            onClick={() => handleAnswer(option)}
+            disabled={isCorrect !== null}
+            className={`transition-all duration-200 ${isCorrect === true && option === kanaItem.romaji
+              ? 'bg-green-500 hover:bg-green-700 text-white'
+              : isCorrect === false && option === kanaItem.romaji
+                ? 'bg-red-500 hover:bg-red-700 text-white'
+                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100'
+              }`}
+          >
+            {option}
+          </Button>
+        ))}
+      </div>
 
       {isCorrect !== null && (
         <div className="text-center">
