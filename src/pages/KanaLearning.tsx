@@ -26,6 +26,11 @@ const KanaLearning = () => {
   const [practiceResults, setPracticeResults] = useState<PracticeResult | null>(null);
   const [userProgress, setUserProgress] = useState<UserKanaProgress[]>([]);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+  const [overallProgress, setOverallProgress] = useState<{
+    all: number;
+    hiragana: number;
+    katakana: number;
+  }>({ all: 0, hiragana: 0, katakana: 0 });
 
   const hiragana = kanaService.getKanaByType('hiragana');
   const katakana = kanaService.getKanaByType('katakana');
@@ -51,15 +56,28 @@ const KanaLearning = () => {
     }
   }, [user]);
 
-  const calculateOverallProgress = async (type: KanaType | 'all'): Promise<number> => {
-    if (!user) return 0;
-    try {
-      return await kanaService.calculateOverallProficiency(user.id, type);
-    } catch (error) {
-      console.error('Error calculating progress:', error);
-      return 0;
-    }
-  };
+  // Load progress data when user or userProgress changes
+  useEffect(() => {
+    const loadProgressData = async () => {
+      if (user) {
+        try {
+          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all');
+          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
+          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
+          
+          setOverallProgress({
+            all: allProgress,
+            hiragana: hiraganaProgress,
+            katakana: katakanaProgress
+          });
+        } catch (error) {
+          console.error('Error calculating progress:', error);
+        }
+      }
+    };
+    
+    loadProgressData();
+  }, [user, userProgress]);
 
   const calculateProficiencyLevel = (proficiency: number): 'beginner' | 'intermediate' | 'advanced' | 'mastered' => {
     if (proficiency >= 90) return 'mastered';
@@ -155,6 +173,23 @@ const KanaLearning = () => {
   const handleFinishPractice = () => {
     setPracticeMode('selection');
     setActiveTab('practice');
+  };
+
+  // Progress rendering helper
+  const renderProgressIndicator = (type: KanaType | 'all') => {
+    const progress = type === 'all' 
+      ? overallProgress.all
+      : type === 'hiragana' 
+        ? overallProgress.hiragana 
+        : overallProgress.katakana;
+    
+    return (
+      <ProgressIndicator 
+        progress={progress} 
+        size="sm" 
+        color={type === 'hiragana' ? 'bg-matcha' : type === 'katakana' ? 'bg-vermilion' : 'bg-indigo'} 
+      />
+    );
   };
 
   return (
@@ -286,13 +321,7 @@ const KanaLearning = () => {
                     <p className="text-sm mb-3">Used for native Japanese words and grammatical elements.</p>
                     <p className="text-sm text-gray-600 mb-3">Example: <span className="japanese-text">あいうえお</span> (a-i-u-e-o)</p>
                     
-                    {user && (
-                      <ProgressIndicator 
-                        progress={await calculateOverallProgress('hiragana')} 
-                        size="sm" 
-                        color="bg-matcha" 
-                      />
-                    )}
+                    {user && renderProgressIndicator('hiragana')}
                   </div>
                   
                   <div className="bg-softgray/30 p-5 rounded-lg border border-gray-100">
@@ -303,13 +332,7 @@ const KanaLearning = () => {
                     <p className="text-sm mb-3">Used for foreign words, emphasis, and technical terms.</p>
                     <p className="text-sm text-gray-600 mb-3">Example: <span className="japanese-text">アイウエオ</span> (a-i-u-e-o)</p>
                     
-                    {user && (
-                      <ProgressIndicator 
-                        progress={await calculateOverallProgress('katakana')} 
-                        size="sm" 
-                        color="bg-vermilion" 
-                      />
-                    )}
+                    {user && renderProgressIndicator('katakana')}
                   </div>
                 </div>
                 
@@ -531,10 +554,10 @@ const KanaLearning = () => {
                         </CardHeader>
                         <CardContent>
                           <div className="text-3xl font-bold text-indigo mb-2">
-                            {(await calculateOverallProgress('all')).toFixed(0)}%
+                            {overallProgress.all.toFixed(0)}%
                           </div>
                           <ProgressIndicator 
-                            progress={await calculateOverallProgress('all')} 
+                            progress={overallProgress.all} 
                             size="md" 
                             color="bg-indigo"
                             showTicks
@@ -597,12 +620,12 @@ const KanaLearning = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <ProgressIndicator 
-                            progress={await calculateOverallProgress('hiragana')} 
+                            progress={overallProgress.hiragana} 
                             size="md" 
                             color="bg-matcha" 
                             showPercentage
                             showTicks
-                            proficiencyLevel={calculateProficiencyLevel(await calculateOverallProgress('hiragana'))}
+                            proficiencyLevel={calculateProficiencyLevel(overallProgress.hiragana)}
                             showLabel
                           />
                           
@@ -655,12 +678,12 @@ const KanaLearning = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <ProgressIndicator 
-                            progress={await calculateOverallProgress('katakana')} 
+                            progress={overallProgress.katakana} 
                             size="md" 
                             color="bg-vermilion" 
                             showPercentage
                             showTicks
-                            proficiencyLevel={calculateProficiencyLevel(await calculateOverallProgress('katakana'))}
+                            proficiencyLevel={calculateProficiencyLevel(overallProgress.katakana)}
                             showLabel
                           />
                           
@@ -826,7 +849,7 @@ const KanaLearning = () => {
                                       <td className="px-4 py-2">
                                         <ProgressIndicator
                                           progress={progress.proficiency}
-                                          size="xs"
+                                          size="sm"
                                           showPercentage
                                         />
                                       </td>
