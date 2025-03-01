@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,14 @@ interface KanaPracticeProps {
   onComplete: (results: PracticeResult) => void;
   onCancel: () => void;
 }
+
+// Proficiency thresholds
+const MASTERY_THRESHOLD = 95; // Consider a character mastered when proficiency reaches this value
+const PROFICIENCY_WEIGHT = {
+  LOW: 0.2,    // For characters with proficiency < 50
+  MEDIUM: 0.5, // For characters with proficiency between 50-80
+  HIGH: 0.8    // For characters with proficiency > 80
+};
 
 const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onComplete, onCancel }) => {
   const { user } = useAuth();
@@ -95,21 +104,78 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     let newKanaList = getKanaByType(kanaType);
     
     if (user && userProgress.length > 0) {
-      newKanaList = newKanaList.filter(kana => {
+      // Filter out completely mastered characters (proficiency >= MASTERY_THRESHOLD)
+      const notMasteredKana = newKanaList.filter(kana => {
         const progress = userProgress.find((p: any) => p.character_id === kana.id);
-        return !progress || progress.proficiency < 100;
+        return !progress || progress.proficiency < MASTERY_THRESHOLD;
+      });
+      
+      // If we have at least some non-mastered characters, use them
+      if (notMasteredKana.length > 0) {
+        newKanaList = notMasteredKana;
+      }
+      
+      // Sort characters by proficiency (lowest first)
+      newKanaList = newKanaList.sort((a, b) => {
+        const progressA = userProgress.find((p: any) => p.character_id === a.id);
+        const progressB = userProgress.find((p: any) => p.character_id === b.id);
+        
+        const proficiencyA = progressA ? progressA.proficiency : 0;
+        const proficiencyB = progressB ? progressB.proficiency : 0;
+        
+        return proficiencyA - proficiencyB;
       });
     }
-
-    newKanaList = [...newKanaList].sort(() => Math.random() - 0.5);
     
-    const practiceSetSize = 20;
+    // Add some randomization while still prioritizing lower proficiency characters
+    newKanaList = weightedRandomSelection(newKanaList, userProgress);
+    
+    // Limit to 10 characters for practice
+    const practiceSetSize = 10;
     if (newKanaList.length > practiceSetSize) {
       newKanaList = newKanaList.slice(0, practiceSetSize);
     }
     
     setKanaList(newKanaList);
   }, [kanaType, user, userProgress]);
+
+  // Function to select characters with weighted randomization based on proficiency
+  const weightedRandomSelection = (kanaList: KanaCharacter[], userProgress: any[]) => {
+    // If no progress data, return randomly shuffled list
+    if (!userProgress.length) {
+      return [...kanaList].sort(() => Math.random() - 0.5);
+    }
+    
+    // Calculate weights for each character
+    const weightedList = kanaList.map(kana => {
+      const progress = userProgress.find((p: any) => p.character_id === kana.id);
+      const proficiency = progress ? progress.proficiency : 0;
+      
+      // Lower proficiency = higher weight
+      let weight;
+      if (proficiency < 50) {
+        weight = PROFICIENCY_WEIGHT.LOW;
+      } else if (proficiency < 80) {
+        weight = PROFICIENCY_WEIGHT.MEDIUM;
+      } else {
+        weight = PROFICIENCY_WEIGHT.HIGH;
+      }
+      
+      // Inverse weight (1 - weight) so lower proficiency characters have higher chance
+      const selectionWeight = 1 - weight;
+      
+      return {
+        kana,
+        weight: selectionWeight
+      };
+    });
+    
+    // Shuffle the list to avoid deterministic ordering
+    const shuffled = [...weightedList].sort(() => Math.random() - 0.5);
+    
+    // Select characters with weighted probability
+    return shuffled.map(item => item.kana);
+  };
 
   useEffect(() => {
     if (kanaList.length > 0) {
@@ -258,8 +324,22 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
 
       const updatedTotalPracticeCount = existingProgress.total_practice_count + 1;
 
+      // Calculate new proficiency with stronger weight on recent performance
+      // Correct answers boost proficiency more significantly
       const successRate = (updatedTotalPracticeCount - updatedMistakeCount) / updatedTotalPracticeCount;
-      const newProficiency = Math.round(successRate * 100);
+      const recentPerformanceFactor = isCorrect ? 1.2 : 0.8; // Boost for correct answers, penalty for mistakes
+      
+      // Calculate new proficiency with consistency tracking
+      let newProficiency = Math.round(successRate * 100 * recentPerformanceFactor);
+      
+      // Cap proficiency at 100
+      newProficiency = Math.min(newProficiency, 100);
+      
+      // Add streak bonus for consistently correct answers
+      if (isCorrect && existingProgress.proficiency >= 80) {
+        // Small bonus for maintaining mastery
+        newProficiency = Math.min(newProficiency + 2, 100);
+      }
 
       await supabaseClient
         .from('user_kana_progress')
@@ -272,16 +352,19 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
         })
         .eq('id', existingProgress.id);
     } else {
+      // First time encountering this character
+      const initialProficiency = isCorrect ? 30 : 10; // Starting point based on first attempt
+      
       await supabaseClient
         .from('user_kana_progress')
         .insert({
           user_id: user.id,
           character_id: kanaItem.id,
-          proficiency: isCorrect ? 100 : 0,
+          proficiency: initialProficiency,
           mistake_count: isCorrect ? 0 : 1,
           total_practice_count: 1,
           last_practiced: new Date().toISOString(),
-          review_due: calculateNextReviewDate(isCorrect ? 100 : 0).toISOString()
+          review_due: calculateNextReviewDate(initialProficiency).toISOString()
         });
     }
   };
