@@ -22,10 +22,10 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/kana-learning" element={<KanaLearning />} />
             
             {/* Protected routes */}
             <Route path="/" element={<RequireAuth />}>
@@ -33,6 +33,9 @@ function App() {
               <Route path="edit-profile" element={<EditProfile />} />
               <Route path="assessment" element={<Assessment />} />
               <Route path="achievements" element={<Achievements />} />
+              <Route path="kana-learning" element={<KanaLearning />} />
+              <Route path="courses" element={<div>Courses Page</div>} />
+              <Route path="resources" element={<div>Resources Page</div>} />
             </Route>
             
             {/* Fallback routes */}

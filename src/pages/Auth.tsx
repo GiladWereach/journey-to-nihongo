@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,18 +19,28 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // If user is already logged in, redirect to home
-  if (user) {
-    const from = (location.state as any)?.from?.pathname || '/dashboard';
-    navigate(from, { replace: true });
-  }
+  // Set active tab from location state if present
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.tab === 'register') {
+      setActiveTab('register');
+    }
+  }, [location]);
+  
+  // If user is already logged in, redirect to the appropriate page
+  useEffect(() => {
+    if (user) {
+      const from = (location.state as any)?.from || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await signIn(email, password);
-      navigate('/dashboard');
+      // Navigation happens in the useEffect above
     } catch (error) {
       console.error('Login error:', error);
     } finally {
@@ -68,7 +78,7 @@ const Auth = () => {
               character={char}
               size="md"
               color="text-indigo"
-              animated={false} // Changed animated to false to prevent flickering
+              animated={false}
             />
           ))}
         </div>

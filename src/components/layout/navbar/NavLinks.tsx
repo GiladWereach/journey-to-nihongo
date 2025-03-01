@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface NavLinksProps {
   user: User | null;
@@ -12,6 +14,8 @@ interface NavLinksProps {
 
 const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
   const [showLearningDropdown, setShowLearningDropdown] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,22 +29,54 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
       document.removeEventListener('closeDropdowns', closeDropdowns);
     };
   }, []);
+
+  const handleLearningClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      toast({
+        title: "Login Required",
+        description: "Please log in to access learning materials.",
+        variant: "default",
+      });
+      navigate('/auth');
+      if (onClick) onClick();
+      return;
+    }
+    
+    e.stopPropagation();
+    setShowLearningDropdown(!showLearningDropdown);
+  };
+
+  const handleProtectedNavigation = (e: React.MouseEvent, path: string) => {
+    if (!user) {
+      e.preventDefault();
+      toast({
+        title: "Login Required",
+        description: "Please log in to access this content.",
+        variant: "default",
+      });
+      navigate('/auth');
+      if (onClick) onClick();
+      return;
+    }
+    
+    navigate(path);
+    setShowLearningDropdown(false);
+    if (onClick) onClick();
+  };
   
   return (
     <nav className={cn("items-center space-x-8", className)}>
       <div className="relative inline-block">
         <button
           className="text-gray-600 dark:text-gray-300 hover:text-indigo dark:hover:text-white transition-colors duration-200 flex items-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowLearningDropdown(!showLearningDropdown);
-          }}
+          onClick={handleLearningClick}
         >
           Learning
           <ChevronDown className="ml-1 h-4 w-4" />
         </button>
         
-        {showLearningDropdown && (
+        {showLearningDropdown && user && (
           <div 
             className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-indigo/95 ring-1 ring-black ring-opacity-5 z-50"
             onClick={(e) => e.stopPropagation()}
@@ -92,16 +128,38 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
       </div>
       
       <Link
-        to="/courses"
+        to={user ? "/courses" : "/auth"}
         className="text-gray-600 dark:text-gray-300 hover:text-indigo dark:hover:text-white transition-colors duration-200"
-        onClick={onClick}
+        onClick={(e) => {
+          if (!user) {
+            e.preventDefault();
+            toast({
+              title: "Login Required",
+              description: "Please log in to access courses.",
+              variant: "default",
+            });
+            navigate('/auth');
+          }
+          onClick && onClick();
+        }}
       >
         Courses
       </Link>
       <Link
-        to="/resources"
+        to={user ? "/resources" : "/auth"}
         className="text-gray-600 dark:text-gray-300 hover:text-indigo dark:hover:text-white transition-colors duration-200"
-        onClick={onClick}
+        onClick={(e) => {
+          if (!user) {
+            e.preventDefault();
+            toast({
+              title: "Login Required",
+              description: "Please log in to access resources.",
+              variant: "default",
+            });
+            navigate('/auth');
+          }
+          onClick && onClick();
+        }}
       >
         Resources
       </Link>

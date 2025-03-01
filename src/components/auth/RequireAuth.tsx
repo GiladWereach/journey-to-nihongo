@@ -1,6 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 interface RequireAuthProps {
   children?: React.ReactNode;
@@ -13,14 +14,15 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo border-t-transparent"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-indigo" />
+        <span className="ml-2 text-indigo">Loading...</span>
       </div>
     );
   }
 
   if (!user) {
     // Redirect to the login page, but save the current location
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;
