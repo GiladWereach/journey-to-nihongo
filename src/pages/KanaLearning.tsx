@@ -13,6 +13,7 @@ import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { Link } from 'react-router-dom';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from '@/lib/utils';
 
 const KanaLearning = () => {
   const { user } = useAuth();
