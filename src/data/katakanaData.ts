@@ -1109,7 +1109,7 @@ export const katakanaCharacters: KanaCharacter[] = [
       }
     ]
   },
-    {
+  {
     id: 'katakana-gi',
     character: 'ギ',
     romaji: 'gi',
@@ -1197,4 +1197,8 @@ export const katakanaCharacters: KanaCharacter[] = [
         word: 'ゴルフ',
         romaji: 'gorufu',
         meaning: 'golf',
-        reading: '
+        reading: 'ゴルフ'
+      }
+    ]
+  }
+];

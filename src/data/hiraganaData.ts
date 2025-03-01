@@ -1,3 +1,4 @@
+
 import { KanaCharacter } from '@/types/kana';
 
 // Complete hiragana character set
@@ -1207,4 +1208,21 @@ export const hiraganaCharacters: KanaCharacter[] = [
     type: 'hiragana',
     stroke_count: 5,
     stroke_order: ['1', '2', '3', '4', '5'],
-    mnemonic: 'た (ta) with two dots becomes だ (
+    mnemonic: 'た (ta) with two dots becomes だ (da)',
+    examples: [
+      {
+        word: 'だれ',
+        romaji: 'dare',
+        meaning: 'who',
+        reading: 'だれ'
+      },
+      {
+        word: 'だいがく',
+        romaji: 'daigaku',
+        meaning: 'university',
+        reading: 'だいがく'
+      }
+    ]
+  }
+  // Add the missing characters in this section if needed
+];
