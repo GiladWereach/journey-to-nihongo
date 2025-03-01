@@ -17,7 +17,10 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          points: number | null
           required_progress: number
+          requirements: string | null
+          title: string | null
         }
         Insert: {
           category: string
@@ -26,7 +29,10 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          points?: number | null
           required_progress: number
+          requirements?: string | null
+          title?: string | null
         }
         Update: {
           category?: string
@@ -35,7 +41,10 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          points?: number | null
           required_progress?: number
+          requirements?: string | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -192,28 +201,90 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          daily_goal_minutes: number | null
           display_name: string | null
+          full_name: string | null
           id: string
+          learning_goal: string | null
+          learning_level: string | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          daily_goal_minutes?: number | null
           display_name?: string | null
+          full_name?: string | null
           id: string
+          learning_goal?: string | null
+          learning_level?: string | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          daily_goal_minutes?: number | null
           display_name?: string | null
+          full_name?: string | null
           id?: string
+          learning_goal?: string | null
+          learning_level?: string | null
           updated_at?: string | null
           username?: string | null
         }
         Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          duration_minutes: number
+          id: string
+          module: string
+          notes: string | null
+          performance_score: number | null
+          session_date: string
+          topics: string[]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          duration_minutes: number
+          id?: string
+          module: string
+          notes?: string | null
+          performance_score?: number | null
+          session_date: string
+          topics?: string[]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          duration_minutes?: number
+          id?: string
+          module?: string
+          notes?: string | null
+          performance_score?: number | null
+          session_date?: string
+          topics?: string[]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_achievements: {
         Row: {
@@ -318,7 +389,11 @@ export type Database = {
         Row: {
           created_at: string | null
           daily_goal: number | null
+          display_furigana: boolean | null
           id: string
+          notifications_enabled: boolean | null
+          preferred_study_time: string | null
+          prior_knowledge: string | null
           reminder_time: string | null
           study_reminder: boolean | null
           theme: string | null
@@ -327,7 +402,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           daily_goal?: number | null
+          display_furigana?: boolean | null
           id: string
+          notifications_enabled?: boolean | null
+          preferred_study_time?: string | null
+          prior_knowledge?: string | null
           reminder_time?: string | null
           study_reminder?: boolean | null
           theme?: string | null
@@ -336,7 +415,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           daily_goal?: number | null
+          display_furigana?: boolean | null
           id?: string
+          notifications_enabled?: boolean | null
+          preferred_study_time?: string | null
+          prior_knowledge?: string | null
           reminder_time?: string | null
           study_reminder?: boolean | null
           theme?: string | null
