@@ -1196,8 +1196,4 @@ export const katakanaCharacters: KanaCharacter[] = [
         word: 'ゴルフ',
         romaji: 'gorufu',
         meaning: 'golf',
-        reading: 'ゴルフ'
-      }
-    ]
-  }
-];
+        reading

@@ -18,6 +18,27 @@ export const kanaService = {
       : katakanaCharacters;
   },
   
+  // Get characters by specific row/group
+  getKanaByRow: (type: KanaType, row: string): KanaCharacter[] => {
+    const allKana = type === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
+    
+    // Filter by the row identifier in the id field
+    return allKana.filter(kana => kana.id.includes(`${type}-${row}`));
+  },
+  
+  // Get specific dakuten/handakuten character groups
+  getDakutenKana: (type: KanaType): KanaCharacter[] => {
+    const allKana = type === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
+    
+    // These are the characters with dakuten (voiced) marks
+    const dakutenRows = ['g', 'z', 'd', 'b', 'p', 'v', 'j'];
+    
+    return allKana.filter(kana => {
+      const id = kana.id.toLowerCase();
+      return dakutenRows.some(row => id.includes(`-${row}`));
+    });
+  },
+  
   getUserKanaProgress: async (userId: string): Promise<UserKanaProgress[]> => {
     try {
       const { data, error } = await supabaseClient
