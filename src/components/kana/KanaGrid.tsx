@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import KanaCard from './KanaCard';
 import { KanaCharacter, KanaGroup, KanaType } from '@/types/kana';
@@ -174,8 +173,8 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       </div>
 
-      {/* Section navigation - positioned below the tabs */}
-      <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
+      {/* Section navigation - positioned below the tabs but with higher z-index */}
+      <div className="sticky top-[104px] z-30 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
         <div className="overflow-x-auto hide-scrollbar py-1">
           <div className="flex space-x-1 px-2 justify-center">
             {allSections.map(section => {
@@ -211,10 +210,10 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         <div 
           key={section}
           ref={el => sectionRefs.current[section] = el}
-          className="scroll-mt-40"
+          className="scroll-mt-[160px]" 
           id={`section-${section}`}
         >
-          <div className="sticky top-[106px] z-10 bg-background/95 backdrop-blur-sm pb-1">
+          <div className="sticky top-[154px] z-20 bg-background/95 backdrop-blur-sm pb-1">
             <h2 className="text-2xl font-bold text-indigo border-b border-indigo/10 pb-1 mb-3">
               {section}
             </h2>

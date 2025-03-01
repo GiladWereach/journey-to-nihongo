@@ -101,7 +101,7 @@ const KanaLearning = () => {
 
   return (
     <div className="container mx-auto px-4">
-      {/* Header Navigation - Fixed position with proper z-index */}
+      {/* Header Navigation - Fixed position with higher z-index */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md shadow-sm border-b">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -180,8 +180,8 @@ const KanaLearning = () => {
           onValueChange={setActiveTab}
           value={activeTab}
         >
-          {/* Tabs list - Sticky with proper z-index and margin */}
-          <TabsList className="grid grid-cols-4 mb-6 sticky top-16 z-30 bg-background/95 backdrop-blur-sm shadow-sm p-1 rounded-lg max-w-md mx-auto">
+          {/* Tabs list - Sticky with proper z-index */}
+          <TabsList className="grid grid-cols-4 mb-6 sticky top-16 z-40 bg-background/95 backdrop-blur-sm shadow-sm p-1 rounded-lg max-w-md mx-auto">
             <TabsTrigger value="intro" className="flex items-center gap-2 rounded-md">
               <BookOpen size={16} />
               Intro
