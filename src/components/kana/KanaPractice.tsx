@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -103,8 +102,16 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       });
     }
 
-    // Shuffle the list
+    // Instead of showing all characters at once, limit to a manageable practice set
+    // Shuffle the list first to get random characters
     newKanaList = [...newKanaList].sort(() => Math.random() - 0.5);
+    
+    // Take only 20 characters for practice to keep it manageable
+    const practiceSetSize = 20;
+    if (newKanaList.length > practiceSetSize) {
+      newKanaList = newKanaList.slice(0, practiceSetSize);
+    }
+    
     setKanaList(newKanaList);
   }, [kanaType, user, userProgress]);
 
@@ -120,11 +127,23 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     const correctRomaji = kanaList[currentKanaIndex].romaji;
     let newOptions = [correctRomaji];
 
-    while (newOptions.length < 4) {
-      const randomKana = getRandomKana(kanaType);
-      if (randomKana && !newOptions.includes(randomKana.romaji)) {
-        newOptions.push(randomKana.romaji);
+    // Get all possible options of the same type
+    const allKana = getKanaByType(kanaType);
+    
+    // Create a pool of unique romaji values that aren't the correct answer
+    const romajiPool = [...new Set(allKana.map(k => k.romaji))].filter(r => r !== correctRomaji);
+    
+    // Randomly select options from the pool
+    while (newOptions.length < 4 && romajiPool.length > 0) {
+      const randomIndex = Math.floor(Math.random() * romajiPool.length);
+      const selectedRomaji = romajiPool[randomIndex];
+      
+      if (!newOptions.includes(selectedRomaji)) {
+        newOptions.push(selectedRomaji);
       }
+      
+      // Remove this option from the pool to avoid selecting it again
+      romajiPool.splice(randomIndex, 1);
     }
 
     // Shuffle the options
