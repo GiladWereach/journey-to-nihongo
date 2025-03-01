@@ -159,7 +159,7 @@ const Assessment = () => {
       if (settingsError) throw settingsError;
       
       // Create a study session for the assessment completion
-      await supabase
+      const { error: sessionError } = await supabase
         .from('study_sessions')
         .insert({
           user_id: user.id,
@@ -169,6 +169,8 @@ const Assessment = () => {
           session_date: new Date().toISOString(),
           completed: true
         });
+        
+      if (sessionError) throw sessionError;
       
       toast({
         title: 'Assessment Complete',

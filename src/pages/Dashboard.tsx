@@ -11,15 +11,15 @@ import { Edit, Calendar, Award, BookOpen, BarChart2 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import { Profile, UserSettings } from '@/types/kana';
 
-interface KanaLearningSession {
+interface StudySession {
   id: string;
   user_id: string;
-  start_time: string;
-  end_time?: string;
-  kana_type: string;
-  characters_studied: string[];
-  accuracy?: number;
+  module: string;
+  topics: string[];
+  duration_minutes: number;
+  session_date: string;
   completed: boolean;
+  performance_score?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -29,7 +29,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [studySessions, setStudySessions] = useState<KanaLearningSession[]>([]);
+  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAssessmentPrompt, setShowAssessmentPrompt] = useState(false);
   const { toast } = useToast();
@@ -42,13 +42,7 @@ const Dashboard = () => {
       return sessionDate >= oneWeekAgo;
     })
     .reduce((sum, session) => {
-      if (session.start_time && session.end_time) {
-        const startTime = new Date(session.start_time);
-        const endTime = new Date(session.end_time);
-        const durationInMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-        return sum + durationInMinutes;
-      }
-      return sum;
+      return sum + session.duration_minutes;
     }, 0);
   
   const calculateStreak = () => {
@@ -126,7 +120,7 @@ const Dashboard = () => {
         setSettings(settingsData as UserSettings);
         
         const { data: sessionsData, error: sessionsError } = await supabase
-          .from('kana_learning_sessions')
+          .from('study_sessions')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -135,7 +129,7 @@ const Dashboard = () => {
         setStudySessions(sessionsData || []);
         
         const hasCompletedAssessment = (sessionsData || []).some(
-          session => session.kana_type === 'both' && session.completed
+          session => session.module === 'assessment' && session.completed
         );
         
         setShowAssessmentPrompt(!hasCompletedAssessment);
