@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ interface NavLinksProps {
 
 const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
   const [showLearningDropdown, setShowLearningDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -23,10 +24,18 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
       setShowLearningDropdown(false);
     };
     
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowLearningDropdown(false);
+      }
+    };
+    
     document.addEventListener('closeDropdowns', closeDropdowns);
+    document.addEventListener('mousedown', handleClickOutside);
     
     return () => {
       document.removeEventListener('closeDropdowns', closeDropdowns);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -67,18 +76,21 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
   
   return (
     <nav className={cn("items-center space-x-8", className)}>
-      <div className="relative inline-block">
+      <div className="relative inline-block" ref={dropdownRef}>
         <button
           className="text-gray-600 dark:text-gray-300 hover:text-indigo dark:hover:text-white transition-colors duration-200 flex items-center"
           onClick={handleLearningClick}
+          aria-expanded={showLearningDropdown}
+          aria-haspopup="true"
         >
           Learning
-          <ChevronDown className="ml-1 h-4 w-4" />
+          <ChevronDown className={cn("ml-1 h-4 w-4 transition-transform", 
+            showLearningDropdown && "transform rotate-180")} />
         </button>
         
         {showLearningDropdown && user && (
           <div 
-            className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-indigo/95 ring-1 ring-black ring-opacity-5 z-50"
+            className="absolute left-0 mt-2 w-52 rounded-md shadow-lg bg-white dark:bg-indigo ring-1 ring-black ring-opacity-5 z-50"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="py-1" role="menu" aria-orientation="vertical">
@@ -89,6 +101,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
                   setShowLearningDropdown(false);
                   onClick && onClick();
                 }}
+                role="menuitem"
               >
                 Kana Mastery
               </Link>
@@ -99,6 +112,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
                   setShowLearningDropdown(false);
                   onClick && onClick();
                 }}
+                role="menuitem"
               >
                 Kanji Basics
               </Link>
@@ -109,6 +123,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
                   setShowLearningDropdown(false);
                   onClick && onClick();
                 }}
+                role="menuitem"
               >
                 Grammar Essentials
               </Link>
@@ -119,6 +134,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ user, className, onClick }) => {
                   setShowLearningDropdown(false);
                   onClick && onClick();
                 }}
+                role="menuitem"
               >
                 Conversation Practice
               </Link>

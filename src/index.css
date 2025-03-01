@@ -164,10 +164,55 @@
   
   /* Navigation utilities */
   .sticky-nav {
-    @apply sticky top-0 z-30 bg-background/95 backdrop-blur-sm shadow-sm;
+    @apply sticky top-0 z-40 bg-background/95 backdrop-blur-sm shadow-sm;
   }
   
   .section-header {
-    @apply sticky top-16 z-20 bg-background/95 backdrop-blur-sm py-1 border-b border-border/30;
+    @apply sticky top-16 z-30 bg-background/95 backdrop-blur-sm py-1 border-b border-border/30;
+  }
+
+  /* Enhanced dropdown styling */
+  .dropdown-menu {
+    @apply absolute z-50 mt-2 w-48 rounded-md shadow-lg border border-gray-100 dark:border-gray-700 
+    bg-white dark:bg-indigo/95 overflow-hidden;
+  }
+
+  .dropdown-item {
+    @apply block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 
+    hover:bg-gray-100 dark:hover:bg-indigo/80 transition-colors duration-150;
+  }
+
+  /* Z-index layering system */
+  .z-nav-dropdown {
+    @apply z-40;
+  }
+  
+  .z-nav-primary {
+    @apply z-50;
+  }
+  
+  .z-nav-secondary {
+    @apply z-30;
+  }
+  
+  .z-content {
+    @apply z-10;
+  }
+  
+  .z-overlay {
+    @apply z-20;
+  }
+
+  /* Card and container spacing helpers */
+  .content-spacing {
+    @apply space-y-8;
+  }
+  
+  .card-padding {
+    @apply p-6;
+  }
+  
+  .section-margin {
+    @apply my-8;
   }
 }

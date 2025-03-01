@@ -24,8 +24,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   return (
     <div
       className={cn(
-        'md:hidden fixed left-0 right-0 bg-white dark:bg-indigo shadow-lg transition-all duration-300 ease-in-out overflow-hidden',
-        isOpen ? 'max-h-[500px] py-4' : 'max-h-0 py-0',
+        'md:hidden fixed left-0 right-0 top-[56px] bg-white dark:bg-indigo/95 shadow-lg transition-all duration-300 ease-in-out overflow-hidden z-40 border-b',
+        isOpen ? 'max-h-[500px] py-4' : 'max-h-0 py-0 border-b-0',
       )}
     >
       <div className="max-w-7xl mx-auto px-4 space-y-4">

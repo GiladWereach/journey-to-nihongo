@@ -14,6 +14,7 @@ export interface KanaCharacter {
     word: string;
     reading: string;
     meaning: string;
+    romaji?: string; // Added this to fix example errors
   }[];
   created_at?: string;
 }
@@ -23,6 +24,7 @@ export interface KanaGroup {
   name: string;
   type: 'hiragana' | 'katakana';
   description?: string;
+  characters?: string[]; // Added to match the service
   created_at?: string;
 }
 
