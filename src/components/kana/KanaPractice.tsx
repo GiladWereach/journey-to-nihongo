@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
 import { kanaService } from '@/services/kanaService';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseClient } from '@/lib/supabase';
 import { calculateNextReviewDate } from '@/lib/utils';
@@ -50,6 +49,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     message: string;
     mnemonic: string;
   }>({ show: false, isCorrect: false, message: '', mnemonic: '' });
+  const [showNextButton, setShowNextButton] = useState(false);
 
   function getKanaByType(type: KanaType | 'all'): KanaCharacter[] {
     if (type === 'all') {
@@ -143,12 +143,10 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   }, [kanaList, currentKanaIndex, kanaType]);
 
   const generateMnemonic = (kanaItem: KanaCharacter) => {
-    // If the kana has a mnemonic, use it
     if (kanaItem.mnemonic) {
       return kanaItem.mnemonic;
     }
 
-    // Generate a simple mnemonic based on the character and romaji
     const simple = {
       a: "Looks like an 'a' with a roof",
       i: "Two short vertical lines, like 'i' without the dot",
@@ -171,7 +169,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       ja: "Like 'sha' with extra marks (voiced 'sh' becomes 'j')"
     };
 
-    // Map romaji to mnemonic or return a default
     return simple[kanaItem.romaji as keyof typeof simple] || 
       `Think of the shape as ${kanaItem.character} for "${kanaItem.romaji}"`;
   };
@@ -218,34 +215,35 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       }
     }
 
-    setTimeout(() => {
-      setIsCorrect(null);
-      setFeedback(prev => ({ ...prev, show: false }));
-      if (currentKanaIndex < kanaList.length - 1) {
-        setCurrentKanaIndex(currentKanaIndex + 1);
-      } else {
-        const total = kanaList.length;
-        const correct = correctCount + (isCorrectSelection ? 1 : 0);
-        const incorrect = incorrectCount + (isCorrectSelection ? 0 : 1);
-        const accuracy = total > 0 ? (correct / total) * 100 : 0;
-        
-        const results: PracticeResult = {
-          correct,
-          incorrect,
-          total,
-          kanaType,
-          practiceType,
-          accuracy,
-          totalQuestions: total,
-          correctAnswers: correct,
-          characterResults: [
-            ...characterResults,
-            { character: kanaItem.character, correct: isCorrectSelection }
-          ],
-        };
-        onComplete(results);
-      }
-    }, 3000);
+    setShowNextButton(true);
+  };
+
+  const handleNext = () => {
+    setIsCorrect(null);
+    setFeedback(prev => ({ ...prev, show: false }));
+    setShowNextButton(false);
+    
+    if (currentKanaIndex < kanaList.length - 1) {
+      setCurrentKanaIndex(currentKanaIndex + 1);
+    } else {
+      const total = kanaList.length;
+      const correct = correctCount;
+      const incorrect = incorrectCount;
+      const accuracy = total > 0 ? (correct / total) * 100 : 0;
+      
+      const results: PracticeResult = {
+        correct,
+        incorrect,
+        total,
+        kanaType,
+        practiceType,
+        accuracy,
+        totalQuestions: total,
+        correctAnswers: correct,
+        characterResults: characterResults,
+      };
+      onComplete(results);
+    }
   };
 
   const updateUserProgress = async (isCorrect: boolean, kanaItem: KanaCharacter) => {
@@ -329,12 +327,13 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
             key={index}
             onClick={() => handleAnswer(option)}
             disabled={isCorrect !== null}
-            className={`transition-all duration-200 ${isCorrect === true && option === kanaItem.romaji
-              ? 'bg-green-500 hover:bg-green-700 text-white'
-              : isCorrect === false && option === kanaItem.romaji
-                ? 'bg-red-500 hover:bg-red-700 text-white'
-                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100'
-              }`}
+            className={`transition-all duration-200 border-2 ${
+              isCorrect === true && option === kanaItem.romaji
+                ? 'bg-green-500 hover:bg-green-700 text-white border-green-600'
+                : isCorrect === false && option === kanaItem.romaji
+                  ? 'bg-red-500 hover:bg-red-700 text-white border-red-600'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100 border-indigo-200 dark:border-indigo-700'
+                }`}
           >
             {option}
           </Button>
@@ -342,15 +341,15 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       </div>
 
       {feedback.show && (
-        <div className={`my-4 p-4 rounded-lg animate-fade-in ${
+        <div className={`my-4 p-3 rounded-lg animate-fade-in ${
           feedback.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
         }`}>
-          <p className={`font-semibold ${
+          <p className={`font-semibold text-sm ${
             feedback.isCorrect ? 'text-green-600' : 'text-amber-600'
           }`}>
             {feedback.message}
           </p>
-          <div className="mt-2 text-sm text-gray-700">
+          <div className="mt-1 text-xs text-gray-700">
             <p><strong>Memory Tip:</strong> {feedback.mnemonic}</p>
             {kanaItem.examples && kanaItem.examples.length > 0 && (
               <p className="mt-1">
@@ -359,6 +358,17 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
               </p>
             )}
           </div>
+        </div>
+      )}
+
+      {showNextButton && (
+        <div className="flex justify-center mt-4">
+          <Button 
+            onClick={handleNext}
+            className="bg-indigo hover:bg-indigo/90"
+          >
+            Next Question
+          </Button>
         </div>
       )}
     </div>
