@@ -370,13 +370,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_kana_progress_character_id_fkey"
-            columns: ["character_id"]
-            isOneToOne: false
-            referencedRelation: "kana_characters"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "user_kana_progress_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false

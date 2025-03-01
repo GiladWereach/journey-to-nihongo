@@ -47,6 +47,7 @@ export const kanaService = {
         .eq('user_id', userId);
         
       if (error) {
+        console.error('Error fetching user progress:', error);
         throw error;
       }
       
@@ -63,6 +64,48 @@ export const kanaService = {
     } catch (error) {
       console.error('Error fetching user progress:', error);
       return [];
+    }
+  },
+  
+  // Add new method to calculate overall proficiency for a kana type
+  calculateOverallProficiency: async (userId: string, kanaType: KanaType | 'all'): Promise<number> => {
+    try {
+      const userProgress = await kanaService.getUserKanaProgress(userId);
+      if (!userProgress || userProgress.length === 0) return 0;
+      
+      // Get all kana characters of the specified type
+      const targetKana = kanaType === 'all' 
+        ? kanaService.getAllKana() 
+        : kanaService.getKanaByType(kanaType);
+      
+      // Map character IDs for easier lookup
+      const kanaIds = targetKana.map(kana => kana.id);
+      
+      // Filter progress entries for the targeted kana type
+      const relevantProgress = userProgress.filter(
+        progress => kanaType === 'all' || progress.character_id.startsWith(kanaType)
+      );
+      
+      // Calculate total proficiency
+      let totalProficiency = 0;
+      
+      // First, count progress entries for characters that have been practiced
+      const practicedCharactersMap = new Map();
+      relevantProgress.forEach(progress => {
+        practicedCharactersMap.set(progress.character_id, progress.proficiency);
+        totalProficiency += progress.proficiency;
+      });
+      
+      // Account for characters with no progress
+      const unpracticedCharacterCount = kanaIds.length - practicedCharactersMap.size;
+      
+      // Calculate average proficiency (including unpracticed characters as 0%)
+      const overallProficiency = totalProficiency / (kanaIds.length || 1);
+      
+      return Math.min(Math.round(overallProficiency), 100);
+    } catch (error) {
+      console.error('Error calculating overall proficiency:', error);
+      return 0;
     }
   }
 };

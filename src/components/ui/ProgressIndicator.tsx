@@ -14,6 +14,9 @@ interface ProgressIndicatorProps {
   showTicks?: boolean;
   tickCount?: number;
   proficiencyLevel?: 'beginner' | 'intermediate' | 'advanced' | 'mastered';
+  showMilestones?: boolean;
+  milestones?: number[];
+  glowOnCompletion?: boolean;
 }
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
@@ -28,6 +31,9 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   showTicks = false,
   tickCount = 5,
   proficiencyLevel,
+  showMilestones = false,
+  milestones = [25, 50, 75, 100],
+  glowOnCompletion = false,
 }) => {
   // Ensure progress is between 0 and 100
   const normalizedProgress = Math.min(100, Math.max(0, progress));
@@ -79,6 +85,28 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
     return ticks;
   };
 
+  // Generate milestone markers
+  const renderMilestones = () => {
+    if (!showMilestones) return null;
+    
+    return milestones.map((milestone, index) => (
+      <div 
+        key={index}
+        className={cn(
+          "absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full border",
+          normalizedProgress >= milestone 
+            ? 'bg-white border-current' 
+            : 'bg-gray-200 border-gray-300'
+        )}
+        style={{ 
+          left: `${milestone}%`, 
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10
+        }}
+      />
+    ));
+  };
+
   const proficiencyLabels = {
     beginner: 'Beginner',
     intermediate: 'Intermediate',
@@ -107,17 +135,30 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           </div>
         </div>
       )}
-      <div className={cn('w-full bg-gray-100 rounded-full overflow-hidden relative', sizeClasses[size])}>
+      <div className={cn(
+        'w-full bg-gray-100 rounded-full overflow-hidden relative', 
+        sizeClasses[size],
+        glowOnCompletion && normalizedProgress >= 100 && 'shadow-glow'
+      )}>
         {renderTicks()}
+        {renderMilestones()}
         <div 
           className={cn(
             'transition-all duration-500 rounded-full', 
             progressColor,
-            animated && 'animate-pulse'
+            animated && 'animate-pulse',
+            glowOnCompletion && normalizedProgress >= 100 && 'animate-glow'
           )} 
           style={{ width: `${normalizedProgress}%` }}
         />
       </div>
+      
+      {/* Optional animated celebration for completed progress */}
+      {glowOnCompletion && normalizedProgress >= 100 && (
+        <div className="text-xs text-center text-green-600 animate-bounce mt-1">
+          ✨ Completed! ✨
+        </div>
+      )}
     </div>
   );
 };
