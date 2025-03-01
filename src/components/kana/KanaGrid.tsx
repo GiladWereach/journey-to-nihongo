@@ -1,16 +1,20 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import KanaCard from './KanaCard';
-import { KanaCharacter, KanaGroup, KanaType } from '@/types/kana';
+import { KanaCharacter, KanaType, UserKanaProgress } from '@/types/kana';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ChevronUp, Info } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { kanaService } from '@/services/kanaService';
+import ProgressIndicator from '@/components/ui/ProgressIndicator';
 
 interface KanaGridProps {
   kanaList: KanaCharacter[];
   className?: string;
+  userProgress?: UserKanaProgress[];
 }
 
 // Group kana by their first letter in romaji
@@ -38,13 +42,30 @@ const groupKanaBySection = (kanaList: KanaCharacter[]): Record<string, KanaChara
   return groups;
 };
 
-const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
+const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className, userProgress = [] }) => {
+  const { user } = useAuth();
   const [selectedType, setSelectedType] = useState<KanaType | 'all'>('all');
   const [expandedKana, setExpandedKana] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [localUserProgress, setLocalUserProgress] = useState<UserKanaProgress[]>(userProgress);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement>(null);
+  
+  // Fetch user progress if not provided and user is logged in
+  useEffect(() => {
+    if (user && userProgress.length === 0) {
+      kanaService.getUserKanaProgress(user.id)
+        .then(progress => {
+          setLocalUserProgress(progress);
+        })
+        .catch(error => {
+          console.error('Error fetching user progress:', error);
+        });
+    } else if (userProgress.length > 0) {
+      setLocalUserProgress(userProgress);
+    }
+  }, [user, userProgress]);
   
   // Filter kana by selected type
   const filteredKana = selectedType === 'all' 
@@ -126,6 +147,11 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   // Scroll to top button
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Get progress for a specific character
+  const getCharacterProgress = (characterId: string): UserKanaProgress | undefined => {
+    return localUserProgress.find(progress => progress.character_id === characterId);
   };
 
   return (
@@ -227,23 +253,41 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-8">
-            {kanaGroups[section].map((kana) => (
-              <KanaCard
-                key={kana.id}
-                kana={kana}
-                showDetails={expandedKana === kana.id}
-                onShowDetails={() => {
-                  if (expandedKana === kana.id) {
-                    setExpandedKana(null);
-                  } else {
-                    setExpandedKana(kana.id);
-                  }
-                }}
-                onPractice={() => {
-                  console.log(`Practice ${kana.character}`);
-                }}
-              />
-            ))}
+            {kanaGroups[section].map((kana) => {
+              const progress = getCharacterProgress(kana.id);
+              const proficiency = progress ? progress.proficiency : 0;
+              
+              return (
+                <div key={kana.id} className="flex flex-col">
+                  <KanaCard
+                    kana={kana}
+                    showDetails={expandedKana === kana.id}
+                    onShowDetails={() => {
+                      if (expandedKana === kana.id) {
+                        setExpandedKana(null);
+                      } else {
+                        setExpandedKana(kana.id);
+                      }
+                    }}
+                    onPractice={() => {
+                      console.log(`Practice ${kana.character}`);
+                    }}
+                  />
+                  
+                  {/* Add progress bar beneath each card */}
+                  {user && (
+                    <div className="mt-1 px-1">
+                      <ProgressIndicator 
+                        progress={proficiency} 
+                        size="sm" 
+                        showPercentage={false}
+                        color={kana.type === 'hiragana' ? 'bg-matcha' : 'bg-vermilion'}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}

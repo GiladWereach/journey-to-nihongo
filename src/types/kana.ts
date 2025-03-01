@@ -1,4 +1,3 @@
-
 // Add or update types as needed to align with the database schema
 
 export interface KanaCharacter {
@@ -105,7 +104,7 @@ export interface StudySession {
 
 export type KanaType = 'hiragana' | 'katakana';
 
-// Utility type for tracking practice results
+// Add interface for tracking practice results
 export interface KanaPracticeResult {
   characterId: string;
   correct: boolean;

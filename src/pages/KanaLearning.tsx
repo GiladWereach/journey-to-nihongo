@@ -1,3 +1,4 @@
+<lov-code>
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,26 +49,16 @@ const KanaLearning = () => {
         setIsLoadingProgress(false);
       }
     }
-  }, [user, toast]);
+  }, [user]);
 
-  const calculateOverallProgress = (type: KanaType | 'all'): number => {
-    if (!userProgress.length) return 0;
-    
-    let relevantKana;
-    if (type === 'all') {
-      relevantKana = allKana;
-    } else {
-      relevantKana = type === 'hiragana' ? hiragana : katakana;
+  const calculateOverallProgress = async (type: KanaType | 'all'): Promise<number> => {
+    if (!user) return 0;
+    try {
+      return await kanaService.calculateOverallProficiency(user.id, type);
+    } catch (error) {
+      console.error('Error calculating progress:', error);
+      return 0;
     }
-    
-    const relevantProgress = userProgress.filter(progress => 
-      relevantKana.some(kana => kana.id === progress.character_id)
-    );
-    
-    if (relevantProgress.length === 0) return 0;
-    
-    const totalProficiency = relevantProgress.reduce((sum, progress) => sum + progress.proficiency, 0);
-    return totalProficiency / relevantProgress.length;
   };
 
   const calculateProficiencyLevel = (proficiency: number): 'beginner' | 'intermediate' | 'advanced' | 'mastered' => {
@@ -121,9 +112,31 @@ const KanaLearning = () => {
     setActiveTab('practice');
   };
 
-  const handlePracticeComplete = (results: PracticeResult) => {
+  const handlePracticeComplete = async (results: PracticeResult) => {
     setPracticeResults(results);
     setPracticeMode('results');
+    
+    // Convert the results to the format expected by our service
+    if (user && results.characterResults.length > 0) {
+      const practiceResults = results.characterResults.map(result => {
+        // Find the kana character from our data
+        const kanaChar = kanaService.getAllKana().find(k => k.character === result.character);
+        if (!kanaChar) return null;
+        
+        return {
+          characterId: kanaChar.id,
+          correct: result.correct,
+          timestamp: new Date()
+        };
+      }).filter(Boolean) as Array<{ characterId: string; correct: boolean; timestamp: Date }>;
+      
+      // Update the progress in the database
+      await kanaService.updateProgressFromResults(user.id, practiceResults);
+      
+      // Refresh the user progress data
+      const updatedProgress = await kanaService.getUserKanaProgress(user.id);
+      setUserProgress(updatedProgress);
+    }
   };
 
   const handlePracticeCancel = () => {
@@ -275,7 +288,7 @@ const KanaLearning = () => {
                     
                     {user && (
                       <ProgressIndicator 
-                        progress={calculateOverallProgress('hiragana')} 
+                        progress={await calculateOverallProgress('hiragana')} 
                         size="sm" 
                         color="bg-matcha" 
                       />
@@ -292,7 +305,7 @@ const KanaLearning = () => {
                     
                     {user && (
                       <ProgressIndicator 
-                        progress={calculateOverallProgress('katakana')} 
+                        progress={await calculateOverallProgress('katakana')} 
                         size="sm" 
                         color="bg-vermilion" 
                       />
@@ -326,7 +339,10 @@ const KanaLearning = () => {
           </TabsContent>
           
           <TabsContent value="learn" className="space-y-4">
-            <KanaGrid kanaList={allKana} />
+            <KanaGrid 
+              kanaList={allKana} 
+              userProgress={userProgress}
+            />
           </TabsContent>
           
           <TabsContent value="practice" className="space-y-6">
@@ -515,10 +531,10 @@ const KanaLearning = () => {
                         </CardHeader>
                         <CardContent>
                           <div className="text-3xl font-bold text-indigo mb-2">
-                            {calculateOverallProgress('all').toFixed(0)}%
+                            {(await calculateOverallProgress('all')).toFixed(0)}%
                           </div>
                           <ProgressIndicator 
-                            progress={calculateOverallProgress('all')} 
+                            progress={await calculateOverallProgress('all')} 
                             size="md" 
                             color="bg-indigo"
                             showTicks
@@ -581,12 +597,12 @@ const KanaLearning = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <ProgressIndicator 
-                            progress={calculateOverallProgress('hiragana')} 
+                            progress={await calculateOverallProgress('hiragana')} 
                             size="md" 
                             color="bg-matcha" 
                             showPercentage
                             showTicks
-                            proficiencyLevel={calculateProficiencyLevel(calculateOverallProgress('hiragana'))}
+                            proficiencyLevel={calculateProficiencyLevel(await calculateOverallProgress('hiragana'))}
                             showLabel
                           />
                           
@@ -639,12 +655,12 @@ const KanaLearning = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <ProgressIndicator 
-                            progress={calculateOverallProgress('katakana')} 
+                            progress={await calculateOverallProgress('katakana')} 
                             size="md" 
                             color="bg-vermilion" 
                             showPercentage
                             showTicks
-                            proficiencyLevel={calculateProficiencyLevel(calculateOverallProgress('katakana'))}
+                            proficiencyLevel={calculateProficiencyLevel(await calculateOverallProgress('katakana'))}
                             showLabel
                           />
                           
@@ -793,92 +809,4 @@ const KanaLearning = () => {
                             <tbody>
                               {userProgress
                                 .sort((a, b) => b.last_practiced.getTime() - a.last_practiced.getTime())
-                                .slice(0, 5)
-                                .map((progress) => {
-                                  const kana = allKana.find(k => k.id === progress.character_id);
-                                  if (!kana) return null;
-                                  
-                                  const formatTimeAgo = (date: Date) => {
-                                    const now = new Date();
-                                    const diffInMs = now.getTime() - date.getTime();
-                                    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-                                    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-                                    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-                                    
-                                    if (diffInDays > 0) return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
-                                    if (diffInHours > 0) return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-                                    if (diffInMinutes > 0) return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-                                    return 'Just now';
-                                  };
-                                  
-                                  return (
-                                    <tr key={progress.character_id} className="border-b hover:bg-gray-50">
-                                      <td className="px-4 py-3 text-xl japanese-text">{kana.character}</td>
-                                      <td className="px-4 py-3">{kana.romaji}</td>
-                                      <td className="px-4 py-3 text-gray-500">{formatTimeAgo(progress.last_practiced)}</td>
-                                      <td className="px-4 py-3 w-1/3">
-                                        <ProgressIndicator 
-                                          progress={progress.proficiency} 
-                                          size="sm" 
-                                          proficiencyLevel={calculateProficiencyLevel(progress.proficiency)}
-                                        />
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <div className="text-center mt-8 pt-4">
-                      <p className="mb-4 text-gray-600">Continue building your skills with more practice</p>
-                      <Button 
-                        onClick={() => {
-                          setActiveTab('practice');
-                          setPracticeMode('selection');
-                        }}
-                        className="bg-indigo hover:bg-indigo/90"
-                      >
-                        Start New Practice
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <p className="mb-8">Start practicing to see your progress here!</p>
-                    
-                    <Button 
-                      onClick={() => {
-                        setActiveTab('practice');
-                        setPracticeMode('selection');
-                      }}
-                      className="bg-indigo hover:bg-indigo/90"
-                    >
-                      Start Practicing
-                    </Button>
-                  </div>
-                )
-              ) : (
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                  <p className="mb-4 text-amber-600">Sign in to track your progress</p>
-                  <p className="mb-4">
-                    Create an account or sign in to save your learning progress.
-                  </p>
-                  <Link to="/auth">
-                    <Button className="bg-indigo hover:bg-indigo/90">
-                      Sign In
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
-};
-
-export default KanaLearning;
+                                .slice(0

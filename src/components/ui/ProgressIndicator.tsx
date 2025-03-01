@@ -17,6 +17,8 @@ interface ProgressIndicatorProps {
   showMilestones?: boolean;
   milestones?: number[];
   glowOnCompletion?: boolean;
+  characterDisplay?: string;
+  showCharacter?: boolean;
 }
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
@@ -34,6 +36,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   showMilestones = false,
   milestones = [25, 50, 75, 100],
   glowOnCompletion = false,
+  characterDisplay,
+  showCharacter = false,
 }) => {
   // Ensure progress is between 0 and 100
   const normalizedProgress = Math.min(100, Math.max(0, progress));
@@ -116,9 +120,14 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
   return (
     <div className={cn('w-full space-y-1', className)}>
-      {(label || showPercentage || (showLabel && proficiencyLevel)) && (
+      {(label || showPercentage || (showLabel && proficiencyLevel) || showCharacter) && (
         <div className="flex justify-between items-center text-sm">
-          {label && <span className="font-medium">{label}</span>}
+          <div className="flex items-center gap-2">
+            {showCharacter && characterDisplay && (
+              <span className="text-lg font-japanese">{characterDisplay}</span>
+            )}
+            {label && <span className="font-medium">{label}</span>}
+          </div>
           <div className="flex items-center gap-2">
             {showLabel && proficiencyLevel && (
               <span className={cn(
@@ -131,7 +140,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                 {proficiencyLabels[level]}
               </span>
             )}
-            {showPercentage && <span className="text-muted-foreground">{normalizedProgress}%</span>}
+            {showPercentage && <span className="text-sm text-muted-foreground">{normalizedProgress}%</span>}
           </div>
         </div>
       )}
