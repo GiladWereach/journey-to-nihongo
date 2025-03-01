@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -137,6 +136,7 @@ const Assessment = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          display_name: user.user_metadata?.name || 'User',
           learning_level: knowledgeLevel,
           learning_goal: learningGoal,
           daily_goal_minutes: dailyGoalMinutes,
@@ -147,7 +147,7 @@ const Assessment = () => {
       
       // Update settings with prior knowledge
       const { error: settingsError } = await supabase
-        .from('profile_settings')
+        .from('user_settings')
         .update({
           prior_knowledge: priorKnowledge,
         })
@@ -157,15 +157,15 @@ const Assessment = () => {
       
       // Create a study session for the assessment completion
       await supabase
-        .from('study_sessions')
+        .from('kana_learning_sessions')
         .insert({
           user_id: user.id,
-          module: 'assessment',
-          topics: ['initial_assessment'],
-          duration_minutes: 5,
+          kana_type: 'both',
+          characters_studied: [],
+          accuracy: 100,
           completed: true,
-          performance_score: 100, // Perfect score for completing the assessment
-          notes: 'Initial skill assessment completed'
+          end_time: new Date().toISOString(),
+          start_time: new Date().toISOString()
         });
       
       toast({

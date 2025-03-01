@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,10 +11,11 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { ArrowLeft, Save, User } from 'lucide-react';
+import { Profile, UserSettings } from '@/types/kana';
 
 interface ProfileFormData {
   username: string;
-  full_name: string;
+  display_name: string;
   avatar_url: string;
   learning_level: string;
   learning_goal: string;
@@ -38,7 +38,7 @@ const EditProfile = () => {
   
   const [profileData, setProfileData] = useState<ProfileFormData>({
     username: '',
-    full_name: '',
+    display_name: '',
     avatar_url: '',
     learning_level: 'beginner',
     learning_goal: 'general',
@@ -67,7 +67,7 @@ const EditProfile = () => {
         
         // Fetch settings data
         const { data: settings, error: settingsError } = await supabase
-          .from('profile_settings')
+          .from('user_settings')
           .select('*')
           .eq('id', user.id)
           .single();
@@ -77,7 +77,7 @@ const EditProfile = () => {
         // Update state with fetched data
         setProfileData({
           username: profile.username || '',
-          full_name: profile.full_name || '',
+          display_name: profile.display_name || '',
           avatar_url: profile.avatar_url || '',
           learning_level: profile.learning_level || 'beginner',
           learning_goal: profile.learning_goal || 'general',
@@ -133,7 +133,7 @@ const EditProfile = () => {
         .from('profiles')
         .update({
           username: profileData.username,
-          full_name: profileData.full_name,
+          display_name: profileData.display_name,
           avatar_url: profileData.avatar_url,
           learning_level: profileData.learning_level,
           learning_goal: profileData.learning_goal,
@@ -145,7 +145,7 @@ const EditProfile = () => {
       
       // Update settings
       const { error: settingsError } = await supabase
-        .from('profile_settings')
+        .from('user_settings')
         .update({
           preferred_study_time: settingsData.preferred_study_time,
           notifications_enabled: settingsData.notifications_enabled,
@@ -215,13 +215,13 @@ const EditProfile = () => {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Full Name</Label>
+                  <Label htmlFor="display_name">Display Name</Label>
                   <Input
-                    id="full_name"
-                    name="full_name"
-                    value={profileData.full_name}
+                    id="display_name"
+                    name="display_name"
+                    value={profileData.display_name}
                     onChange={handleProfileChange}
-                    placeholder="Your full name"
+                    placeholder="Your display name"
                   />
                 </div>
                 

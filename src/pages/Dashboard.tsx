@@ -9,62 +9,58 @@ import LearningPathCard from '@/components/ui/LearningPathCard';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { Edit, Calendar, Award, BookOpen, BarChart2 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
+import { Profile, UserSettings } from '@/types/kana';
 
-interface Profile {
+interface KanaLearningSession {
   id: string;
-  username: string;
-  avatar_url: string;
-  full_name: string;
-  learning_level: string;
-  learning_goal: string;
-  daily_goal_minutes: number;
-}
-
-interface ProfileSettings {
-  preferred_study_time: string;
-  notifications_enabled: boolean;
-  display_furigana: boolean;
-  prior_knowledge: string;
-}
-
-interface StudySession {
-  id: string;
-  module: string;
-  topics: string[];
-  duration_minutes: number;
-  session_date: string;
+  user_id: string;
+  start_time: string;
+  end_time?: string;
+  kana_type: string;
+  characters_studied: string[];
+  accuracy?: number;
   completed: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [settings, setSettings] = useState<ProfileSettings | null>(null);
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [studySessions, setStudySessions] = useState<KanaLearningSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAssessmentPrompt, setShowAssessmentPrompt] = useState(false);
   const { toast } = useToast();
   
   const totalStudyTime = studySessions
     .filter(session => {
-      const sessionDate = new Date(session.session_date);
+      const sessionDate = new Date(session.created_at || '');
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       return sessionDate >= oneWeekAgo;
     })
-    .reduce((sum, session) => sum + session.duration_minutes, 0);
+    .reduce((sum, session) => {
+      if (session.start_time && session.end_time) {
+        const startTime = new Date(session.start_time);
+        const endTime = new Date(session.end_time);
+        const durationInMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+        return sum + durationInMinutes;
+      }
+      return sum;
+    }, 0);
   
   const calculateStreak = () => {
     if (studySessions.length === 0) return 0;
     
     const sortedSessions = [...studySessions].sort((a, b) => 
-      new Date(b.session_date).getTime() - new Date(a.session_date).getTime()
+      new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
     );
     
     const uniqueDates = new Set(
       sortedSessions.map(session => 
-        new Date(session.session_date).toISOString().split('T')[0]
+        new Date(session.created_at || '').toISOString().split('T')[0]
       )
     );
     
@@ -118,28 +114,28 @@ const Dashboard = () => {
           .single();
           
         if (profileError) throw profileError;
-        setProfile(profileData);
+        setProfile(profileData as Profile);
         
         const { data: settingsData, error: settingsError } = await supabase
-          .from('profile_settings')
+          .from('user_settings')
           .select('*')
           .eq('id', user.id)
           .single();
           
         if (settingsError) throw settingsError;
-        setSettings(settingsData);
+        setSettings(settingsData as UserSettings);
         
         const { data: sessionsData, error: sessionsError } = await supabase
-          .from('study_sessions')
+          .from('kana_learning_sessions')
           .select('*')
           .eq('user_id', user.id)
-          .order('session_date', { ascending: false });
+          .order('created_at', { ascending: false });
           
         if (sessionsError) throw sessionsError;
         setStudySessions(sessionsData || []);
         
         const hasCompletedAssessment = (sessionsData || []).some(
-          session => session.module === 'assessment'
+          session => session.kana_type === 'both' && session.completed
         );
         
         setShowAssessmentPrompt(!hasCompletedAssessment);

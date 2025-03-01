@@ -45,3 +45,45 @@ export interface KanaLearningSession {
   accuracy: number; // 0-100
   completed: boolean;
 }
+
+// Database-aligned types
+export interface Profile {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  full_name?: string;
+  learning_level?: string;
+  learning_goal?: string;
+  daily_goal_minutes?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserSettings {
+  id: string;
+  theme?: string;
+  study_reminder?: boolean;
+  reminder_time?: string;
+  daily_goal?: number;
+  prior_knowledge?: string;
+  preferred_study_time?: string;
+  notifications_enabled?: boolean;
+  display_furigana?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StudySession {
+  id: string;
+  user_id: string;
+  module: string;
+  topics: string[];
+  duration_minutes: number;
+  session_date: string;
+  completed: boolean;
+  performance_score?: number;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
