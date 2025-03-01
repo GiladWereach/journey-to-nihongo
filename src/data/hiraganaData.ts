@@ -1,34 +1,32 @@
-
 import { KanaCharacter } from '@/types/kana';
 
 // Complete hiragana character set
 export const hiraganaCharacters: KanaCharacter[] = [
-  // Basic vowels
   {
-    id: 'a',
+    id: 'hiragana-a',
     character: 'あ',
     romaji: 'a',
     type: 'hiragana',
     stroke_count: 3,
     stroke_order: ['1', '2', '3'],
-    mnemonic: 'Looks like an open mouth saying "ahh"',
+    mnemonic: 'Looks like a person with their mouth open saying "a"',
     examples: [
       {
-        word: 'あかい',
-        romaji: 'akai',
+        word: 'あか',
+        romaji: 'aka',
         meaning: 'red',
-        reading: 'あかい'
+        reading: 'あか'
       },
       {
-        word: 'あさ',
-        romaji: 'asa',
-        meaning: 'morning',
-        reading: 'あさ'
+        word: 'あめ',
+        romaji: 'ame',
+        meaning: 'rain',
+        reading: 'あめ'
       }
     ]
   },
   {
-    id: 'i',
+    id: 'hiragana-i',
     character: 'い',
     romaji: 'i',
     type: 'hiragana',
@@ -51,7 +49,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'u',
+    id: 'hiragana-u',
     character: 'う',
     romaji: 'u',
     type: 'hiragana',
@@ -74,7 +72,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'e',
+    id: 'hiragana-e',
     character: 'え',
     romaji: 'e',
     type: 'hiragana',
@@ -97,7 +95,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'o',
+    id: 'hiragana-o',
     character: 'お',
     romaji: 'o',
     type: 'hiragana',
@@ -122,7 +120,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // K-row
   {
-    id: 'ka',
+    id: 'hiragana-ka',
     character: 'か',
     romaji: 'ka',
     type: 'hiragana',
@@ -145,7 +143,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ki',
+    id: 'hiragana-ki',
     character: 'き',
     romaji: 'ki',
     type: 'hiragana',
@@ -168,7 +166,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ku',
+    id: 'hiragana-ku',
     character: 'く',
     romaji: 'ku',
     type: 'hiragana',
@@ -191,7 +189,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ke',
+    id: 'hiragana-ke',
     character: 'け',
     romaji: 'ke',
     type: 'hiragana',
@@ -214,7 +212,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ko',
+    id: 'hiragana-ko',
     character: 'こ',
     romaji: 'ko',
     type: 'hiragana',
@@ -239,7 +237,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // S-row
   {
-    id: 'sa',
+    id: 'hiragana-sa',
     character: 'さ',
     romaji: 'sa',
     type: 'hiragana',
@@ -262,7 +260,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'shi',
+    id: 'hiragana-shi',
     character: 'し',
     romaji: 'shi',
     type: 'hiragana',
@@ -285,7 +283,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'su',
+    id: 'hiragana-su',
     character: 'す',
     romaji: 'su',
     type: 'hiragana',
@@ -308,7 +306,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'se',
+    id: 'hiragana-se',
     character: 'せ',
     romaji: 'se',
     type: 'hiragana',
@@ -331,7 +329,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'so',
+    id: 'hiragana-so',
     character: 'そ',
     romaji: 'so',
     type: 'hiragana',
@@ -356,7 +354,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // T-row
   {
-    id: 'ta',
+    id: 'hiragana-ta',
     character: 'た',
     romaji: 'ta',
     type: 'hiragana',
@@ -379,7 +377,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'chi',
+    id: 'hiragana-chi',
     character: 'ち',
     romaji: 'chi',
     type: 'hiragana',
@@ -402,7 +400,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'tsu',
+    id: 'hiragana-tsu',
     character: 'つ',
     romaji: 'tsu',
     type: 'hiragana',
@@ -425,7 +423,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'te',
+    id: 'hiragana-te',
     character: 'て',
     romaji: 'te',
     type: 'hiragana',
@@ -448,7 +446,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'to',
+    id: 'hiragana-to',
     character: 'と',
     romaji: 'to',
     type: 'hiragana',
@@ -473,7 +471,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // N-row
   {
-    id: 'na',
+    id: 'hiragana-na',
     character: 'な',
     romaji: 'na',
     type: 'hiragana',
@@ -496,7 +494,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ni',
+    id: 'hiragana-ni',
     character: 'に',
     romaji: 'ni',
     type: 'hiragana',
@@ -519,7 +517,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'nu',
+    id: 'hiragana-nu',
     character: 'ぬ',
     romaji: 'nu',
     type: 'hiragana',
@@ -542,7 +540,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ne',
+    id: 'hiragana-ne',
     character: 'ね',
     romaji: 'ne',
     type: 'hiragana',
@@ -565,7 +563,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'no',
+    id: 'hiragana-no',
     character: 'の',
     romaji: 'no',
     type: 'hiragana',
@@ -590,7 +588,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // H-row
   {
-    id: 'ha',
+    id: 'hiragana-ha',
     character: 'は',
     romaji: 'ha',
     type: 'hiragana',
@@ -613,7 +611,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'hi',
+    id: 'hiragana-hi',
     character: 'ひ',
     romaji: 'hi',
     type: 'hiragana',
@@ -636,7 +634,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'fu',
+    id: 'hiragana-fu',
     character: 'ふ',
     romaji: 'fu',
     type: 'hiragana',
@@ -659,7 +657,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'he',
+    id: 'hiragana-he',
     character: 'へ',
     romaji: 'he',
     type: 'hiragana',
@@ -682,7 +680,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ho',
+    id: 'hiragana-ho',
     character: 'ほ',
     romaji: 'ho',
     type: 'hiragana',
@@ -707,7 +705,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // M-row
   {
-    id: 'ma',
+    id: 'hiragana-ma',
     character: 'ま',
     romaji: 'ma',
     type: 'hiragana',
@@ -730,7 +728,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'mi',
+    id: 'hiragana-mi',
     character: 'み',
     romaji: 'mi',
     type: 'hiragana',
@@ -753,7 +751,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'mu',
+    id: 'hiragana-mu',
     character: 'む',
     romaji: 'mu',
     type: 'hiragana',
@@ -776,7 +774,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'me',
+    id: 'hiragana-me',
     character: 'め',
     romaji: 'me',
     type: 'hiragana',
@@ -799,7 +797,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'mo',
+    id: 'hiragana-mo',
     character: 'も',
     romaji: 'mo',
     type: 'hiragana',
@@ -824,7 +822,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // Y-row
   {
-    id: 'ya',
+    id: 'hiragana-ya',
     character: 'や',
     romaji: 'ya',
     type: 'hiragana',
@@ -847,7 +845,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'yu',
+    id: 'hiragana-yu',
     character: 'ゆ',
     romaji: 'yu',
     type: 'hiragana',
@@ -870,7 +868,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'yo',
+    id: 'hiragana-yo',
     character: 'よ',
     romaji: 'yo',
     type: 'hiragana',
@@ -895,7 +893,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // R-row
   {
-    id: 'ra',
+    id: 'hiragana-ra',
     character: 'ら',
     romaji: 'ra',
     type: 'hiragana',
@@ -918,7 +916,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ri',
+    id: 'hiragana-ri',
     character: 'り',
     romaji: 'ri',
     type: 'hiragana',
@@ -941,7 +939,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ru',
+    id: 'hiragana-ru',
     character: 'る',
     romaji: 'ru',
     type: 'hiragana',
@@ -964,7 +962,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 're',
+    id: 'hiragana-re',
     character: 'れ',
     romaji: 're',
     type: 'hiragana',
@@ -987,7 +985,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'ro',
+    id: 'hiragana-ro',
     character: 'ろ',
     romaji: 'ro',
     type: 'hiragana',
@@ -1012,7 +1010,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // W-row
   {
-    id: 'wa',
+    id: 'hiragana-wa',
     character: 'わ',
     romaji: 'wa',
     type: 'hiragana',
@@ -1035,7 +1033,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'wo',
+    id: 'hiragana-wo',
     character: 'を',
     romaji: 'wo',
     type: 'hiragana',
@@ -1060,7 +1058,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // N
   {
-    id: 'n',
+    id: 'hiragana-n',
     character: 'ん',
     romaji: 'n',
     type: 'hiragana',
@@ -1085,7 +1083,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // B-row (Variations of H-row with dakuten)
   {
-    id: 'ba',
+    id: 'hiragana-ba',
     character: 'ば',
     romaji: 'ba',
     type: 'hiragana',
@@ -1108,7 +1106,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'bi',
+    id: 'hiragana-bi',
     character: 'び',
     romaji: 'bi',
     type: 'hiragana',
@@ -1131,7 +1129,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'bu',
+    id: 'hiragana-bu',
     character: 'ぶ',
     romaji: 'bu',
     type: 'hiragana',
@@ -1154,7 +1152,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'be',
+    id: 'hiragana-be',
     character: 'べ',
     romaji: 'be',
     type: 'hiragana',
@@ -1177,7 +1175,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
     ]
   },
   {
-    id: 'bo',
+    id: 'hiragana-bo',
     character: 'ぼ',
     romaji: 'bo',
     type: 'hiragana',
@@ -1202,7 +1200,7 @@ export const hiraganaCharacters: KanaCharacter[] = [
 
   // D-row (Variations of T-row with dakuten)
   {
-    id: 'da',
+    id: 'hiragana-da',
     character: 'だ',
     romaji: 'da',
     type: 'hiragana',
@@ -1224,5 +1222,4 @@ export const hiraganaCharacters: KanaCharacter[] = [
       }
     ]
   }
-  // Add the missing characters in this section if needed
 ];

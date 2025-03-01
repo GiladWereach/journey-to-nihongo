@@ -2,7 +2,6 @@ import { KanaCharacter } from '@/types/kana';
 
 // Complete katakana character set
 export const katakanaCharacters: KanaCharacter[] = [
-  // Basic vowels
   {
     id: 'katakana-a',
     character: 'ア',
@@ -10,19 +9,19 @@ export const katakanaCharacters: KanaCharacter[] = [
     type: 'katakana',
     stroke_count: 2,
     stroke_order: ['1', '2'],
-    mnemonic: 'Looks like an axe',
+    mnemonic: 'Looks like an "A" with a missing segment',
     examples: [
+      {
+        word: 'アイス',
+        romaji: 'aisu',
+        meaning: 'ice cream',
+        reading: 'アイス'
+      },
       {
         word: 'アメリカ',
         romaji: 'amerika',
         meaning: 'America',
         reading: 'アメリカ'
-      },
-      {
-        word: 'アニメ',
-        romaji: 'anime',
-        meaning: 'animation',
-        reading: 'アニメ'
       }
     ]
   },
