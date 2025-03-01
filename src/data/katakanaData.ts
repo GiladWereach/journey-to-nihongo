@@ -1,3 +1,4 @@
+
 import { KanaCharacter } from '@/types/kana';
 
 // Complete katakana character set
@@ -1196,4 +1197,664 @@ export const katakanaCharacters: KanaCharacter[] = [
         word: 'ゴルフ',
         romaji: 'gorufu',
         meaning: 'golf',
-        reading
+        reading: 'ゴルフ'
+      }
+    ]
+  },
+  
+  // Z-row (variations of S-row with dakuten)
+  {
+    id: 'katakana-za',
+    character: 'ザ',
+    romaji: 'za',
+    type: 'katakana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'サ (sa) with two dots becomes ザ (za)',
+    examples: [
+      {
+        word: 'ザリガニ',
+        romaji: 'zarigani',
+        meaning: 'crayfish',
+        reading: 'ザリガニ'
+      },
+      {
+        word: 'バザール',
+        romaji: 'bazāru',
+        meaning: 'bazaar',
+        reading: 'バザール'
+      }
+    ]
+  },
+  {
+    id: 'katakana-ji',
+    character: 'ジ',
+    romaji: 'ji',
+    type: 'katakana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'シ (shi) with two dots becomes ジ (ji)',
+    examples: [
+      {
+        word: 'ジュース',
+        romaji: 'jūsu',
+        meaning: 'juice',
+        reading: 'ジュース'
+      },
+      {
+        word: 'ジーンズ',
+        romaji: 'jīnzu',
+        meaning: 'jeans',
+        reading: 'ジーンズ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-zu',
+    character: 'ズ',
+    romaji: 'zu',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ス (su) with two dots becomes ズ (zu)',
+    examples: [
+      {
+        word: 'ブルーズ',
+        romaji: 'burūzu',
+        meaning: 'blues',
+        reading: 'ブルーズ'
+      },
+      {
+        word: 'メガネズ',
+        romaji: 'meganēzu',
+        meaning: 'mayonnaise',
+        reading: 'メガネズ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-ze',
+    character: 'ゼ',
+    romaji: 'ze',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'セ (se) with two dots becomes ゼ (ze)',
+    examples: [
+      {
+        word: 'ゼロ',
+        romaji: 'zero',
+        meaning: 'zero',
+        reading: 'ゼロ'
+      },
+      {
+        word: 'ゼリー',
+        romaji: 'zerī',
+        meaning: 'jelly',
+        reading: 'ゼリー'
+      }
+    ]
+  },
+  {
+    id: 'katakana-zo',
+    character: 'ゾ',
+    romaji: 'zo',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ソ (so) with two dots becomes ゾ (zo)',
+    examples: [
+      {
+        word: 'ゾウ',
+        romaji: 'zō',
+        meaning: 'elephant',
+        reading: 'ゾウ'
+      },
+      {
+        word: 'ホリゾン',
+        romaji: 'horizon',
+        meaning: 'horizon',
+        reading: 'ホリゾン'
+      }
+    ]
+  },
+  
+  // D-row (variations of T-row with dakuten)
+  {
+    id: 'katakana-da',
+    character: 'ダ',
+    romaji: 'da',
+    type: 'katakana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'タ (ta) with two dots becomes ダ (da)',
+    examples: [
+      {
+        word: 'ダンス',
+        romaji: 'dansu',
+        meaning: 'dance',
+        reading: 'ダンス'
+      },
+      {
+        word: 'ダイヤ',
+        romaji: 'daiya',
+        meaning: 'diamond',
+        reading: 'ダイヤ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-ji2',
+    character: 'ヂ',
+    romaji: 'ji',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'チ (chi) with two dots becomes ヂ (ji) - alternate form of ジ',
+    examples: [
+      {
+        word: 'カヂ',
+        romaji: 'kaji',
+        meaning: 'fire',
+        reading: 'カヂ'
+      },
+      {
+        word: 'ヂョウ',
+        romaji: 'jō',
+        meaning: 'lock',
+        reading: 'ヂョウ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-zu2',
+    character: 'ヅ',
+    romaji: 'zu',
+    type: 'katakana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'ツ (tsu) with two dots becomes ヅ (zu) - alternate form of ズ',
+    examples: [
+      {
+        word: 'ツヅキ',
+        romaji: 'tsuzuki',
+        meaning: 'continuation',
+        reading: 'ツヅキ'
+      },
+      {
+        word: 'ミヅ',
+        romaji: 'mizu',
+        meaning: 'water (old form)',
+        reading: 'ミヅ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-de',
+    character: 'デ',
+    romaji: 'de',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'テ (te) with two dots becomes デ (de)',
+    examples: [
+      {
+        word: 'デザイン',
+        romaji: 'dezain',
+        meaning: 'design',
+        reading: 'デザイン'
+      },
+      {
+        word: 'デート',
+        romaji: 'dēto',
+        meaning: 'date',
+        reading: 'デート'
+      }
+    ]
+  },
+  {
+    id: 'katakana-do',
+    character: 'ド',
+    romaji: 'do',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ト (to) with two dots becomes ド (do)',
+    examples: [
+      {
+        word: 'ドア',
+        romaji: 'doa',
+        meaning: 'door',
+        reading: 'ドア'
+      },
+      {
+        word: 'ドラマ',
+        romaji: 'dorama',
+        meaning: 'drama',
+        reading: 'ドラマ'
+      }
+    ]
+  },
+  
+  // B-row (variations of H-row with dakuten)
+  {
+    id: 'katakana-ba',
+    character: 'バ',
+    romaji: 'ba',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ハ (ha) with two dots becomes バ (ba)',
+    examples: [
+      {
+        word: 'バス',
+        romaji: 'basu',
+        meaning: 'bus',
+        reading: 'バス'
+      },
+      {
+        word: 'バナナ',
+        romaji: 'banana',
+        meaning: 'banana',
+        reading: 'バナナ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-bi',
+    character: 'ビ',
+    romaji: 'bi',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'ヒ (hi) with two dots becomes ビ (bi)',
+    examples: [
+      {
+        word: 'ビール',
+        romaji: 'bīru',
+        meaning: 'beer',
+        reading: 'ビール'
+      },
+      {
+        word: 'ビル',
+        romaji: 'biru',
+        meaning: 'building',
+        reading: 'ビル'
+      }
+    ]
+  },
+  {
+    id: 'katakana-bu',
+    character: 'ブ',
+    romaji: 'bu',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'フ (fu) with two dots becomes ブ (bu)',
+    examples: [
+      {
+        word: 'ブドウ',
+        romaji: 'budō',
+        meaning: 'grapes',
+        reading: 'ブドウ'
+      },
+      {
+        word: 'ブログ',
+        romaji: 'burogu',
+        meaning: 'blog',
+        reading: 'ブログ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-be',
+    character: 'ベ',
+    romaji: 'be',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'ヘ (he) with two dots becomes ベ (be)',
+    examples: [
+      {
+        word: 'ベッド',
+        romaji: 'beddo',
+        meaning: 'bed',
+        reading: 'ベッド'
+      },
+      {
+        word: 'ベル',
+        romaji: 'beru',
+        meaning: 'bell',
+        reading: 'ベル'
+      }
+    ]
+  },
+  {
+    id: 'katakana-bo',
+    character: 'ボ',
+    romaji: 'bo',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ホ (ho) with two dots becomes ボ (bo)',
+    examples: [
+      {
+        word: 'ボール',
+        romaji: 'bōru',
+        meaning: 'ball',
+        reading: 'ボール'
+      },
+      {
+        word: 'ボタン',
+        romaji: 'botan',
+        meaning: 'button',
+        reading: 'ボタン'
+      }
+    ]
+  },
+  
+  // P-row (variations of H-row with circle)
+  {
+    id: 'katakana-pa',
+    character: 'パ',
+    romaji: 'pa',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ハ (ha) with a circle becomes パ (pa)',
+    examples: [
+      {
+        word: 'パン',
+        romaji: 'pan',
+        meaning: 'bread',
+        reading: 'パン'
+      },
+      {
+        word: 'パスタ',
+        romaji: 'pasuta',
+        meaning: 'pasta',
+        reading: 'パスタ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-pi',
+    character: 'ピ',
+    romaji: 'pi',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'ヒ (hi) with a circle becomes ピ (pi)',
+    examples: [
+      {
+        word: 'ピザ',
+        romaji: 'piza',
+        meaning: 'pizza',
+        reading: 'ピザ'
+      },
+      {
+        word: 'ピンク',
+        romaji: 'pinku',
+        meaning: 'pink',
+        reading: 'ピンク'
+      }
+    ]
+  },
+  {
+    id: 'katakana-pu',
+    character: 'プ',
+    romaji: 'pu',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'フ (fu) with a circle becomes プ (pu)',
+    examples: [
+      {
+        word: 'プール',
+        romaji: 'pūru',
+        meaning: 'pool',
+        reading: 'プール'
+      },
+      {
+        word: 'プレゼント',
+        romaji: 'purezento',
+        meaning: 'present',
+        reading: 'プレゼント'
+      }
+    ]
+  },
+  {
+    id: 'katakana-pe',
+    character: 'ペ',
+    romaji: 'pe',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'ヘ (he) with a circle becomes ペ (pe)',
+    examples: [
+      {
+        word: 'ペン',
+        romaji: 'pen',
+        meaning: 'pen',
+        reading: 'ペン'
+      },
+      {
+        word: 'ペット',
+        romaji: 'petto',
+        meaning: 'pet',
+        reading: 'ペット'
+      }
+    ]
+  },
+  {
+    id: 'katakana-po',
+    character: 'ポ',
+    romaji: 'po',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ホ (ho) with a circle becomes ポ (po)',
+    examples: [
+      {
+        word: 'ポケット',
+        romaji: 'poketto',
+        meaning: 'pocket',
+        reading: 'ポケット'
+      },
+      {
+        word: 'ポスト',
+        romaji: 'posuto',
+        meaning: 'post/mail',
+        reading: 'ポスト'
+      }
+    ]
+  },
+  
+  // V-row (uses the ウ with dakuten)
+  {
+    id: 'katakana-va',
+    character: 'ヴァ',
+    romaji: 'va',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ウ (u) with two dots and small ア becomes ヴァ (va)',
+    examples: [
+      {
+        word: 'ヴァイオリン',
+        romaji: 'vaiorin',
+        meaning: 'violin',
+        reading: 'ヴァイオリン'
+      },
+      {
+        word: 'ヴァニラ',
+        romaji: 'vanira',
+        meaning: 'vanilla',
+        reading: 'ヴァニラ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-vi',
+    character: 'ヴィ',
+    romaji: 'vi',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ウ (u) with two dots and small イ becomes ヴィ (vi)',
+    examples: [
+      {
+        word: 'ヴィザ',
+        romaji: 'viza',
+        meaning: 'visa',
+        reading: 'ヴィザ'
+      },
+      {
+        word: 'ヴィデオ',
+        romaji: 'video',
+        meaning: 'video',
+        reading: 'ヴィデオ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-vu',
+    character: 'ヴ',
+    romaji: 'vu',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ウ (u) with two dots becomes ヴ (vu)',
+    examples: [
+      {
+        word: 'ヴルカン',
+        romaji: 'vurukan',
+        meaning: 'vulcan',
+        reading: 'ヴルカン'
+      },
+      {
+        word: 'デジャヴ',
+        romaji: 'dejavu',
+        meaning: 'déjà vu',
+        reading: 'デジャヴ'
+      }
+    ]
+  },
+  {
+    id: 'katakana-ve',
+    character: 'ヴェ',
+    romaji: 've',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ウ (u) with two dots and small エ becomes ヴェ (ve)',
+    examples: [
+      {
+        word: 'ヴェニス',
+        romaji: 'venisu',
+        meaning: 'Venice',
+        reading: 'ヴェニス'
+      },
+      {
+        word: 'ヴェール',
+        romaji: 'vēru',
+        meaning: 'veil',
+        reading: 'ヴェール'
+      }
+    ]
+  },
+  {
+    id: 'katakana-vo',
+    character: 'ヴォ',
+    romaji: 'vo',
+    type: 'katakana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ウ (u) with two dots and small オ becomes ヴォ (vo)',
+    examples: [
+      {
+        word: 'ヴォルト',
+        romaji: 'voruto',
+        meaning: 'volt',
+        reading: 'ヴォルト'
+      },
+      {
+        word: 'ヴォイス',
+        romaji: 'voisu',
+        meaning: 'voice',
+        reading: 'ヴォイス'
+      }
+    ]
+  },
+  
+  // J-row (uses the Ya-row with modified sounds)
+  {
+    id: 'katakana-ja',
+    character: 'ジャ',
+    romaji: 'ja',
+    type: 'katakana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'ジ (ji) with small ャ becomes ジャ (ja)',
+    examples: [
+      {
+        word: 'ジャズ',
+        romaji: 'jazu',
+        meaning: 'jazz',
+        reading: 'ジャズ'
+      },
+      {
+        word: 'ジャケット',
+        romaji: 'jaketto',
+        meaning: 'jacket',
+        reading: 'ジャケット'
+      }
+    ]
+  },
+  {
+    id: 'katakana-ju',
+    character: 'ジュ',
+    romaji: 'ju',
+    type: 'katakana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'ジ (ji) with small ュ becomes ジュ (ju)',
+    examples: [
+      {
+        word: 'ジュース',
+        romaji: 'jūsu',
+        meaning: 'juice',
+        reading: 'ジュース'
+      },
+      {
+        word: 'ジュニア',
+        romaji: 'junia',
+        meaning: 'junior',
+        reading: 'ジュニア'
+      }
+    ]
+  },
+  {
+    id: 'katakana-jo',
+    character: 'ジョ',
+    romaji: 'jo',
+    type: 'katakana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'ジ (ji) with small ョ becomes ジョ (jo)',
+    examples: [
+      {
+        word: 'ジョギング',
+        romaji: 'jogingu',
+        meaning: 'jogging',
+        reading: 'ジョギング'
+      },
+      {
+        word: 'ジョーク',
+        romaji: 'jōku',
+        meaning: 'joke',
+        reading: 'ジョーク'
+      }
+    ]
+  }
+];
