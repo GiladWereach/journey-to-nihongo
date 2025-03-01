@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS public.kana_learning_sessions (
   characters_studied TEXT[] NOT NULL DEFAULT '{}',
   accuracy INTEGER,
   completed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Enable RLS for these tables
