@@ -12,9 +12,9 @@ export interface KanaCharacter {
   sound_file?: string;
   examples?: {
     word: string;
-    reading: string; // Keep reading for API compatibility
+    reading?: string; // Make reading optional
     meaning: string;
-    romaji?: string;
+    romaji: string; // Make romaji required
   }[];
   created_at?: string;
 }

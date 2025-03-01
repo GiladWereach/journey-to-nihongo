@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { KanaType } from '@/types/kana';
+import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
 import { kanaService } from '@/services/kanaService';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,7 +34,7 @@ interface KanaPracticeProps {
 const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onComplete, onCancel }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [kanaList, setKanaList] = useState(getKanaByType(kanaType));
+  const [kanaList, setKanaList] = useState<KanaCharacter[]>([]);
   const [currentKanaIndex, setCurrentKanaIndex] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -46,7 +46,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   const [isLoading, setIsLoading] = useState(true);
 
   // Helper function to get kana by type
-  function getKanaByType(type: KanaType | 'all') {
+  function getKanaByType(type: KanaType | 'all'): KanaCharacter[] {
     if (type === 'all') {
       return kanaService.getAllKana();
     }
@@ -54,27 +54,43 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   }
 
   // Helper function to get random kana
-  function getRandomKana(type: KanaType | 'all') {
+  function getRandomKana(type: KanaType | 'all'): KanaCharacter {
     const kanaArray = getKanaByType(type);
     return kanaArray[Math.floor(Math.random() * kanaArray.length)];
   }
 
   useEffect(() => {
-    if (user) {
-      supabaseClient
-        .from('user_kana_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .then(result => {
-          if (result.data) {
-            setUserProgress(result.data);
+    const fetchUserProgress = async () => {
+      setIsLoading(true);
+      try {
+        if (user) {
+          const { data, error } = await supabaseClient
+            .from('user_kana_progress')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (error) {
+            throw error;
           }
-        })
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
-  }, [user]);
+          
+          if (data) {
+            setUserProgress(data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user progress:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load progress data.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProgress();
+  }, [user, toast]);
 
   useEffect(() => {
     let newKanaList = getKanaByType(kanaType);
@@ -188,7 +204,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     }, 750);
   };
 
-  const updateUserProgress = async (isCorrect: boolean, kanaItem: any) => {
+  const updateUserProgress = async (isCorrect: boolean, kanaItem: KanaCharacter) => {
     if (!user) return;
 
     const existingProgress = userProgress.find((p: any) => p.character_id === kanaItem.id);
@@ -233,7 +249,9 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-32">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
+    </div>;
   }
 
   if (!kanaList || kanaList.length === 0) {

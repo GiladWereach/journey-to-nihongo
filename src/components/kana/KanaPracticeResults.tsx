@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, RotateCcw, Home } from "lucide-react";
-import { PracticeResult } from './KanaPractice';
+import { PracticeResult } from '@/types/kana';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { cn } from '@/lib/utils';
 

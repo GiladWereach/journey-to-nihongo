@@ -57,7 +57,7 @@ const KanaCard: React.FC<KanaCardProps> = ({
                 <ul className="list-disc list-inside space-y-1">
                   {kana.examples.map((example, index) => (
                     <li key={index}>
-                      <span className="font-medium">{example.word}</span> ({example.romaji || example.reading}) - {example.meaning}
+                      <span className="font-medium">{example.word}</span> ({example.romaji}) - {example.meaning}
                     </li>
                   ))}
                 </ul>
