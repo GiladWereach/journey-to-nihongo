@@ -67,17 +67,16 @@ const JapaneseCharacter: React.FC<JapaneseCharacterProps> = ({
         }
       };
     }
-  }, [animated, character]); // Add character as a dependency to reset animation when character changes
+  }, [animated, character]);
 
   return (
     <div 
       ref={charRef}
       className={cn(
-        'japanese-text font-semibold flex items-center justify-center',
+        'japanese-text font-japanese font-semibold flex items-center justify-center',
         sizeClasses[size],
         color,
         'transition-all duration-500 ease-out',
-        // Only apply opacity-0 if explicitly animated, otherwise always visible
         animated ? 'opacity-0' : 'opacity-100',
         className
       )}

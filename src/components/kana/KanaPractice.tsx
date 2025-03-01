@@ -44,7 +44,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   const [userProgress, setUserProgress] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper function to get kana by type
   function getKanaByType(type: KanaType | 'all'): KanaCharacter[] {
     if (type === 'all') {
       return kanaService.getAllKana();
@@ -88,7 +87,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   useEffect(() => {
     let newKanaList = getKanaByType(kanaType);
     
-    // Filter out kana that the user has mastered
     if (user && userProgress.length > 0) {
       newKanaList = newKanaList.filter(kana => {
         const progress = userProgress.find((p: any) => p.character_id === kana.id);
@@ -96,11 +94,8 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       });
     }
 
-    // Instead of showing all characters at once, limit to a manageable practice set
-    // Shuffle the list first to get random characters
     newKanaList = [...newKanaList].sort(() => Math.random() - 0.5);
     
-    // Take only 20 characters for practice to keep it manageable
     const practiceSetSize = 20;
     if (newKanaList.length > practiceSetSize) {
       newKanaList = newKanaList.slice(0, practiceSetSize);
@@ -121,13 +116,10 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     const correctRomaji = kanaList[currentKanaIndex].romaji;
     let newOptions = [correctRomaji];
 
-    // Get all possible options of the same type
     const allKana = getKanaByType(kanaType);
     
-    // Create a pool of unique romaji values that aren't the correct answer
     const romajiPool = [...new Set(allKana.map(k => k.romaji))].filter(r => r !== correctRomaji);
     
-    // Randomly select options from the pool
     while (newOptions.length < 4 && romajiPool.length > 0) {
       const randomIndex = Math.floor(Math.random() * romajiPool.length);
       const selectedRomaji = romajiPool[randomIndex];
@@ -136,11 +128,9 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
         newOptions.push(selectedRomaji);
       }
       
-      // Remove this option from the pool to avoid selecting it again
       romajiPool.splice(randomIndex, 1);
     }
 
-    // Shuffle the options
     newOptions = newOptions.sort(() => Math.random() - 0.5);
     setOptions(newOptions);
   }, [kanaList, currentKanaIndex, kanaType]);
@@ -151,7 +141,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     setIsCorrect(isCorrectSelection);
     setPracticeHistory([...practiceHistory, isCorrectSelection]);
     
-    // Update character results
     setCharacterResults([
       ...characterResults,
       { character: kanaItem.character, correct: isCorrectSelection }
@@ -172,7 +161,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       });
     }
 
-    // Update user progress in Supabase
     if (user) {
       try {
         await updateUserProgress(isCorrectSelection, kanaItem);
@@ -186,13 +174,11 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       }
     }
 
-    // Move to the next kana after a delay
     setTimeout(() => {
       setIsCorrect(null);
       if (currentKanaIndex < kanaList.length - 1) {
         setCurrentKanaIndex(currentKanaIndex + 1);
       } else {
-        // Practice completed
         const total = kanaList.length;
         const correct = correctCount + (isCorrectSelection ? 1 : 0);
         const incorrect = incorrectCount + (isCorrectSelection ? 0 : 1);
@@ -223,18 +209,15 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     const existingProgress = userProgress.find((p: any) => p.character_id === kanaItem.id);
 
     if (existingProgress) {
-      // Update existing progress
       const updatedMistakeCount = isCorrect
         ? existingProgress.mistake_count
         : existingProgress.mistake_count + 1;
 
       const updatedTotalPracticeCount = existingProgress.total_practice_count + 1;
 
-      // Calculate new proficiency (simplified example)
       const successRate = (updatedTotalPracticeCount - updatedMistakeCount) / updatedTotalPracticeCount;
       const newProficiency = Math.round(successRate * 100);
 
-      // Update the progress
       await supabaseClient
         .from('user_kana_progress')
         .update({
@@ -246,7 +229,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
         })
         .eq('id', existingProgress.id);
     } else {
-      // Create new progress entry
       await supabaseClient
         .from('user_kana_progress')
         .insert({
