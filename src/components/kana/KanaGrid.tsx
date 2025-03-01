@@ -162,8 +162,8 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
         </div>
       </div>
 
-      {/* Fixed floating filter panel - now positioned BELOW the nav */}
-      <div className="fixed right-6 top-[160px] z-20 bg-background/95 backdrop-blur-lg rounded-xl shadow-lg border border-border/40 p-4 max-w-[220px] transition-all">
+      {/* Fixed floating filter panel - with higher z-index */}
+      <div className="fixed right-6 top-[160px] z-50 bg-background/95 backdrop-blur-lg rounded-xl shadow-lg border border-border/40 p-4 max-w-[220px] transition-all">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-medium">Filter Kana</h3>
