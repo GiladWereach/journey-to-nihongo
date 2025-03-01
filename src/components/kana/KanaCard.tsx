@@ -5,7 +5,6 @@ import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { Button } from '@/components/ui/button';
 import { KanaCharacter } from '@/types/kana';
 import { cn } from '@/lib/utils';
-import { BookOpen, Book } from 'lucide-react';
 
 interface KanaCardProps {
   kana: KanaCharacter;
@@ -28,15 +27,13 @@ const KanaCard: React.FC<KanaCardProps> = ({
     <Card className={cn("h-full", className)}>
       <CardHeader className="text-center p-3 pb-2">
         <div className="flex justify-between items-start">
-          <div className="flex items-center text-xs font-medium px-2 py-1 rounded-full bg-muted">
-            {isHiragana ? (
-              <Book className="h-3 w-3 mr-1 text-indigo" />
-            ) : (
-              <BookOpen className="h-3 w-3 mr-1 text-secondary" />
+          <div 
+            className={cn(
+              "flex items-center justify-center h-5 w-5 rounded-full text-white font-bold text-xs",
+              isHiragana ? "bg-matcha" : "bg-vermilion"
             )}
-            <span className={isHiragana ? "text-indigo" : "text-secondary"}>
-              {isHiragana ? 'Hiragana' : 'Katakana'}
-            </span>
+          >
+            {isHiragana ? 'H' : 'K'}
           </div>
         </div>
         <CardTitle className="flex justify-center mt-2">
@@ -44,7 +41,7 @@ const KanaCard: React.FC<KanaCardProps> = ({
             character={kana.character} 
             size="lg" 
             animated={true} 
-            className={isHiragana ? "text-indigo" : "text-secondary"} 
+            className={isHiragana ? "text-matcha" : "text-vermilion"} 
           />
         </CardTitle>
         <CardDescription className="text-base font-medium mt-1">{kana.romaji}</CardDescription>
@@ -84,7 +81,7 @@ const KanaCard: React.FC<KanaCardProps> = ({
             size="sm"
             className={cn(
               "text-xs px-2 py-1 h-auto",
-              isHiragana ? "bg-indigo hover:bg-indigo/90" : "bg-secondary hover:bg-secondary/90"
+              isHiragana ? "bg-matcha hover:bg-matcha/90" : "bg-vermilion hover:bg-vermilion/90"
             )}
             onClick={onPractice}
           >
@@ -98,8 +95,8 @@ const KanaCard: React.FC<KanaCardProps> = ({
             className={cn(
               "text-xs px-2 py-1 h-auto",
               isHiragana 
-                ? "border-indigo text-indigo hover:bg-indigo/10" 
-                : "border-secondary text-secondary hover:bg-secondary/10"
+                ? "border-matcha text-matcha hover:bg-matcha/10" 
+                : "border-vermilion text-vermilion hover:bg-vermilion/10"
             )}
             onClick={onShowDetails}
           >

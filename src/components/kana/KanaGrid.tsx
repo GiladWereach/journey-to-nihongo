@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import KanaCard from './KanaCard';
 import { KanaCharacter, KanaGroup, KanaType } from '@/types/kana';
@@ -5,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { ChevronUp, Info, X } from 'lucide-react';
+import { ChevronUp, Info } from 'lucide-react';
 
 interface KanaGridProps {
   kanaList: KanaCharacter[];
@@ -129,50 +130,6 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
 
   return (
     <div className={cn("space-y-6 relative", className)} ref={gridRef}>
-      {/* Fixed floating filter panel on the right side */}
-      <div className="fixed right-6 top-[100px] z-50 bg-background/95 backdrop-blur-lg rounded-xl shadow-lg border border-border/40 p-4 max-w-[220px] transition-all">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm font-medium">Filter Kana</h3>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setShowHelp(!showHelp)}
-              className="h-6 w-6 text-muted-foreground hover:text-indigo transition-colors"
-            >
-              <Info size={16} />
-            </Button>
-          </div>
-          
-          <RadioGroup
-            className="flex flex-col space-y-2"
-            defaultValue="all"
-            onValueChange={(value) => setSelectedType(value as KanaType | 'all')}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="all" id="all" />
-              <Label htmlFor="all">All</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="hiragana" id="hiragana" />
-              <Label htmlFor="hiragana">Hiragana</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="katakana" id="katakana" />
-              <Label htmlFor="katakana">Katakana</Label>
-            </div>
-          </RadioGroup>
-          
-          {showHelp && (
-            <div className="bg-muted/50 p-3 rounded-md text-xs text-muted-foreground">
-              <h4 className="font-medium text-xs mb-1">Navigation Help</h4>
-              <p className="mb-1">• Click section buttons to navigate</p>
-              <p>• Click any card to see details</p>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Section navigation - positioned below the tabs but with higher z-index */}
       <div className="sticky top-[104px] z-30 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
         <div className="overflow-x-auto hide-scrollbar py-1">
@@ -202,6 +159,56 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Fixed floating filter panel - now positioned BELOW the nav */}
+      <div className="fixed right-6 top-[160px] z-20 bg-background/95 backdrop-blur-lg rounded-xl shadow-lg border border-border/40 p-4 max-w-[220px] transition-all">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium">Filter Kana</h3>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowHelp(!showHelp)}
+              className="h-6 w-6 text-muted-foreground hover:text-indigo transition-colors"
+            >
+              <Info size={16} />
+            </Button>
+          </div>
+          
+          <RadioGroup
+            className="flex flex-col space-y-2"
+            defaultValue="all"
+            onValueChange={(value) => setSelectedType(value as KanaType | 'all')}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="all" id="all" />
+              <Label htmlFor="all">All</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="hiragana" id="hiragana" />
+              <Label htmlFor="hiragana" className="flex items-center">
+                <span className="bg-matcha text-white h-4 w-4 rounded-full flex items-center justify-center text-[10px] font-bold mr-1.5">H</span>
+                Hiragana
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="katakana" id="katakana" />
+              <Label htmlFor="katakana" className="flex items-center">
+                <span className="bg-vermilion text-white h-4 w-4 rounded-full flex items-center justify-center text-[10px] font-bold mr-1.5">K</span>
+                Katakana
+              </Label>
+            </div>
+          </RadioGroup>
+          
+          {showHelp && (
+            <div className="bg-muted/50 p-3 rounded-md text-xs text-muted-foreground">
+              <h4 className="font-medium text-xs mb-1">Navigation Help</h4>
+              <p className="mb-1">• Click section buttons to navigate</p>
+              <p>• Click any card to see details</p>
+            </div>
+          )}
         </div>
       </div>
 
