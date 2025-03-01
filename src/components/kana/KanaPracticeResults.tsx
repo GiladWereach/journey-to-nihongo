@@ -20,9 +20,6 @@ const KanaPracticeResults: React.FC<KanaPracticeResultsProps> = ({
   onPracticeAgain,
   onFinish
 }) => {
-  // Calculate performance metrics
-  const accuracy = results.accuracy;
-  
   // Get characters with mistakes
   const mistakes = results.characterResults.filter(result => !result.correct);
   
@@ -41,24 +38,24 @@ const KanaPracticeResults: React.FC<KanaPracticeResultsProps> = ({
             <div className="text-center mb-4">
               <h3 className="text-xl font-semibold">Accuracy</h3>
               <div className="text-4xl font-bold text-indigo mt-2">
-                {accuracy.toFixed(0)}%
+                {results.accuracy.toFixed(0)}%
               </div>
             </div>
             
             <ProgressIndicator 
-              progress={accuracy} 
+              progress={results.accuracy} 
               size="md"
               color={cn(
-                accuracy >= 80 ? "bg-green-500" : 
-                accuracy >= 60 ? "bg-yellow-500" : 
+                results.accuracy >= 80 ? "bg-green-500" : 
+                results.accuracy >= 60 ? "bg-yellow-500" : 
                 "bg-red-500"
               )}
             />
             
             <div className="mt-4 text-center text-sm text-gray-600">
-              {accuracy >= 80 ? (
+              {results.accuracy >= 80 ? (
                 "Great job! You're doing well with these characters."
-              ) : accuracy >= 60 ? (
+              ) : results.accuracy >= 60 ? (
                 "Good progress, but there's room for improvement."
               ) : (
                 "Keep practicing. These characters need more attention."

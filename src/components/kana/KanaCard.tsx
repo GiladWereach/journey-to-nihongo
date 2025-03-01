@@ -43,7 +43,7 @@ const KanaCard: React.FC<KanaCardProps> = ({
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">Stroke Count:</span>
-              <span>{kana.strokeCount}</span>
+              <span>{kana.stroke_count}</span>
             </div>
             {kana.mnemonic && (
               <div className="text-sm">
@@ -57,7 +57,7 @@ const KanaCard: React.FC<KanaCardProps> = ({
                 <ul className="list-disc list-inside space-y-1">
                   {kana.examples.map((example, index) => (
                     <li key={index}>
-                      <span className="font-medium">{example.word}</span> ({example.romaji}) - {example.meaning}
+                      <span className="font-medium">{example.word}</span> ({example.romaji || example.reading}) - {example.meaning}
                     </li>
                   ))}
                 </ul>

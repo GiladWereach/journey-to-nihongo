@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,13 @@ export interface PracticeResult {
   total: number;
   kanaType: KanaType | 'all';
   practiceType: 'recognition' | 'matching';
+  accuracy: number;
+  totalQuestions: number; 
+  correctAnswers: number;
+  characterResults: Array<{
+    character: string;
+    correct: boolean;
+  }>;
 }
 
 interface KanaPracticeProps {
@@ -26,15 +34,30 @@ interface KanaPracticeProps {
 const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onComplete, onCancel }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [kanaList, setKanaList] = useState(kanaService.getKanaByType(kanaType));
+  const [kanaList, setKanaList] = useState(getKanaByType(kanaType));
   const [currentKanaIndex, setCurrentKanaIndex] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [practiceHistory, setPracticeHistory] = useState<boolean[]>([]);
-  const [userProgress, setUserProgress] = useState([]);
+  const [characterResults, setCharacterResults] = useState<Array<{character: string, correct: boolean}>>([]);
+  const [userProgress, setUserProgress] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Helper function to get kana by type
+  function getKanaByType(type: KanaType | 'all') {
+    if (type === 'all') {
+      return kanaService.getAllKana();
+    }
+    return kanaService.getKanaByType(type);
+  }
+
+  // Helper function to get random kana
+  function getRandomKana(type: KanaType | 'all') {
+    const kanaArray = getKanaByType(type);
+    return kanaArray[Math.floor(Math.random() * kanaArray.length)];
+  }
 
   useEffect(() => {
     if (user) {
@@ -48,11 +71,13 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
           }
         })
         .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
-    let newKanaList = kanaType === 'all' ? kanaService.getAllKana() : kanaService.getKanaByType(kanaType);
+    let newKanaList = getKanaByType(kanaType);
     
     // Filter out kana that the user has mastered
     if (user && userProgress.length > 0) {
@@ -80,7 +105,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     let newOptions = [correctRomaji];
 
     while (newOptions.length < 4) {
-      const randomKana = kanaService.getRandomKana(kanaType);
+      const randomKana = getRandomKana(kanaType);
       if (randomKana && !newOptions.includes(randomKana.romaji)) {
         newOptions.push(randomKana.romaji);
       }
@@ -96,6 +121,12 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     const isCorrectSelection = selectedRomaji === kanaItem.romaji;
     setIsCorrect(isCorrectSelection);
     setPracticeHistory([...practiceHistory, isCorrectSelection]);
+    
+    // Update character results
+    setCharacterResults([
+      ...characterResults,
+      { character: kanaItem.character, correct: isCorrectSelection }
+    ]);
 
     if (isCorrectSelection) {
       setCorrectCount(correctCount + 1);
@@ -134,12 +165,23 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       } else {
         // Practice completed
         const total = kanaList.length;
+        const correct = correctCount + (isCorrectSelection ? 1 : 0);
+        const incorrect = incorrectCount + (isCorrectSelection ? 0 : 1);
+        const accuracy = total > 0 ? (correct / total) * 100 : 0;
+        
         const results: PracticeResult = {
-          correct: correctCount + (isCorrectSelection ? 1 : 0),
-          incorrect: incorrectCount + (isCorrectSelection ? 0 : 1),
-          total: total,
-          kanaType: kanaType,
-          practiceType: practiceType,
+          correct,
+          incorrect,
+          total,
+          kanaType,
+          practiceType,
+          accuracy,
+          totalQuestions: total,
+          correctAnswers: correct,
+          characterResults: [
+            ...characterResults,
+            { character: kanaItem.character, correct: isCorrectSelection }
+          ],
         };
         onComplete(results);
       }
@@ -173,7 +215,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
           last_practiced: new Date().toISOString(),
           review_due: calculateNextReviewDate(newProficiency).toISOString()
         })
-        .eq('id', existingProgress.id)
+        .eq('id', existingProgress.id);
     } else {
       // Create new progress entry
       await supabaseClient
@@ -186,7 +228,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
           total_practice_count: 1,
           last_practiced: new Date().toISOString(),
           review_due: calculateNextReviewDate(isCorrect ? 100 : 0).toISOString()
-        })
+        });
     }
   };
 

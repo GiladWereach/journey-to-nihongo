@@ -6,15 +6,15 @@ export interface KanaCharacter {
   character: string;
   romaji: string;
   type: 'hiragana' | 'katakana';
-  stroke_count: number;
+  stroke_count: number; // Use snake_case to match database
   stroke_order: string[];
   mnemonic?: string;
   sound_file?: string;
   examples?: {
     word: string;
-    reading: string;
+    reading: string; // Keep reading for API compatibility
     meaning: string;
-    romaji?: string; // Added this to fix example errors
+    romaji?: string;
   }[];
   created_at?: string;
 }
@@ -24,7 +24,7 @@ export interface KanaGroup {
   name: string;
   type: 'hiragana' | 'katakana';
   description?: string;
-  characters?: string[]; // Added to match the service
+  characters?: string[]; // Array of character IDs
   created_at?: string;
 }
 
@@ -110,4 +110,20 @@ export interface KanaPracticeResult {
   characterId: string;
   correct: boolean;
   timestamp: Date;
+}
+
+// Updated PracticeResult interface for KanaPracticeResults component
+export interface PracticeResult {
+  correct: number;
+  incorrect: number;
+  total: number;
+  kanaType: KanaType | 'all';
+  practiceType: 'recognition' | 'matching';
+  accuracy: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  characterResults: Array<{
+    character: string;
+    correct: boolean;
+  }>;
 }
