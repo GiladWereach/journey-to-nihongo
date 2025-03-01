@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, RotateCcw, Home } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, Home, BarChart } from "lucide-react";
 import { PracticeResult } from '@/types/kana';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { cn } from '@/lib/utils';
@@ -50,10 +50,20 @@ const KanaPracticeResults: React.FC<KanaPracticeResultsProps> = ({
                 results.accuracy >= 60 ? "bg-yellow-500" : 
                 "bg-red-500"
               )}
+              showTicks
+              animated={results.accuracy >= 90}
+              proficiencyLevel={
+                results.accuracy >= 90 ? "mastered" :
+                results.accuracy >= 70 ? "advanced" :
+                results.accuracy >= 50 ? "intermediate" :
+                "beginner"
+              }
             />
             
             <div className="mt-4 text-center text-sm text-gray-600">
-              {results.accuracy >= 80 ? (
+              {results.accuracy >= 90 ? (
+                "Excellent! You've mastered these characters."
+              ) : results.accuracy >= 80 ? (
                 "Great job! You're doing well with these characters."
               ) : results.accuracy >= 60 ? (
                 "Good progress, but there's room for improvement."
