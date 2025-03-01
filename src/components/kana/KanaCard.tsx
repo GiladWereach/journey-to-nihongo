@@ -41,7 +41,6 @@ const KanaCard: React.FC<KanaCardProps> = ({
             character={kana.character} 
             size="lg" 
             animated={true} 
-            className={isHiragana ? "text-matcha" : "text-vermilion"} 
           />
         </CardTitle>
         <CardDescription className="text-base font-medium mt-1">{kana.romaji}</CardDescription>
