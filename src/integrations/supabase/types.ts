@@ -9,7 +9,349 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      achievements: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          icon: string | null
+          id: string
+          name: string
+          required_progress: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          icon?: string | null
+          id?: string
+          name: string
+          required_progress: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          required_progress?: number
+        }
+        Relationships: []
+      }
+      kana_characters: {
+        Row: {
+          character: string
+          created_at: string | null
+          examples: Json | null
+          id: string
+          mnemonic: string | null
+          romaji: string
+          sound_file: string | null
+          stroke_count: number
+          stroke_order: string[]
+          type: string
+        }
+        Insert: {
+          character: string
+          created_at?: string | null
+          examples?: Json | null
+          id?: string
+          mnemonic?: string | null
+          romaji: string
+          sound_file?: string | null
+          stroke_count: number
+          stroke_order: string[]
+          type: string
+        }
+        Update: {
+          character?: string
+          created_at?: string | null
+          examples?: Json | null
+          id?: string
+          mnemonic?: string | null
+          romaji?: string
+          sound_file?: string | null
+          stroke_count?: number
+          stroke_order?: string[]
+          type?: string
+        }
+        Relationships: []
+      }
+      kana_group_characters: {
+        Row: {
+          character_id: string
+          created_at: string | null
+          group_id: string
+          id: string
+          sequence_order: number
+        }
+        Insert: {
+          character_id: string
+          created_at?: string | null
+          group_id: string
+          id?: string
+          sequence_order: number
+        }
+        Update: {
+          character_id?: string
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          sequence_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kana_group_characters_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "kana_characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kana_group_characters_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "kana_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kana_groups: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      kana_learning_sessions: {
+        Row: {
+          accuracy: number | null
+          characters_studied: string[]
+          completed: boolean | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          kana_type: string
+          start_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          characters_studied?: string[]
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          kana_type: string
+          start_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          characters_studied?: string[]
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          kana_type?: string
+          start_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kana_learning_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          created_at: string | null
+          current_progress: number
+          id: string
+          unlocked_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          created_at?: string | null
+          current_progress?: number
+          id?: string
+          unlocked_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          created_at?: string | null
+          current_progress?: number
+          id?: string
+          unlocked_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_kana_progress: {
+        Row: {
+          character_id: string
+          created_at: string | null
+          id: string
+          last_practiced: string | null
+          mistake_count: number
+          proficiency: number
+          review_due: string | null
+          total_practice_count: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          created_at?: string | null
+          id?: string
+          last_practiced?: string | null
+          mistake_count?: number
+          proficiency?: number
+          review_due?: string | null
+          total_practice_count?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          created_at?: string | null
+          id?: string
+          last_practiced?: string | null
+          mistake_count?: number
+          proficiency?: number
+          review_due?: string | null
+          total_practice_count?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_kana_progress_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "kana_characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_kana_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          daily_goal: number | null
+          id: string
+          reminder_time: string | null
+          study_reminder: boolean | null
+          theme: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_goal?: number | null
+          id: string
+          reminder_time?: string | null
+          study_reminder?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_goal?: number | null
+          id?: string
+          reminder_time?: string | null
+          study_reminder?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
