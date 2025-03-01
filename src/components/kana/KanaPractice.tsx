@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,12 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   const [characterResults, setCharacterResults] = useState<Array<{character: string, correct: boolean}>>([]);
   const [userProgress, setUserProgress] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [feedback, setFeedback] = useState<{
+    show: boolean;
+    isCorrect: boolean;
+    message: string;
+    mnemonic: string;
+  }>({ show: false, isCorrect: false, message: '', mnemonic: '' });
 
   function getKanaByType(type: KanaType | 'all'): KanaCharacter[] {
     if (type === 'all') {
@@ -135,6 +142,40 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     setOptions(newOptions);
   }, [kanaList, currentKanaIndex, kanaType]);
 
+  const generateMnemonic = (kanaItem: KanaCharacter) => {
+    // If the kana has a mnemonic, use it
+    if (kanaItem.mnemonic) {
+      return kanaItem.mnemonic;
+    }
+
+    // Generate a simple mnemonic based on the character and romaji
+    const simple = {
+      a: "Looks like an 'a' with a roof",
+      i: "Two short vertical lines, like 'i' without the dot",
+      u: "Resembles a horseshoe or 'u' shape",
+      e: "Similar to a backward '3', forming an 'e'",
+      o: "Circular shape, like the letter 'o'",
+      ka: "Looks like a 'k' with an extra line",
+      sa: "Three horizontal strokes, think 's' for 'sa'",
+      ta: "Cross shape, like 't' in 'ta'",
+      na: "Like an 'n' with an extra mark",
+      ma: "Three vertical lines, 'm' has three legs in cursive",
+      ya: "Resembles a 'y' shape",
+      ra: "Like an 'r' with a loop",
+      wa: "Circle with a tail, like 'w' in cursive",
+      ga: "Like 'ka' with extra dots (voiced 'k' becomes 'g')",
+      za: "Like 'sa' with extra marks (voiced 's' becomes 'z')",
+      da: "Like 'ta' with extra marks (voiced 't' becomes 'd')",
+      ba: "Like 'ha' with a marker (voiced 'h' becomes 'b')",
+      pa: "Like 'ha' with a circle marker ('h' with more force becomes 'p')",
+      ja: "Like 'sha' with extra marks (voiced 'sh' becomes 'j')"
+    };
+
+    // Map romaji to mnemonic or return a default
+    return simple[kanaItem.romaji as keyof typeof simple] || 
+      `Think of the shape as ${kanaItem.character} for "${kanaItem.romaji}"`;
+  };
+
   const handleAnswer = async (selectedRomaji: string) => {
     const kanaItem = kanaList[currentKanaIndex];
     const isCorrectSelection = selectedRomaji === kanaItem.romaji;
@@ -148,16 +189,19 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
 
     if (isCorrectSelection) {
       setCorrectCount(correctCount + 1);
-      toast({
-        title: "Correct!",
-        description: `Great job! ${kanaItem.character} is ${kanaItem.romaji}.`,
+      setFeedback({
+        show: true,
+        isCorrect: true,
+        message: `Great job! ${kanaItem.character} is ${kanaItem.romaji}.`,
+        mnemonic: generateMnemonic(kanaItem)
       });
     } else {
       setIncorrectCount(incorrectCount + 1);
-      toast({
-        title: "Incorrect",
-        description: `Not quite! ${kanaItem.character} is ${kanaItem.romaji}.`,
-        variant: "destructive",
+      setFeedback({
+        show: true,
+        isCorrect: false,
+        message: `Not quite! ${kanaItem.character} is ${kanaItem.romaji}.`,
+        mnemonic: generateMnemonic(kanaItem)
       });
     }
 
@@ -176,6 +220,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
 
     setTimeout(() => {
       setIsCorrect(null);
+      setFeedback(prev => ({ ...prev, show: false }));
       if (currentKanaIndex < kanaList.length - 1) {
         setCurrentKanaIndex(currentKanaIndex + 1);
       } else {
@@ -200,7 +245,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
         };
         onComplete(results);
       }
-    }, 750);
+    }, 3000);
   };
 
   const updateUserProgress = async (isCorrect: boolean, kanaItem: KanaCharacter) => {
@@ -296,13 +341,24 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
         ))}
       </div>
 
-      {isCorrect !== null && (
-        <div className="text-center">
-          {isCorrect ? (
-            <p className="text-green-500 font-semibold">Correct!</p>
-          ) : (
-            <p className="text-red-500 font-semibold">Incorrect. The correct answer was {kanaItem.romaji}.</p>
-          )}
+      {feedback.show && (
+        <div className={`my-4 p-4 rounded-lg animate-fade-in ${
+          feedback.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
+        }`}>
+          <p className={`font-semibold ${
+            feedback.isCorrect ? 'text-green-600' : 'text-amber-600'
+          }`}>
+            {feedback.message}
+          </p>
+          <div className="mt-2 text-sm text-gray-700">
+            <p><strong>Memory Tip:</strong> {feedback.mnemonic}</p>
+            {kanaItem.examples && kanaItem.examples.length > 0 && (
+              <p className="mt-1">
+                <strong>Example:</strong> {kanaItem.examples[0].word} 
+                ({kanaItem.examples[0].romaji}) - {kanaItem.examples[0].meaning}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>
