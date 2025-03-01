@@ -1066,4 +1066,159 @@ const hiraganaCharacters: KanaCharacter[] = [
     type: 'hiragana',
     stroke_count: 1,
     stroke_order: ['1'],
-    mnemonic: 'Looks like the letter n
+    mnemonic: 'Looks like the letter n',
+    examples: [
+      {
+        word: 'でんわ',
+        romaji: 'denwa',
+        meaning: 'telephone',
+        reading: 'でんわ'
+      },
+      {
+        word: 'ほん',
+        romaji: 'hon',
+        meaning: 'book',
+        reading: 'ほん'
+      }
+    ]
+  }
+];
+
+// Complete katakana character set
+const katakanaCharacters: KanaCharacter[] = [
+  // Basic vowels
+  {
+    id: 'a-katakana',
+    character: 'ア',
+    romaji: 'a',
+    type: 'katakana',
+    stroke_count: 2,
+    stroke_order: ['1', '2'],
+    mnemonic: 'Looks like a capital A',
+    examples: [
+      {
+        word: 'アメリカ',
+        romaji: 'amerika',
+        meaning: 'America',
+        reading: 'アメリカ'
+      },
+      {
+        word: 'アニメ',
+        romaji: 'anime',
+        meaning: 'anime',
+        reading: 'アニメ'
+      }
+    ]
+  },
+  {
+    id: 'i-katakana',
+    character: 'イ',
+    romaji: 'i',
+    type: 'katakana',
+    stroke_count: 2,
+    stroke_order: ['1', '2'],
+    mnemonic: 'Looks like two identical lines',
+    examples: [
+      {
+        word: 'イギリス',
+        romaji: 'igirisu',
+        meaning: 'England',
+        reading: 'イギリス'
+      },
+      {
+        word: 'イメージ',
+        romaji: 'imeeji',
+        meaning: 'image',
+        reading: 'イメージ'
+      }
+    ]
+  },
+  {
+    id: 'u-katakana',
+    character: 'ウ',
+    romaji: 'u',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'Looks like a crown',
+    examples: [
+      {
+        word: 'ウイルス',
+        romaji: 'uirusu',
+        meaning: 'virus',
+        reading: 'ウイルス'
+      },
+      {
+        word: 'ウーロン',
+        romaji: 'uuron',
+        meaning: 'oolong',
+        reading: 'ウーロン'
+      }
+    ]
+  },
+  {
+    id: 'e-katakana',
+    character: 'エ',
+    romaji: 'e',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'Looks like a sideways E',
+    examples: [
+      {
+        word: 'エネルギー',
+        romaji: 'enerugii',
+        meaning: 'energy',
+        reading: 'エネルギー'
+      },
+      {
+        word: 'エレベーター',
+        romaji: 'erebeetaa',
+        meaning: 'elevator',
+        reading: 'エレベーター'
+      }
+    ]
+  },
+  {
+    id: 'o-katakana',
+    character: 'オ',
+    romaji: 'o',
+    type: 'katakana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'Looks like an open box',
+    examples: [
+      {
+        word: 'オレンジ',
+        romaji: 'orenji',
+        meaning: 'orange',
+        reading: 'オレンジ'
+      },
+      {
+        word: 'オートバイ',
+        romaji: 'ootobai',
+        meaning: 'motorcycle',
+        reading: 'オートバイ'
+      }
+    ]
+  },
+
+  // K-row
+  {
+    id: 'ka-katakana',
+    character: 'カ',
+    romaji: 'ka',
+    type: 'katakana',
+    stroke_count: 2,
+    stroke_order: ['1', '2'],
+    mnemonic: 'Looks like a power symbol',
+    examples: [
+      {
+        word: 'カメラ',
+        romaji: 'kamera',
+        meaning: 'camera',
+        reading: 'カメラ'
+      },
+      {
+        word: 'カレンダー',
+        romaji: 'karend
