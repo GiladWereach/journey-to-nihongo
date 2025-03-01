@@ -1,13 +1,13 @@
-<lov-code>
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/components/ui/use-toast';
 import { kanaService } from '@/services/kanaService';
 import KanaGrid from '@/components/kana/KanaGrid';
-import KanaPractice, { PracticeResult } from '@/components/kana/KanaPractice';
+import KanaPractice from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
-import { KanaType, UserKanaProgress } from '@/types/kana';
+import { KanaType, UserKanaProgress, PracticeResult } from '@/types/kana';
 import { Button } from '@/components/ui/button';
 import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft, GraduationCap, Bookmark, Calendar, Award, TrendingUp, Clock, Medal } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
@@ -809,4 +809,82 @@ const KanaLearning = () => {
                             <tbody>
                               {userProgress
                                 .sort((a, b) => b.last_practiced.getTime() - a.last_practiced.getTime())
-                                .slice(0
+                                .slice(0, 10)
+                                .map(progress => {
+                                  const kana = allKana.find(k => k.id === progress.character_id);
+                                  if (!kana) return null;
+                                  
+                                  return (
+                                    <tr key={progress.character_id} className="border-b">
+                                      <td className="px-4 py-2 text-center">
+                                        <span className="text-xl">{kana.character}</span>
+                                      </td>
+                                      <td className="px-4 py-2">{kana.romaji}</td>
+                                      <td className="px-4 py-2">
+                                        {new Date(progress.last_practiced).toLocaleDateString()}
+                                      </td>
+                                      <td className="px-4 py-2">
+                                        <ProgressIndicator
+                                          progress={progress.proficiency}
+                                          size="xs"
+                                          showPercentage
+                                        />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                                
+                                {userProgress.length === 0 && (
+                                  <tr>
+                                    <td colSpan={4} className="text-center py-6 text-gray-500">
+                                      No practice history yet
+                                    </td>
+                                  </tr>
+                                )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-10 bg-gray-50 rounded-lg border">
+                    <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-medium mb-2">No Progress Yet</h3>
+                    <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                      Start practicing with Hiragana and Katakana to see your progress here.
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setActiveTab('practice');
+                        setPracticeMode('selection');
+                      }}
+                      className="bg-indigo hover:bg-indigo/90"
+                    >
+                      Start Practice Now
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <div className="text-center py-10 bg-gray-50 rounded-lg border">
+                  <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium mb-2">Sign In to Track Progress</h3>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Create an account or sign in to track your progress and see your learning stats.
+                  </p>
+                  <Link to="/auth">
+                    <Button className="bg-indigo hover:bg-indigo/90">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default KanaLearning;
