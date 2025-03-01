@@ -4,10 +4,13 @@ import { supabase } from '../integrations/supabase/client';
 export interface Achievement {
   id: string;
   name: string;
+  title: string;
   description: string;
   icon: string | null;
   category: string;
   required_progress: number;
+  points: number;
+  requirements: string;
   created_at?: string;
 }
 
@@ -32,7 +35,7 @@ export const fetchAchievements = async (): Promise<Achievement[]> => {
       .order('category', { ascending: true });
       
     if (error) throw error;
-    return data as Achievement[];
+    return data as unknown as Achievement[];
   } catch (error) {
     console.error('Error fetching achievements:', error);
     return [];
@@ -55,7 +58,7 @@ export const fetchUserAchievements = async (userId: string): Promise<UserAchieve
     return data.map(item => ({
       ...item,
       earned_at: item.unlocked_at // Map unlocked_at to earned_at for compatibility
-    })) as UserAchievement[];
+    })) as unknown as UserAchievement[];
   } catch (error) {
     console.error('Error fetching user achievements:', error);
     return [];
@@ -90,7 +93,7 @@ export const updateAchievementProgress = async (
       
     if (achievementError) throw achievementError;
     
-    const achievement = achievementData as Achievement;
+    const achievement = achievementData as unknown as Achievement;
     const isCompleted = progress >= achievement.required_progress;
     
     if (!existingData) {
@@ -149,7 +152,7 @@ export const checkAndAwardAchievements = async (
       if (userAchievement.current_progress >= achievement.required_progress && 
           userAchievement.unlocked_at && 
           new Date(userAchievement.unlocked_at).toDateString() === new Date().toDateString()) {
-        newlyCompletedAchievements.push(achievement);
+        newlyCompletedAchievements.push(achievement as unknown as Achievement);
       }
     }
     
@@ -158,4 +161,12 @@ export const checkAndAwardAchievements = async (
     console.error('Error checking achievements:', error);
     return [];
   }
+};
+
+// Export all functions as a service object
+export const achievementService = {
+  getAllAchievements: fetchAchievements,
+  getUserAchievements: fetchUserAchievements,
+  updateProgress: updateAchievementProgress,
+  checkAndAward: checkAndAwardAchievements
 };
