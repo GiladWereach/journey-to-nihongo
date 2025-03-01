@@ -341,7 +341,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       </div>
 
       {feedback.show && (
-        <div className={`my-4 p-3 rounded-lg animate-fade-in ${
+        <div className={`my-4 p-3 rounded-lg animate-fade-in max-w-md mx-auto ${
           feedback.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
         }`}>
           <p className={`font-semibold text-sm ${
