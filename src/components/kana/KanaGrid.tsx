@@ -35,13 +35,6 @@ const groupKanaBySection = (kanaList: KanaCharacter[]): Record<string, KanaChara
     groups[firstLetter].push(kana);
   });
   
-  // Remove empty sections
-  Object.keys(groups).forEach(key => {
-    if (groups[key].length === 0) {
-      delete groups[key];
-    }
-  });
-  
   return groups;
 };
 
@@ -60,7 +53,13 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
   
   // Group kana by section
   const kanaGroups = groupKanaBySection(filteredKana);
-  const sectionKeys = Object.keys(kanaGroups).sort();
+  
+  // Always display all section buttons, even for empty sections
+  const allSections = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
+                       'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z'];
+  
+  // Only show sections that have content
+  const sectionKeys = allSections.filter(section => kanaGroups[section] && kanaGroups[section].length > 0);
   
   // Set initial active section
   useEffect(() => {
@@ -179,22 +178,30 @@ const KanaGrid: React.FC<KanaGridProps> = ({ kanaList, className }) => {
       <div className="sticky top-[53px] z-20 bg-background/95 backdrop-blur-sm pt-2 pb-1 border-b border-border/40">
         <div className="overflow-x-auto hide-scrollbar py-1">
           <div className="flex space-x-1 px-2 justify-center">
-            {sectionKeys.map(section => (
-              <Button
-                key={section}
-                variant={activeSection === section ? "default" : "outline"}
-                size="sm"
-                className={cn(
-                  "rounded-full px-3 py-1 h-7 text-sm transition-all",
-                  activeSection === section 
-                    ? "bg-indigo text-white" 
-                    : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
-                )}
-                onClick={() => scrollToSection(section)}
-              >
-                {section}
-              </Button>
-            ))}
+            {allSections.map(section => {
+              // Check if this section has any kana
+              const hasContent = kanaGroups[section] && kanaGroups[section].length > 0;
+              // If no content, gray it out
+              return (
+                <Button
+                  key={section}
+                  variant={activeSection === section ? "default" : "outline"}
+                  size="sm"
+                  disabled={!hasContent}
+                  className={cn(
+                    "rounded-full px-3 py-1 h-7 text-sm transition-all",
+                    hasContent ? (
+                      activeSection === section 
+                        ? "bg-indigo text-white" 
+                        : "text-muted-foreground hover:bg-indigo/10 hover:text-indigo"
+                    ) : "opacity-40 cursor-not-allowed"
+                  )}
+                  onClick={() => hasContent && scrollToSection(section)}
+                >
+                  {section}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>
