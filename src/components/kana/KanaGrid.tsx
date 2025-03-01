@@ -17,13 +17,29 @@ interface KanaGridProps {
 const groupKanaBySection = (kanaList: KanaCharacter[]): Record<string, KanaCharacter[]> => {
   const groups: Record<string, KanaCharacter[]> = {};
   
-  // Group by first letter of romaji (a, k, s, etc.)
+  // Define section order to ensure B, D, J, P, V are included
+  const sectionOrder = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
+                        'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z'];
+  
+  // Initialize empty groups for all sections
+  sectionOrder.forEach(section => {
+    groups[section] = [];
+  });
+  
+  // Group by first letter of romaji
   kanaList.forEach(kana => {
     const firstLetter = kana.romaji.charAt(0).toUpperCase();
     if (!groups[firstLetter]) {
       groups[firstLetter] = [];
     }
     groups[firstLetter].push(kana);
+  });
+  
+  // Remove empty sections
+  Object.keys(groups).forEach(key => {
+    if (groups[key].length === 0) {
+      delete groups[key];
+    }
   });
   
   return groups;
