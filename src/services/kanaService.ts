@@ -1,4 +1,3 @@
-<lov-code>
 import { supabaseClient } from '@/lib/supabase';
 import { KanaCharacter, KanaGroup, KanaGroupCharacter, KanaType, UserKanaProgress } from '@/types/kana';
 
@@ -1222,4 +1221,4 @@ const katakanaCharacters: KanaCharacter[] = [
       },
       {
         word: 'カレンダー',
-        romaji:
+        romaji: 'karend
