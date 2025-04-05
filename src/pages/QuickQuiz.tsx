@@ -159,7 +159,10 @@ const QuickQuiz: React.FC = () => {
             {quizState === 'active' && (
               <QuizInterface 
                 kanaType={selectedKanaType}
-                characterSets={selectedSets}
+                characterSets={selectedSets.map(set => ({
+                  ...set,
+                  name: set.name.replace(' Group', '') // Remove "Group" from displayed names
+                }))}
                 settings={quizSettings}
                 onEndQuiz={handleEndQuiz}
               />

@@ -180,7 +180,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
       }
       
-      // Reset state and move to next character after delay
+      // Move to next character after a brief delay (reduced from previous time)
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -192,7 +192,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 1000);
+      }, 300); // Reduced delay for correct answers
     } else {
       // Incorrect answer
       setFeedback('incorrect');
@@ -238,7 +238,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           if (inputRef.current) {
             inputRef.current.focus();
           }
-        }, 3000);
+        }, 2000); // Slightly reduced time for hint viewing
       } else {
         // Reset input for another attempt
         setTimeout(() => {
@@ -249,7 +249,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           if (inputRef.current) {
             inputRef.current.focus();
           }
-        }, 1000);
+        }, 800); // Slightly reduced delay for incorrect answers
       }
     }
     
@@ -311,12 +311,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             size="sm"
             onClick={togglePause}
+            className="text-xs sm:text-sm"
           >
             {isPaused ? <Play size={16} /> : <Pause size={16} />}
             {isPaused ? 'Resume' : 'Pause'}
@@ -325,13 +326,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         
         <div className="text-center">
           <div className="flex items-center justify-center gap-1">
-            <span className="text-sm font-medium">Set:</span>
-            <span className="text-sm text-muted-foreground">{characterSets.map(s => s.name).join(', ')}</span>
+            <span className="text-xs sm:text-sm font-medium">Set:</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {characterSets.map(s => s.name.replace(' Group', '')).join(', ')}
+            </span>
           </div>
           <div className="flex items-center justify-center gap-1">
-            <span className="text-sm font-medium">Progress:</span>
-            <span className="text-sm text-muted-foreground">
-              {sessionStats.totalAttempts} attempted
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {sessionStats.correctCount} / {quizCharacters.length}
             </span>
           </div>
         </div>
@@ -340,7 +342,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           variant="outline" 
           size="sm"
           onClick={handleEndQuiz}
-          className="text-red-500"
+          className="text-red-500 text-xs sm:text-sm"
         >
           End Quiz
         </Button>
@@ -348,20 +350,20 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       
       <div className="grid grid-cols-1 gap-4">
         <Card className={`overflow-hidden ${feedback === 'correct' ? 'border-green-500 bg-green-50' : feedback === 'incorrect' ? 'border-red-500 bg-red-50' : ''}`}>
-          <CardContent className="pt-6 pb-6">
+          <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
             <div className="flex flex-col items-center">
-              <div className="flex justify-center items-center mb-6 relative">
+              <div className="flex justify-center items-center mb-4 sm:mb-6 relative">
                 {/* Quiz progress */}
-                <div className="absolute top-0 -mt-10 w-full max-w-xs">
+                <div className="absolute top-0 -mt-8 sm:-mt-10 w-full max-w-xs">
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span>{sessionStats.correctCount} correct</span>
                     <span>{Math.round((sessionStats.correctCount / Math.max(sessionStats.totalAttempts, 1)) * 100)}% accuracy</span>
                   </div>
-                  <Progress value={sessionStats.correctCount} max={Math.max(sessionStats.totalAttempts, 1)} className="h-1" />
+                  <Progress value={sessionStats.currentStreak} max={10} className="h-1" />
                 </div>
                 
                 {/* Character display */}
-                <div className={`flex items-center justify-center w-40 h-40 rounded-full ${feedback === 'correct' ? 'bg-green-100' : feedback === 'incorrect' ? 'bg-red-100' : 'bg-muted'}`}>
+                <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full ${feedback === 'correct' ? 'bg-green-100' : feedback === 'incorrect' ? 'bg-red-100' : 'bg-muted'}`}>
                   <JapaneseCharacter 
                     character={currentCharacter.character} 
                     size={characterSizeMap[settings.characterSize] || 'xl'} 
@@ -373,12 +375,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                 {feedback !== 'none' && (
                   <div className="absolute top-0 right-0 -mt-4 -mr-4">
                     {feedback === 'correct' ? (
-                      <div className="bg-green-500 text-white rounded-full p-2">
-                        <Check size={20} />
+                      <div className="bg-green-500 text-white rounded-full p-1 sm:p-2">
+                        <Check size={16} className="sm:w-5 sm:h-5" />
                       </div>
                     ) : (
-                      <div className="bg-red-500 text-white rounded-full p-2">
-                        <X size={20} />
+                      <div className="bg-red-500 text-white rounded-full p-1 sm:p-2">
+                        <X size={16} className="sm:w-5 sm:h-5" />
                       </div>
                     )}
                   </div>
@@ -387,9 +389,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
               
               {/* Streak indicator */}
               {sessionStats.currentStreak > 0 && (
-                <div className="mb-4">
-                  <span className="text-sm font-medium text-indigo">
-                    Current streak: {sessionStats.currentStreak}
+                <div className="mb-3 sm:mb-4">
+                  <span className="text-xs sm:text-sm font-medium text-indigo">
+                    Streak: {sessionStats.currentStreak}
                     {sessionStats.currentStreak >= 5 && ' 🔥'}
                   </span>
                 </div>
@@ -397,25 +399,25 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
               
               {/* Hint display */}
               {showHint && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md w-full max-w-md">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle size={16} className="text-amber-500" />
-                    <span className="text-sm font-medium">The correct answer is:</span>
+                <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-md w-full max-w-md">
+                  <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                    <AlertTriangle size={14} className="text-amber-500 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">The correct answer is:</span>
                   </div>
-                  <div className="flex justify-center items-center gap-4">
-                    <span className="text-lg font-bold">{currentCharacter.character}</span>
-                    <span className="text-lg">=</span>
-                    <span className="text-lg font-bold">{currentCharacter.romaji}</span>
+                  <div className="flex justify-center items-center gap-2 sm:gap-4">
+                    <span className="text-base sm:text-lg font-bold">{currentCharacter.character}</span>
+                    <span className="text-base sm:text-lg">=</span>
+                    <span className="text-base sm:text-lg font-bold">{currentCharacter.romaji}</span>
                   </div>
                   
                   {getSimilarCharacters().length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-amber-200">
-                      <span className="text-xs text-muted-foreground">Similar characters:</span>
-                      <div className="flex justify-center gap-4 mt-1">
+                    <div className="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-amber-200">
+                      <span className="text-2xs sm:text-xs text-muted-foreground">Similar characters:</span>
+                      <div className="flex justify-center gap-3 sm:gap-4 mt-1">
                         {getSimilarCharacters().map(char => (
                           <div key={char.id} className="text-center">
-                            <div className="text-md">{char.character}</div>
-                            <div className="text-xs">{char.romaji}</div>
+                            <div className="text-sm sm:text-md">{char.character}</div>
+                            <div className="text-2xs sm:text-xs">{char.romaji}</div>
                           </div>
                         ))}
                       </div>
@@ -433,7 +435,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     placeholder="Enter romaji..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className={`text-center text-lg ${isPaused ? 'bg-gray-100' : ''}`}
+                    className={`text-center text-base sm:text-lg ${isPaused ? 'bg-gray-100' : ''}`}
                     disabled={isPaused || showHint}
                     autoComplete="off"
                     autoCorrect="off"
@@ -450,13 +452,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
               
               {attemptCount > 0 && attemptCount < 3 && feedback === 'none' && (
                 <div className="mt-2">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     Attempt {attemptCount + 1} of 3
                   </span>
                 </div>
               )}
               
-              <div className="mt-4 flex justify-center gap-4">
+              <div className="mt-3 sm:mt-4 flex justify-center gap-4">
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -469,8 +471,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     moveToNextCharacter();
                   }}
                   disabled={isPaused}
+                  className="text-xs sm:text-sm"
                 >
-                  <SkipForward size={16} className="mr-1" />
+                  <SkipForward size={14} className="mr-1 sm:w-4 sm:h-4" />
                   Skip
                 </Button>
               </div>
