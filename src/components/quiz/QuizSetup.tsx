@@ -252,7 +252,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
                               >
                                 <JapaneseCharacter 
                                   character={char.character} 
-                                  size="xs" 
+                                  size="sm" 
                                   color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'} 
                                 />
                               </div>
@@ -332,7 +332,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
                               >
                                 <JapaneseCharacter 
                                   character={char.character} 
-                                  size="xs" 
+                                  size="sm" 
                                   color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'} 
                                 />
                               </div>
