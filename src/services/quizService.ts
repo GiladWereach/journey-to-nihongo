@@ -1,4 +1,3 @@
-
 import { supabaseClient } from '@/lib/supabase';
 import { KanaType, QuizCharacterSet, QuizCharacter } from '@/types/quiz';
 import { UserKanaProgress } from '@/types/kana';
@@ -468,7 +467,7 @@ export const quizService = {
       
       const now = new Date().toISOString();
       
-      // If we already have a record, update it
+      // If we already have a record, update it - this prevents database overload
       if (data) {
         // Get current values or defaults
         const currentProficiency = data.proficiency || 0;
@@ -597,6 +596,40 @@ export const quizService = {
     }
   ): Promise<string | null> => {
     try {
+      // Calculate streak by checking most recent session
+      const { data: recentSessions } = await supabaseClient
+        .from('kana_learning_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      // Calculate current streak
+      let streak = 0;
+      
+      if (recentSessions) {
+        // If the last session had a streak and the accuracy was good (>70%)
+        if (recentSessions.streak && recentSessions.accuracy && recentSessions.accuracy >= 70) {
+          // Continue the streak
+          streak = recentSessions.streak + 1;
+        } else {
+          // Start a new streak
+          streak = 1;
+        }
+      } else {
+        // First session - start with streak of 1
+        streak = 1;
+      }
+      
+      // Calculate accuracy
+      const accuracy = Math.round((quizData.correctCount / Math.max(quizData.totalAttempts, 1)) * 100);
+      
+      // Reset streak if accuracy is poor
+      if (accuracy < 50) {
+        streak = 0;
+      }
+      
       const { data, error } = await supabaseClient
         .from('kana_learning_sessions')
         .insert({
@@ -605,7 +638,8 @@ export const quizService = {
           characters_studied: quizData.characterIds,
           start_time: quizData.startTime.toISOString(),
           end_time: quizData.endTime.toISOString(),
-          accuracy: Math.round((quizData.correctCount / Math.max(quizData.totalAttempts, 1)) * 100),
+          accuracy: accuracy,
+          streak: streak,
           completed: true
         })
         .select('id')

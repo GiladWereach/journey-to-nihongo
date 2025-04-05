@@ -180,7 +180,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
       }
       
-      // Move to next character after a brief delay (reduced from previous time)
+      // Move to next character after a brief delay (REDUCED TO 100ms)
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -192,7 +192,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 300); // Reduced delay for correct answers
+      }, 100); // Reduced delay for correct answers to 100ms
     } else {
       // Incorrect answer
       setFeedback('incorrect');
@@ -238,7 +238,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           if (inputRef.current) {
             inputRef.current.focus();
           }
-        }, 2000); // Slightly reduced time for hint viewing
+        }, 1500); // Slightly reduced time for hint viewing
       } else {
         // Reset input for another attempt
         setTimeout(() => {
@@ -265,13 +265,29 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   };
   
   // Handle end quiz
-  const handleEndQuiz = () => {
+  const handleEndQuiz = async () => {
     const endTime = new Date();
     const finalStats = {
       ...sessionStats,
       endTime,
       durationSeconds: Math.round((endTime.getTime() - sessionStats.startTime.getTime()) / 1000),
     };
+    
+    // Record quiz session in database if user is logged in
+    if (user) {
+      try {
+        await quizService.recordQuizSession(user.id, {
+          kanaType,
+          characterIds: quizCharacters.map(char => char.id),
+          startTime: sessionStats.startTime,
+          endTime,
+          correctCount: sessionStats.correctCount,
+          totalAttempts: sessionStats.totalAttempts
+        });
+      } catch (error) {
+        console.error('Error recording quiz session:', error);
+      }
+    }
     
     onEndQuiz(finalStats);
   };
@@ -490,3 +506,4 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
 };
 
 export default QuizInterface;
+

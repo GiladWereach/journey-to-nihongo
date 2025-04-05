@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuizSetup from '@/components/quiz/QuizSetup';
 import QuizInterface from '@/components/quiz/QuizInterface';
 import QuizResults from '@/components/quiz/QuizResults';
-import { KanaType, QuizCharacterSet, QuizSettings } from '@/types/quiz';
+import { KanaType, QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
+import { quizService } from '@/services/quizService';
 
 const QuickQuiz: React.FC = () => {
   const { user } = useAuth();
@@ -25,7 +26,57 @@ const QuickQuiz: React.FC = () => {
     characterSize: 'large',
     audioFeedback: true,
   });
-  const [quizResults, setQuizResults] = useState<any>(null);
+  const [quizResults, setQuizResults] = useState<QuizSessionStats | null>(null);
+  const [userStats, setUserStats] = useState<{
+    longestStreak: number;
+    totalCorrect: number;
+    totalQuizzes: number;
+  }>({
+    longestStreak: 0,
+    totalCorrect: 0,
+    totalQuizzes: 0
+  });
+
+  // Load user's quiz stats when component mounts
+  useEffect(() => {
+    const loadUserStats = async () => {
+      if (user) {
+        try {
+          // Get recent quiz sessions
+          const recentSessions = await quizService.getRecentQuizSessions(user.id, 20);
+          
+          // Calculate stats from sessions
+          if (recentSessions.length > 0) {
+            let longestStreak = 0;
+            let totalCorrect = 0;
+            
+            recentSessions.forEach(session => {
+              // Each session might have streak data we can track
+              if (session.streak && session.streak > longestStreak) {
+                longestStreak = session.streak;
+              }
+              
+              // Sum up correct answers
+              if (session.accuracy) {
+                const correctCount = Math.round((session.accuracy / 100) * session.characters_studied.length);
+                totalCorrect += correctCount;
+              }
+            });
+            
+            setUserStats({
+              longestStreak,
+              totalCorrect,
+              totalQuizzes: recentSessions.length
+            });
+          }
+        } catch (error) {
+          console.error('Error loading user quiz stats:', error);
+        }
+      }
+    };
+    
+    loadUserStats();
+  }, [user]);
 
   const handleStartQuiz = (kanaType: KanaType, characterSets: QuizCharacterSet[], settings: QuizSettings) => {
     setSelectedKanaType(kanaType);
@@ -35,7 +86,7 @@ const QuickQuiz: React.FC = () => {
     setActiveTab('quiz');
   };
 
-  const handleEndQuiz = (results: any) => {
+  const handleEndQuiz = async (results: QuizSessionStats) => {
     setQuizResults(results);
     setQuizState('results');
     setActiveTab('results');
@@ -45,6 +96,15 @@ const QuickQuiz: React.FC = () => {
       title: "Quiz Complete!",
       description: `You scored ${results.accuracy}% accuracy with ${results.correctCount} correct answers.`,
     });
+    
+    // Update user stats with new results
+    if (user) {
+      setUserStats(prev => ({
+        longestStreak: Math.max(prev.longestStreak, results.longestStreak),
+        totalCorrect: prev.totalCorrect + results.correctCount,
+        totalQuizzes: prev.totalQuizzes + 1
+      }));
+    }
   };
 
   const handleReturnToSetup = () => {
@@ -150,6 +210,23 @@ const QuickQuiz: React.FC = () => {
                   <Settings size={16} />
                 </Button>
               </div>
+              
+              {user && userStats.totalQuizzes > 0 && (
+                <div className="mb-6 p-4 bg-indigo/5 rounded-lg">
+                  <h3 className="text-sm font-medium mb-2">Your Quiz Stats</h3>
+                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                    <div>
+                      <span className="font-semibold text-indigo">{userStats.totalQuizzes}</span> quizzes taken
+                    </div>
+                    <div>
+                      <span className="font-semibold text-indigo">{userStats.totalCorrect}</span> correct answers
+                    </div>
+                    <div>
+                      <span className="font-semibold text-indigo">{userStats.longestStreak}</span> longest streak
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <QuizSetup onStartQuiz={handleStartQuiz} />
             </div>
