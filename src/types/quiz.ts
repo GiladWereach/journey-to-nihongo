@@ -12,6 +12,7 @@ export interface QuizCharacter {
   isHandakuten?: boolean;
   group?: string;
   row?: string;
+  quizMode?: 'recognition' | 'production' | 'both';
 }
 
 export interface QuizCharacterSet {
