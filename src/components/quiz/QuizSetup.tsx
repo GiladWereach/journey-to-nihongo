@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, Circle } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { kanaService } from '@/services/kanaService';
 import { quizService } from '@/services/quizService';
 import { KanaType, QuizCharacterSet, QuizSettings } from '@/types/quiz';
@@ -30,7 +30,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
   });
   const [availableSets, setAvailableSets] = useState<QuizCharacterSet[]>([]);
   const [loadingCharacterSets, setLoadingCharacterSets] = useState(true);
-  const [groupBy, setGroupBy] = useState<'consonant' | 'vowel'>('consonant');
+  const [groupingTab, setGroupingTab] = useState<'consonant' | 'vowel'>('consonant');
 
   // Load character sets when kana type changes
   useEffect(() => {
@@ -93,14 +93,39 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
   };
   
   // Group the available sets by consonant or vowel
-  const groupedSets = availableSets.reduce((groups: Record<string, QuizCharacterSet[]>, set) => {
-    const groupKey = groupBy === 'consonant' ? set.consonantGroup || 'other' : set.vowelGroup || 'other';
+  const groupedSetsByConsonant = availableSets.reduce((groups: Record<string, QuizCharacterSet[]>, set) => {
+    const groupKey = set.consonantGroup || 'other';
     if (!groups[groupKey]) {
       groups[groupKey] = [];
     }
     groups[groupKey].push(set);
     return groups;
   }, {});
+
+  const groupedSetsByVowel = availableSets.reduce((groups: Record<string, QuizCharacterSet[]>, set) => {
+    const groupKey = set.vowelGroup || 'other';
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+    }
+    groups[groupKey].push(set);
+    return groups;
+  }, {});
+
+  // Sort group keys for better display order
+  const consonantOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'special', 'dakuten', 'handakuten', 'combinations', 'all', 'other'];
+  const vowelOrder = ['a', 'i', 'u', 'e', 'o', 'all', 'special', 'other'];
+
+  const sortedConsonantGroups = Object.keys(groupedSetsByConsonant).sort((a, b) => {
+    return consonantOrder.indexOf(a) - consonantOrder.indexOf(b);
+  });
+
+  const sortedVowelGroups = Object.keys(groupedSetsByVowel).sort((a, b) => {
+    return vowelOrder.indexOf(a) - vowelOrder.indexOf(b);
+  });
+
+  const isSetSelected = (set: QuizCharacterSet) => {
+    return selectedSets.some(s => s.id === set.id);
+  };
 
   return (
     <div className="space-y-6">
@@ -150,67 +175,181 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <RadioGroup 
-              defaultValue="consonant" 
-              value={groupBy}
-              onValueChange={(value) => setGroupBy(value as 'consonant' | 'vowel')}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="consonant" id="group-consonant" />
-                <Label htmlFor="group-consonant">Group by Consonant</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="vowel" id="group-vowel" />
-                <Label htmlFor="group-vowel">Group by Vowel</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        
           {loadingCharacterSets ? (
             <div className="flex justify-center items-center h-32">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
             </div>
           ) : (
-            <Accordion type="multiple" className="w-full">
-              {Object.entries(groupedSets).map(([groupName, sets]) => (
-                <AccordionItem key={groupName} value={groupName}>
-                  <AccordionTrigger className="text-lg capitalize">
-                    {groupName} Group 
-                    <span className="text-sm text-muted-foreground ml-2">
-                      ({sets.length} sets)
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                      {sets.map((set) => (
-                        <Button
-                          key={set.id}
-                          variant="outline"
-                          className={`h-full flex items-center justify-between px-3 py-2 hover:bg-muted ${
-                            selectedSets.some(s => s.id === set.id) 
-                              ? 'border-2 border-indigo' 
-                              : ''
-                          }`}
-                          onClick={() => toggleSetSelection(set)}
+            <Tabs 
+              value={groupingTab} 
+              onValueChange={(value) => setGroupingTab(value as 'consonant' | 'vowel')}
+              className="w-full"
+            >
+              <TabsList className="w-full grid grid-cols-2 mb-6">
+                <TabsTrigger value="consonant">Group by Consonant</TabsTrigger>
+                <TabsTrigger value="vowel">Group by Vowel</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="consonant" className="space-y-6">
+                {sortedConsonantGroups.map((groupName) => (
+                  <div key={groupName} className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-medium capitalize">{groupName === 'all' ? 'All Characters' : `${groupName} Group`}</h3>
+                      
+                      {groupedSetsByConsonant[groupName].length > 0 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            // Check if all sets in this group are already selected
+                            const allSelected = groupedSetsByConsonant[groupName].every(set => 
+                              selectedSets.some(s => s.id === set.id)
+                            );
+                            
+                            if (allSelected) {
+                              // Deselect all sets in this group
+                              setSelectedSets(selectedSets.filter(s => 
+                                !groupedSetsByConsonant[groupName].some(gs => gs.id === s.id)
+                              ));
+                            } else {
+                              // Select all sets in this group
+                              const setsToAdd = groupedSetsByConsonant[groupName].filter(set => 
+                                !selectedSets.some(s => s.id === set.id)
+                              );
+                              setSelectedSets([...selectedSets, ...setsToAdd]);
+                            }
+                          }}
                         >
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{set.name}</span>
-                            <span className="text-sm text-muted-foreground">{set.characters.length} characters</span>
-                          </div>
-                          {selectedSets.some(s => s.id === set.id) ? (
-                            <CheckCircle2 className="h-5 w-5 text-indigo" />
-                          ) : (
-                            <Circle className="h-5 w-5 text-muted-foreground" />
-                          )}
+                          {groupedSetsByConsonant[groupName].every(set => 
+                            selectedSets.some(s => s.id === set.id)
+                          ) ? 'Deselect All' : 'Select All'}
                         </Button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {groupedSetsByConsonant[groupName].map((set) => (
+                        <div key={set.id} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`set-${set.id}`} 
+                                checked={isSetSelected(set)}
+                                onCheckedChange={() => toggleSetSelection(set)}
+                              />
+                              <Label htmlFor={`set-${set.id}`} className="font-medium cursor-pointer">{set.name}</Label>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{set.characters.length} chars</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {set.characters.slice(0, 8).map((char) => (
+                              <div 
+                                key={char.id} 
+                                className={`flex items-center justify-center h-8 w-8 rounded border ${
+                                  isSetSelected(set) ? 'bg-muted' : 'bg-background'
+                                }`}
+                              >
+                                <JapaneseCharacter 
+                                  character={char.character} 
+                                  size="xs" 
+                                  color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'} 
+                                />
+                              </div>
+                            ))}
+                            {set.characters.length > 8 && (
+                              <div className="flex items-center justify-center h-8 w-8 rounded border bg-muted">
+                                <span className="text-xs text-muted-foreground">+{set.characters.length - 8}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       ))}
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                  </div>
+                ))}
+              </TabsContent>
+              
+              <TabsContent value="vowel" className="space-y-6">
+                {sortedVowelGroups.map((groupName) => (
+                  <div key={groupName} className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-medium capitalize">{groupName === 'all' ? 'All Vowels' : `${groupName.toUpperCase()} Row`}</h3>
+                      
+                      {groupedSetsByVowel[groupName].length > 0 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            // Check if all sets in this group are already selected
+                            const allSelected = groupedSetsByVowel[groupName].every(set => 
+                              selectedSets.some(s => s.id === set.id)
+                            );
+                            
+                            if (allSelected) {
+                              // Deselect all sets in this group
+                              setSelectedSets(selectedSets.filter(s => 
+                                !groupedSetsByVowel[groupName].some(gs => gs.id === s.id)
+                              ));
+                            } else {
+                              // Select all sets in this group
+                              const setsToAdd = groupedSetsByVowel[groupName].filter(set => 
+                                !selectedSets.some(s => s.id === set.id)
+                              );
+                              setSelectedSets([...selectedSets, ...setsToAdd]);
+                            }
+                          }}
+                        >
+                          {groupedSetsByVowel[groupName].every(set => 
+                            selectedSets.some(s => s.id === set.id)
+                          ) ? 'Deselect All' : 'Select All'}
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {groupedSetsByVowel[groupName].map((set) => (
+                        <div key={set.id} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`set-vowel-${set.id}`} 
+                                checked={isSetSelected(set)}
+                                onCheckedChange={() => toggleSetSelection(set)}
+                              />
+                              <Label htmlFor={`set-vowel-${set.id}`} className="font-medium cursor-pointer">{set.name}</Label>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{set.characters.length} chars</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {set.characters.slice(0, 8).map((char) => (
+                              <div 
+                                key={char.id} 
+                                className={`flex items-center justify-center h-8 w-8 rounded border ${
+                                  isSetSelected(set) ? 'bg-muted' : 'bg-background'
+                                }`}
+                              >
+                                <JapaneseCharacter 
+                                  character={char.character} 
+                                  size="xs" 
+                                  color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'} 
+                                />
+                              </div>
+                            ))}
+                            {set.characters.length > 8 && (
+                              <div className="flex items-center justify-center h-8 w-8 rounded border bg-muted">
+                                <span className="text-xs text-muted-foreground">+{set.characters.length - 8}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </TabsContent>
+            </Tabs>
           )}
           
           {selectedSets.length > 0 && (
