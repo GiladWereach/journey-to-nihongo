@@ -15,6 +15,7 @@ import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import Achievements from './pages/Achievements';
 import KanaLearning from './pages/KanaLearning';
+import QuickQuiz from './pages/QuickQuiz';
 
 function App() {
   return (
@@ -26,6 +27,8 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/kana-learning" element={<KanaLearning />} />
+            <Route path="/quick-quiz" element={<QuickQuiz />} />
             
             {/* Protected routes */}
             <Route path="/" element={<RequireAuth />}>
@@ -33,7 +36,6 @@ function App() {
               <Route path="edit-profile" element={<EditProfile />} />
               <Route path="assessment" element={<Assessment />} />
               <Route path="achievements" element={<Achievements />} />
-              <Route path="kana-learning" element={<KanaLearning />} />
               <Route path="courses" element={<div>Courses Page</div>} />
               <Route path="resources" element={<div>Resources Page</div>} />
             </Route>
