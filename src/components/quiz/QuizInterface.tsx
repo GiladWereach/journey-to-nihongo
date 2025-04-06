@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -191,6 +192,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     setSessionStats(newStats);
     setFeedback('correct');
     
+    // Speed up the feedback for correct answers
     setTimeout(() => {
       setInput('');
       setFeedback('none');
@@ -201,7 +203,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, 250);
+    }, 250); // Reduced from original
   };
   
   const handleWrongAnswer = async () => {
@@ -240,6 +242,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
       }
       
+      // Speed up the hint display but still give time to read
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -250,7 +253,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 1500);
+      }, 1500); // Reduced from original
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
       
@@ -280,8 +283,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 1500);
+      }, 1500); // Reduced from original
     } else {
+      // Speed up the feedback for incorrect answers
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -289,7 +293,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 500);
+      }, 500); // Reduced from original
     }
     
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
@@ -409,41 +413,52 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           variant="outline" 
           size="sm"
           onClick={handleEndQuiz}
-          className="text-red-500 text-xs sm:text-sm"
+          className="text-vermilion text-xs sm:text-sm border-vermilion/50 hover:bg-vermilion/10"
         >
           End Quiz
         </Button>
       </div>
       
       <div className="grid grid-cols-1 gap-4">
-        <Card className={`overflow-hidden ${feedback === 'correct' ? 'border-green-500 bg-green-50' : feedback === 'incorrect' ? 'border-red-500 bg-red-50' : ''}`}>
+        <Card className={`overflow-hidden border-2 transition-colors duration-150 ${
+          feedback === 'correct' ? 'border-matcha bg-matcha/5' : 
+          feedback === 'incorrect' ? 'border-vermilion bg-vermilion/5' : 
+          kanaType === 'hiragana' ? 'border-matcha/40' : 'border-vermilion/40'
+        }`}>
           <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
             <div className="flex flex-col items-center">
               <div className="flex justify-center items-center mb-4 sm:mb-6 relative">
                 <div className="absolute top-0 -mt-8 sm:-mt-10 w-full max-w-xs">
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span>{sessionStats.correctCount} correct</span>
-                    <span>{Math.round((sessionStats.correctCount / Math.max(sessionStats.totalAttempts, 1)) * 100)}% accuracy</span>
+                    <span className="text-indigo">{sessionStats.correctCount} correct</span>
+                    <span className="text-muted-foreground">{Math.round((sessionStats.correctCount / Math.max(sessionStats.totalAttempts, 1)) * 100)}% accuracy</span>
                   </div>
-                  <Progress value={sessionStats.currentStreak} max={10} className="h-1" />
+                  <Progress value={(sessionStats.currentStreak / 10) * 100} className="h-1 bg-gray-100" 
+                    indicatorClassName={kanaType === 'hiragana' ? 'bg-matcha' : 'bg-vermilion'} />
                 </div>
                 
-                <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full ${feedback === 'correct' ? 'bg-green-100' : feedback === 'incorrect' ? 'bg-red-100' : 'bg-muted'}`}>
+                <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full transition-colors ${
+                  feedback === 'correct' ? 'bg-matcha/10' : 
+                  feedback === 'incorrect' ? 'bg-vermilion/10' : 
+                  kanaType === 'hiragana' ? 'bg-matcha/5' : 'bg-vermilion/5'
+                }`}>
                   <JapaneseCharacter 
                     character={currentCharacter.character} 
                     size={characterSizeMap[settings.characterSize] || 'xl'} 
-                    color={feedback === 'correct' ? 'text-green-600' : feedback === 'incorrect' ? 'text-red-600' : kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'}
+                    color={feedback === 'correct' ? 'text-matcha' : 
+                           feedback === 'incorrect' ? 'text-vermilion' : 
+                           kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'}
                   />
                 </div>
                 
                 {feedback !== 'none' && (
                   <div className="absolute top-0 right-0 -mt-4 -mr-4">
                     {feedback === 'correct' ? (
-                      <div className="bg-green-500 text-white rounded-full p-1 sm:p-2">
+                      <div className="bg-matcha text-white rounded-full p-1 sm:p-2">
                         <Check size={16} className="sm:w-5 sm:h-5" />
                       </div>
                     ) : (
-                      <div className="bg-red-500 text-white rounded-full p-1 sm:p-2">
+                      <div className="bg-vermilion text-white rounded-full p-1 sm:p-2">
                         <X size={16} className="sm:w-5 sm:h-5" />
                       </div>
                     )}
@@ -461,24 +476,24 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
               )}
               
               {showHint && (
-                <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-md w-full max-w-md">
+                <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-indigo/5 border border-indigo/20 rounded-md w-full max-w-md">
                   <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-                    <AlertTriangle size={14} className="text-amber-500 sm:w-4 sm:h-4" />
+                    <AlertTriangle size={14} className="text-indigo sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm font-medium">The correct answer is:</span>
                   </div>
                   <div className="flex justify-center items-center gap-2 sm:gap-4">
-                    <span className="text-base sm:text-lg font-bold">{currentCharacter.character}</span>
+                    <span className="text-base sm:text-lg font-bold japanese-text">{currentCharacter.character}</span>
                     <span className="text-base sm:text-lg">=</span>
                     <span className="text-base sm:text-lg font-bold">{currentCharacter.romaji}</span>
                   </div>
                   
                   {getSimilarCharacters().length > 0 && (
-                    <div className="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-amber-200">
+                    <div className="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-indigo/10">
                       <span className="text-2xs sm:text-xs text-muted-foreground">Similar characters:</span>
                       <div className="flex justify-center gap-3 sm:gap-4 mt-1">
                         {getSimilarCharacters().map(char => (
                           <div key={char.id} className="text-center">
-                            <div className="text-sm sm:text-md">{char.character}</div>
+                            <div className="text-sm sm:text-md japanese-text">{char.character}</div>
                             <div className="text-2xs sm:text-xs">{char.romaji}</div>
                           </div>
                         ))}
@@ -496,7 +511,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     placeholder="Enter romaji..."
                     value={input}
                     onChange={handleInputChange}
-                    className={`text-center text-base sm:text-lg ${isPaused ? 'bg-gray-100' : ''}`}
+                    className={`text-center text-base sm:text-lg ${isPaused ? 'bg-gray-100' : ''} 
+                      border-2 ${kanaType === 'hiragana' ? 'focus:border-matcha' : 'focus:border-vermilion'}`}
                     disabled={isPaused || showHint}
                     autoComplete="off"
                     autoCorrect="off"
@@ -507,6 +523,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     <Button 
                       type="submit" 
                       disabled={isPaused || showHint || input.trim() === ''}
+                      className={kanaType === 'hiragana' ? 'bg-matcha hover:bg-matcha/90' : 'bg-vermilion hover:bg-vermilion/90'}
                     >
                       Check
                     </Button>
@@ -534,7 +551,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     moveToNextCharacter();
                   }}
                   disabled={isPaused}
-                  className="text-xs sm:text-sm"
+                  className="text-xs sm:text-sm border-indigo/30 hover:bg-indigo/5"
                 >
                   <SkipForward size={14} className="mr-1 sm:w-4 sm:h-4" />
                   Skip

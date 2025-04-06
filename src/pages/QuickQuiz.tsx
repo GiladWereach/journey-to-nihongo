@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Book, ArrowLeft, Settings, Zap } from 'lucide-react';
+import { Book, ArrowLeft, Settings, Zap, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuizSetup from '@/components/quiz/QuizSetup';
 import QuizInterface from '@/components/quiz/QuizInterface';
 import QuizResults from '@/components/quiz/QuizResults';
+import UserKanaProgress from '@/components/kana/UserKanaProgress';
 import { KanaType, QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -213,6 +214,13 @@ const QuickQuiz: React.FC = () => {
             >
               Results
             </TabsTrigger>
+            <TabsTrigger 
+              value="progress" 
+              className="flex items-center gap-2 rounded-md"
+            >
+              <Trophy size={16} />
+              Progress
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="setup" className="space-y-6 animate-fade-in">
@@ -249,7 +257,7 @@ const QuickQuiz: React.FC = () => {
                 </div>
               )}
               
-              <Alert className="mb-6">
+              <Alert className="mb-6 border-indigo/20 bg-indigo/5">
                 <Zap className="h-4 w-4 text-indigo" />
                 <AlertDescription>
                   <b>Quick Quiz</b> uses Speed Mode by default. Type the correct romaji to immediately advance to the next character.
@@ -285,6 +293,25 @@ const QuickQuiz: React.FC = () => {
                 }}
               />
             )}
+          </TabsContent>
+          
+          <TabsContent value="progress" className="space-y-6 animate-fade-in">
+            <div className="max-w-3xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-indigo">Your Kana Progress</h2>
+              </div>
+              
+              {user ? (
+                <UserKanaProgress />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="mb-4 text-muted-foreground">Sign in to track your progress</p>
+                  <Button asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
