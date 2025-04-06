@@ -1,4 +1,3 @@
-
 import { supabaseClient } from '@/lib/supabase';
 import { KanaType, QuizCharacterSet, QuizCharacter } from '@/types/quiz';
 import { UserKanaProgress } from '@/types/kana';
@@ -523,6 +522,55 @@ export const quizService = {
     } catch (error) {
       console.error('Error fetching user progress:', error);
       return [];
+    }
+  },
+  
+  // Get user's quiz statistics
+  getUserQuizStats: async (userId: string, kanaType?: KanaType): Promise<{
+    totalQuizzes: number;
+    averageAccuracy: number;
+    bestStreak: number;
+  }> => {
+    try {
+      let query = supabaseClient
+        .from('kana_learning_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('completed', true);
+      
+      if (kanaType) {
+        query = query.eq('kana_type', kanaType);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching quiz stats:', error);
+        throw error;
+      }
+      
+      // Calculate statistics
+      const totalQuizzes = data.length;
+      
+      // Calculate average accuracy
+      const accuracySum = data.reduce((sum, session) => sum + (session.accuracy || 0), 0);
+      const averageAccuracy = totalQuizzes > 0 ? Math.round(accuracySum / totalQuizzes) : 0;
+      
+      // Find best streak
+      const bestStreak = data.length > 0 ? Math.max(...data.map(session => session.streak || 0)) : 0;
+      
+      return {
+        totalQuizzes,
+        averageAccuracy,
+        bestStreak
+      };
+    } catch (error) {
+      console.error('Error calculating quiz stats:', error);
+      return {
+        totalQuizzes: 0,
+        averageAccuracy: 0,
+        bestStreak: 0
+      };
     }
   },
   
