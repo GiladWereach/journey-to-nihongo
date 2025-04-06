@@ -75,58 +75,58 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center text-2xl font-semibold">
-          <MapPin className="mr-2 h-5 w-5 text-gray-700" />
+          <MapPin className="mr-2 h-5 w-5 text-vermilion" />
           Learning Path Progress
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-2">
+      <CardContent className="pt-0">
         <div className="relative">
           {/* Vertical timeline line */}
-          <div className="absolute left-[26px] top-4 bottom-0 w-[1px] bg-gray-200" />
+          <div className="absolute left-[22px] top-0 bottom-0 w-[2px] bg-gray-100" />
           
-          <div className="space-y-8">
+          <div className="space-y-7">
             {stages.map((stage, index) => (
               <div key={stage.id} className="relative">
                 <div className="flex">
                   {/* Stage indicator dot */}
-                  <div className="relative flex-shrink-0 mt-1">
+                  <div className="relative flex-shrink-0">
                     {stage.completed ? (
-                      <CheckCircle2 className="h-[26px] w-[26px] text-matcha" />
+                      <CheckCircle2 className="h-[22px] w-[22px] text-matcha bg-white rounded-full z-10 relative" />
                     ) : stage.current ? (
-                      <MapPin className="h-[26px] w-[26px] text-vermilion" />
+                      <MapPin className="h-[22px] w-[22px] text-vermilion bg-white rounded-full z-10 relative" />
                     ) : (
                       <Circle className={cn(
-                        "h-[26px] w-[26px]",
-                        index <= stages.findIndex(s => s.current) ? "text-gray-400" : "text-gray-300"
+                        "h-[22px] w-[22px] bg-white rounded-full z-10 relative",
+                        index <= stages.findIndex(s => s.current) ? "text-gray-400" : "text-gray-200"
                       )} />
                     )}
                   </div>
                   
                   {/* Stage content */}
                   <div className={cn(
-                    "ml-5 w-full",
-                    stage.current ? "pb-6" : "pb-0"
+                    "ml-4 w-full",
+                    stage.current ? "pb-5" : "pb-0"
                   )}>
                     <h3 className={cn(
-                      "text-lg font-medium",
+                      "text-base font-semibold leading-tight",
                       stage.completed ? "text-matcha" : 
                       stage.current ? "text-vermilion" :
                       "text-gray-700"
                     )}>
                       {stage.title}
                     </h3>
-                    <p className="text-gray-500 mt-1">{stage.description}</p>
+                    <p className="text-gray-500 mt-1 text-sm">{stage.description}</p>
                     
-                    {/* Progress indicator for current or completed stage */}
-                    {(stage.current || (stage.completed && index === 0)) && stage.progress > 0 && (
-                      <div className="mt-4">
+                    {/* Progress indicator for current stage */}
+                    {stage.current && stage.progress > 0 && (
+                      <div className="mt-3 pl-0">
                         <div className="flex justify-between items-center text-xs mb-1">
                           <span className="text-gray-600 font-medium">Progress</span>
                           <span className="text-gray-600">{Math.round(stage.progress)}%</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                           <div 
                             className={cn(
                               "h-full rounded-full", 
@@ -138,6 +138,21 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
                             style={{ width: `${stage.progress}%` }}
                           />
                         </div>
+                      </div>
+                    )}
+
+                    {/* Visual indicator for completed stages */}
+                    {stage.completed && (
+                      <div className="mt-1 text-xs text-matcha flex items-center">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        <span>Completed</span>
+                      </div>
+                    )}
+
+                    {/* Future stage indicator */}
+                    {!stage.completed && !stage.current && index > stages.findIndex(s => s.current) && (
+                      <div className="mt-1 text-xs text-gray-400">
+                        Unlock by completing previous stage
                       </div>
                     )}
                   </div>

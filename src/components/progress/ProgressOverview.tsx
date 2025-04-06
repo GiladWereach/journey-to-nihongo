@@ -72,6 +72,7 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
         katakanaProgress={overallProgress.katakana}
         basicKanjiProgress={overallProgress.basic_kanji}
         grammarProgress={overallProgress.grammar}
+        className="bg-white"
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -83,7 +84,7 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
         <ProgressTimelineCard data={timelineData} />
       </div>
       
-      <Card>
+      <Card className="bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center text-2xl font-semibold">
             <TrendingUp className="mr-2 h-5 w-5" />
@@ -105,6 +106,7 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
                 size="md"
               />
             </div>
+            
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">Katakana</span>
@@ -118,6 +120,7 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
                 size="md"
               />
             </div>
+            
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">Basic Kanji</span>
@@ -131,6 +134,7 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
                 size="md"
               />
             </div>
+            
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">Grammar</span>
