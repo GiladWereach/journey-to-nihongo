@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -123,6 +122,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     
     initializeQuiz();
   }, [kanaType, characterSets, settings, user]);
+
+  // Keep input field focused
+  useEffect(() => {
+    if (!isPaused && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isPaused, currentCharacterIndex, feedback]);
   
   // Current character being tested
   const currentCharacter = quizCharacters[currentCharacterIndex];
@@ -139,27 +145,21 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       
       // If the input exactly matches the correct answer
       if (userAnswer === correctAnswer) {
-        handleSubmit();
+        handleCorrectAnswer();
       }
       
       // If the input has 3+ characters and is wrong, mark as incorrect
-      if (userAnswer.length >= 3 && userAnswer.length >= correctAnswer.length && userAnswer !== correctAnswer) {
-        handleSubmit();
+      if (userAnswer.length >= 3 && userAnswer.length >= correctAnswer.length) {
+        if (userAnswer !== correctAnswer) {
+          handleWrongAnswer();
+        }
       }
     }
   };
   
-  // Handle user input submission
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    if (!currentCharacter || input.trim() === '' || isPaused) return;
-    
-    const userAnswer = input.trim().toLowerCase();
-    const correctAnswer = currentCharacter.romaji.toLowerCase();
-    const isCorrect = userAnswer === correctAnswer;
+  // Handle correct answer
+  const handleCorrectAnswer = async () => {
+    if (!currentCharacter || isPaused) return;
     
     // Update attempt count
     const newAttemptCount = attemptCount + 1;
@@ -168,41 +168,100 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     // Update session stats
     const newStats = { ...sessionStats };
     newStats.totalAttempts++;
+    newStats.correctCount++;
+    newStats.currentStreak++;
     
-    if (isCorrect) {
-      // Correct answer
-      setFeedback('correct');
-      newStats.correctCount++;
-      newStats.currentStreak++;
-      
-      if (newStats.currentStreak > newStats.longestStreak) {
-        newStats.longestStreak = newStats.currentStreak;
+    if (newStats.currentStreak > newStats.longestStreak) {
+      newStats.longestStreak = newStats.currentStreak;
+    }
+    
+    // Play correct sound
+    if (settings.audioFeedback && correctAudioRef.current) {
+      correctAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
+    }
+    
+    // Update character results
+    newStats.characterResults.push({
+      characterId: currentCharacter.id,
+      character: currentCharacter.character,
+      romaji: currentCharacter.romaji,
+      isCorrect: true,
+      attemptCount: newAttemptCount,
+    });
+    
+    // Update user progress if signed in
+    if (user) {
+      try {
+        await quizService.updateKanaProgress(user.id, currentCharacter.id, true);
+      } catch (error) {
+        console.error('Error updating progress:', error);
       }
+    }
+    
+    // Calculate accuracy
+    newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
+    setSessionStats(newStats);
+    setFeedback('correct');
+    
+    // Move to next character after a brief delay (REDUCED TO 100ms)
+    setTimeout(() => {
+      setInput('');
+      setFeedback('none');
+      setShowHint(false);
+      setAttemptCount(0);
+      moveToNextCharacter();
       
-      // Play correct sound
-      if (settings.audioFeedback && correctAudioRef.current) {
-        correctAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
+      // Focus input field
+      if (inputRef.current) {
+        inputRef.current.focus();
       }
+    }, 400); // Slightly increased delay to make the correct feedback visible
+  };
+  
+  // Handle wrong answer
+  const handleWrongAnswer = async () => {
+    if (!currentCharacter || isPaused) return;
+    
+    // Update attempt count
+    const newAttemptCount = attemptCount + 1;
+    setAttemptCount(newAttemptCount);
+    
+    // Update session stats
+    const newStats = { ...sessionStats };
+    newStats.totalAttempts++;
+    newStats.incorrectCount++;
+    newStats.currentStreak = 0;
+    
+    // Play incorrect sound
+    if (settings.audioFeedback && incorrectAudioRef.current) {
+      incorrectAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
+    }
+    
+    setFeedback('incorrect');
+    
+    // For speed mode, show hint after 3 incorrect attempts
+    if (settings.speedMode && newAttemptCount >= 3) {
+      setShowHint(true);
       
       // Update character results
       newStats.characterResults.push({
         characterId: currentCharacter.id,
         character: currentCharacter.character,
         romaji: currentCharacter.romaji,
-        isCorrect: true,
+        isCorrect: false,
         attemptCount: newAttemptCount,
       });
       
       // Update user progress if signed in
       if (user) {
         try {
-          await quizService.updateKanaProgress(user.id, currentCharacter.id, true);
+          await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
         } catch (error) {
           console.error('Error updating progress:', error);
         }
       }
       
-      // Move to next character after a brief delay (REDUCED TO 100ms)
+      // Move to next character after showing hint
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -214,104 +273,77 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 100); // Reduced delay for correct answers to 100ms
+      }, 2000); // Slight increase to ensure users can see the hint
+    } else if (!settings.speedMode && newAttemptCount >= 3) {
+      // Regular mode - show hint after 3 incorrect attempts
+      setShowHint(true);
+      
+      // Update character results
+      newStats.characterResults.push({
+        characterId: currentCharacter.id,
+        character: currentCharacter.character,
+        romaji: currentCharacter.romaji,
+        isCorrect: false,
+        attemptCount: newAttemptCount,
+      });
+      
+      // Update user progress if signed in
+      if (user) {
+        try {
+          await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
+        } catch (error) {
+          console.error('Error updating progress:', error);
+        }
+      }
+      
+      // Move to next character after showing hint
+      setTimeout(() => {
+        setInput('');
+        setFeedback('none');
+        setShowHint(false);
+        setAttemptCount(0);
+        moveToNextCharacter();
+        
+        // Focus input field
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 2000); // Allow time for user to see the hint
     } else {
-      // Incorrect answer
-      setFeedback('incorrect');
-      newStats.incorrectCount++;
-      newStats.currentStreak = 0;
-      
-      // Play incorrect sound
-      if (settings.audioFeedback && incorrectAudioRef.current) {
-        incorrectAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
-      }
-      
-      // For speed mode, instantly move to next character on incorrect
-      if (settings.speedMode) {
-        // Update character results
-        newStats.characterResults.push({
-          characterId: currentCharacter.id,
-          character: currentCharacter.character,
-          romaji: currentCharacter.romaji,
-          isCorrect: false,
-          attemptCount: newAttemptCount,
-        });
+      // Reset input for another attempt after a short delay to show feedback
+      setTimeout(() => {
+        setInput('');
+        setFeedback('none');
         
-        // Update user progress if signed in
-        if (user) {
-          try {
-            await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
-          } catch (error) {
-            console.error('Error updating progress:', error);
-          }
+        // Focus input field
+        if (inputRef.current) {
+          inputRef.current.focus();
         }
-        
-        // Show brief feedback then move on
-        setTimeout(() => {
-          setInput('');
-          setFeedback('none');
-          setShowHint(false);
-          setAttemptCount(0);
-          moveToNextCharacter();
-          
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-        }, 500); // Brief delay to show feedback in speed mode
-      } else {
-        // Regular mode - show hint after 3 incorrect attempts
-        if (newAttemptCount >= 3) {
-          setShowHint(true);
-          
-          // Update character results
-          newStats.characterResults.push({
-            characterId: currentCharacter.id,
-            character: currentCharacter.character,
-            romaji: currentCharacter.romaji,
-            isCorrect: false,
-            attemptCount: newAttemptCount,
-          });
-          
-          // Update user progress if signed in
-          if (user) {
-            try {
-              await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
-            } catch (error) {
-              console.error('Error updating progress:', error);
-            }
-          }
-          
-          // Move to next character after showing hint
-          setTimeout(() => {
-            setInput('');
-            setFeedback('none');
-            setShowHint(false);
-            setAttemptCount(0);
-            moveToNextCharacter();
-            
-            // Focus input field
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          }, 1500); // Slightly reduced time for hint viewing
-        } else {
-          // Reset input for another attempt
-          setTimeout(() => {
-            setInput('');
-            setFeedback('none');
-            
-            // Focus input field
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          }, 800); // Slightly reduced delay for incorrect answers
-        }
-      }
+      }, 800);
     }
     
     // Calculate accuracy
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
     setSessionStats(newStats);
+  };
+  
+  // Handle user input submission (for non-speed mode)
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    if (!currentCharacter || input.trim() === '' || isPaused) return;
+    
+    const userAnswer = input.trim().toLowerCase();
+    const correctAnswer = currentCharacter.romaji.toLowerCase();
+    const isCorrect = userAnswer === correctAnswer;
+    
+    if (isCorrect) {
+      handleCorrectAnswer();
+    } else {
+      handleWrongAnswer();
+    }
   };
   
   // Move to next character
@@ -338,7 +370,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           startTime: sessionStats.startTime,
           endTime,
           correctCount: sessionStats.correctCount,
-          totalAttempts: sessionStats.totalAttempts
+          totalAttempts: sessionStats.totalAttempts,
+          streak: sessionStats.currentStreak
         });
       } catch (error) {
         console.error('Error recording quiz session:', error);
@@ -351,6 +384,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   // Handle pause/resume
   const togglePause = () => {
     setIsPaused(!isPaused);
+    
+    // Focus input when resuming
+    if (isPaused && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }
   };
   
   // Character size mapping

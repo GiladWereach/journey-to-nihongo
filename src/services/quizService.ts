@@ -722,33 +722,37 @@ export const quizService = {
       endTime: Date;
       correctCount: number;
       totalAttempts: number;
+      streak?: number;
     }
   ): Promise<string | null> => {
     try {
-      // Calculate streak by checking most recent session
-      const { data: recentSessions } = await supabaseClient
-        .from('kana_learning_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('start_time', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Calculate streak if not provided
+      let streak = quizData.streak || 0;
       
-      // Calculate current streak
-      let streak = 0;
-      
-      if (recentSessions) {
-        // If the last session had a streak and the accuracy was good (>70%)
-        if (recentSessions.streak && recentSessions.accuracy && recentSessions.accuracy >= 70) {
-          // Continue the streak
-          streak = recentSessions.streak + 1;
+      // If streak is not provided, check most recent session
+      if (!quizData.streak) {
+        const { data: recentSessions } = await supabaseClient
+          .from('kana_learning_sessions')
+          .select('*')
+          .eq('user_id', userId)
+          .order('start_time', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        // Calculate current streak
+        if (recentSessions) {
+          // If the last session had a streak and the accuracy was good (>70%)
+          if (recentSessions.streak && recentSessions.accuracy && recentSessions.accuracy >= 70) {
+            // Continue the streak
+            streak = recentSessions.streak + 1;
+          } else {
+            // Start a new streak
+            streak = 1;
+          }
         } else {
-          // Start a new streak
+          // First session - start with streak of 1
           streak = 1;
         }
-      } else {
-        // First session - start with streak of 1
-        streak = 1;
       }
       
       // Calculate accuracy

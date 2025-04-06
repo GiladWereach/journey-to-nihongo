@@ -1,463 +1,341 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { kanaService } from '@/services/kanaService';
-import { quizService } from '@/services/quizService';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 import { KanaType, QuizCharacterSet, QuizSettings } from '@/types/quiz';
-import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { quizService } from '@/services/quizService';
+import { AlertCircle, Zap, Check } from 'lucide-react';
 
 interface QuizSetupProps {
-  onStartQuiz: (kanaType: KanaType, characterSets: QuizCharacterSet[], settings: QuizSettings) => void;
+  onStartQuiz: (
+    kanaType: KanaType, 
+    characterSets: QuizCharacterSet[], 
+    settings: QuizSettings
+  ) => void;
+  enforceSpeedMode?: boolean;
 }
 
-const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
+const QuizSetup: React.FC<QuizSetupProps> = ({ 
+  onStartQuiz,
+  enforceSpeedMode = false
+}) => {
   const { user } = useAuth();
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
-  const [selectedSets, setSelectedSets] = useState<QuizCharacterSet[]>([]);
+  const [characterSets, setCharacterSets] = useState<QuizCharacterSet[]>([]);
+  const [selectedSets, setSelectedSets] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<QuizSettings>({
     showBasicOnly: false,
-    showPreviouslyLearned: true, 
+    showPreviouslyLearned: true,
     showTroubleCharacters: false,
     characterSize: 'large',
     audioFeedback: true,
-    speedMode: false,
-    includeDakuten: true,
-    includeHandakuten: true,
+    speedMode: enforceSpeedMode,
   });
-  const [availableSets, setAvailableSets] = useState<QuizCharacterSet[]>([]);
-  const [loadingCharacterSets, setLoadingCharacterSets] = useState(true);
-  const [groupingTab, setGroupingTab] = useState<'consonant' | 'vowel'>('consonant');
-  const [quizStats, setQuizStats] = useState<{
-    totalQuizzes: number;
-    averageAccuracy: number;
-    bestStreak: number;
-  } | null>(null);
 
-  // Load character sets when kana type changes
+  // Fetch available character sets when kana type changes
   useEffect(() => {
-    const loadCharacterSets = async () => {
-      setLoadingCharacterSets(true);
+    const fetchCharacterSets = async () => {
+      setLoading(true);
       try {
-        // Get character sets for selected kana type
         const sets = await quizService.getAvailableCharacterSets(kanaType);
-        setAvailableSets(sets);
+        setCharacterSets(sets);
         
-        // Select first group by default if nothing selected
-        if (selectedSets.length === 0 && sets.length > 0) {
-          setSelectedSets([sets[0]]);
-        }
-
-        // Load quiz stats for user if logged in
-        if (user) {
-          const stats = await quizService.getUserQuizStats(user.id, kanaType);
-          setQuizStats(stats);
+        // Default selection: vowels group
+        if (sets.length > 0 && selectedSets.length === 0) {
+          const vowelsSet = sets.find(set => set.id === `${kanaType}-vowels`);
+          if (vowelsSet) {
+            setSelectedSets([vowelsSet.id]);
+          } else {
+            setSelectedSets([sets[0].id]);
+          }
         }
       } catch (error) {
-        console.error('Error loading character sets:', error);
+        console.error('Error fetching character sets:', error);
       } finally {
-        setLoadingCharacterSets(false);
+        setLoading(false);
       }
     };
     
-    loadCharacterSets();
-  }, [kanaType, user]);
+    fetchCharacterSets();
+  }, [kanaType]);
+  
+  // Update speed mode when enforceSpeedMode changes
+  useEffect(() => {
+    if (enforceSpeedMode) {
+      setSettings(prev => ({
+        ...prev,
+        speedMode: true
+      }));
+    }
+  }, [enforceSpeedMode]);
 
-  const handleKanaTypeChange = (type: KanaType) => {
-    setKanaType(type);
-    setSelectedSets([]);
-  };
-
-  const toggleSetSelection = (set: QuizCharacterSet) => {
-    if (selectedSets.some(s => s.id === set.id)) {
-      setSelectedSets(selectedSets.filter(s => s.id !== set.id));
+  // Handle character set selection
+  const toggleSetSelection = (setId: string) => {
+    if (selectedSets.includes(setId)) {
+      setSelectedSets(selectedSets.filter(id => id !== setId));
     } else {
-      setSelectedSets([...selectedSets, set]);
+      setSelectedSets([...selectedSets, setId]);
     }
   };
 
-  const selectAllSets = () => {
-    setSelectedSets([...availableSets]);
-  };
-
-  const deselectAllSets = () => {
-    setSelectedSets([]);
-  };
-
-  const handleSettingChange = (key: keyof QuizSettings, value: any) => {
-    setSettings({
-      ...settings,
-      [key]: value
-    });
-  };
-
-  const handleStartQuiz = () => {
-    if (selectedSets.length === 0) {
-      // Provide feedback that at least one set must be selected
+  // Handle settings toggle
+  const toggleSetting = (setting: keyof QuizSettings) => {
+    // Don't allow toggling speed mode if enforced
+    if (setting === 'speedMode' && enforceSpeedMode) {
       return;
     }
     
-    onStartQuiz(kanaType, selectedSets, settings);
-  };
-  
-  // Group the available sets by consonant or vowel
-  const groupedSetsByConsonant = availableSets.reduce((groups: Record<string, QuizCharacterSet[]>, set) => {
-    const groupKey = set.consonantGroup || 'other';
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push(set);
-    return groups;
-  }, {});
-
-  const groupedSetsByVowel = availableSets.reduce((groups: Record<string, QuizCharacterSet[]>, set) => {
-    const groupKey = set.vowelGroup || 'other';
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push(set);
-    return groups;
-  }, {});
-
-  // Sort group keys for better display order
-  const consonantOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'j', 'special', 'dakuten', 'handakuten', 'combinations', 'all', 'other'];
-  const vowelOrder = ['a', 'i', 'u', 'e', 'o', 'all', 'special', 'other'];
-
-  const sortedConsonantGroups = Object.keys(groupedSetsByConsonant).sort((a, b) => {
-    return consonantOrder.indexOf(a) - consonantOrder.indexOf(b);
-  });
-
-  const sortedVowelGroups = Object.keys(groupedSetsByVowel).sort((a, b) => {
-    return vowelOrder.indexOf(a) - vowelOrder.indexOf(b);
-  });
-
-  const isSetSelected = (set: QuizCharacterSet) => {
-    return selectedSets.some(s => s.id === set.id);
+    setSettings({
+      ...settings,
+      [setting]: !settings[setting as keyof QuizSettings]
+    });
   };
 
-  // Format group name to remove "Group" suffix
-  const formatGroupName = (groupName: string) => {
-    if (groupName === 'vowels') return 'Vowels';
-    if (groupName === 'dakuten') return 'Dakuten';
-    if (groupName === 'handakuten') return 'Handakuten';
-    if (groupName === 'special') return 'Special';
-    if (groupName === 'combinations') return 'Combinations';
-    if (groupName === 'all') return 'All';
-    return groupName.toUpperCase();
+  // Handle start quiz button
+  const handleStartQuiz = () => {
+    if (selectedSets.length === 0) return;
+    
+    const selectedCharacterSets = characterSets.filter(set => selectedSets.includes(set.id));
+    onStartQuiz(kanaType, selectedCharacterSets, settings);
   };
+
+  // Group character sets by category
+  const groupCharacterSets = () => {
+    // Basic groups
+    const basic = characterSets.filter(set => 
+      ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w'].includes(set.consonantGroup || '')
+    );
+    
+    // Dakuten/Handakuten groups
+    const dakuten = characterSets.filter(set => 
+      ['g', 'z', 'd', 'b', 'p'].includes(set.consonantGroup || '')
+    );
+    
+    // Special groups
+    const special = characterSets.filter(set => 
+      ['special', 'combinations'].includes(set.consonantGroup || '')
+    );
+    
+    // Vowel groups
+    const vowels = characterSets.filter(set => 
+      set.id.includes('-a-row') || 
+      set.id.includes('-i-row') || 
+      set.id.includes('-u-row') || 
+      set.id.includes('-e-row') || 
+      set.id.includes('-o-row')
+    );
+    
+    return { basic, dakuten, special, vowels };
+  };
+
+  const groupedSets = groupCharacterSets();
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl text-indigo">Select Writing System</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Button
-              variant={kanaType === 'hiragana' ? 'default' : 'outline'}
-              className={`h-24 ${kanaType === 'hiragana' ? 'bg-matcha hover:bg-matcha/90' : ''}`}
-              onClick={() => handleKanaTypeChange('hiragana')}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Select Kana Type</h2>
+        <Tabs 
+          value={kanaType} 
+          onValueChange={(value) => setKanaType(value as KanaType)}
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-2 mb-6">
+            <TabsTrigger value="hiragana">Hiragana</TabsTrigger>
+            <TabsTrigger value="katakana">Katakana</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Select Character Sets</h2>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSelectedSets(characterSets.map(set => set.id))}
             >
-              <div className="text-center flex flex-col items-center justify-center">
-                <span className="text-xl mb-2">Hiragana</span>
-                <JapaneseCharacter character="あいう" size="sm" color={kanaType === 'hiragana' ? 'text-white' : 'text-matcha'} />
-              </div>
+              Select All
             </Button>
-            
-            <Button
-              variant={kanaType === 'katakana' ? 'default' : 'outline'}
-              className={`h-24 ${kanaType === 'katakana' ? 'bg-vermilion hover:bg-vermilion/90' : ''}`}
-              onClick={() => handleKanaTypeChange('katakana')}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSelectedSets([])}
             >
-              <div className="text-center flex flex-col items-center justify-center">
-                <span className="text-xl mb-2">Katakana</span>
-                <JapaneseCharacter character="アイウ" size="sm" color={kanaType === 'katakana' ? 'text-white' : 'text-vermilion'} />
-              </div>
+              Clear
             </Button>
           </div>
-
-          {quizStats && (
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="border rounded-lg p-2">
-                <p className="text-xs text-muted-foreground">Total Quizzes</p>
-                <p className="font-bold text-lg">{quizStats.totalQuizzes}</p>
-              </div>
-              <div className="border rounded-lg p-2">
-                <p className="text-xs text-muted-foreground">Avg. Accuracy</p>
-                <p className="font-bold text-lg">{quizStats.averageAccuracy}%</p>
-              </div>
-              <div className="border rounded-lg p-2">
-                <p className="text-xs text-muted-foreground">Best Streak</p>
-                <p className="font-bold text-lg">{quizStats.bestStreak}</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-xl text-indigo">Select Character Sets</CardTitle>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={selectAllSets}>
-                Select All
-              </Button>
-              <Button variant="outline" size="sm" onClick={deselectAllSets}>
-                Clear
-              </Button>
-            </div>
+        </div>
+        
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo"></div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loadingCharacterSets ? (
-            <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
-            </div>
-          ) : (
-            <Tabs 
-              value={groupingTab} 
-              onValueChange={(value) => setGroupingTab(value as 'consonant' | 'vowel')}
-              className="w-full"
-            >
-              <TabsList className="w-full grid grid-cols-2 mb-6">
-                <TabsTrigger value="consonant">Group by Consonant</TabsTrigger>
-                <TabsTrigger value="vowel">Group by Vowel</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="consonant" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sortedConsonantGroups
-                    .filter(groupName => groupName !== 'all') // Exclude 'all' as it's redundant with separate vowel tab
-                    .map((groupName) => (
-                      <div key={groupName} className="border rounded-lg p-3 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-start gap-2">
-                          <Checkbox 
-                            id={`group-${groupName}`} 
-                            className="mt-1.5"
-                            checked={groupedSetsByConsonant[groupName].every(set => 
-                              selectedSets.some(s => s.id === set.id)
-                            )}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                // Select all sets in this group
-                                const setsToAdd = groupedSetsByConsonant[groupName].filter(set => 
-                                  !selectedSets.some(s => s.id === set.id)
-                                );
-                                setSelectedSets([...selectedSets, ...setsToAdd]);
-                              } else {
-                                // Deselect all sets in this group
-                                setSelectedSets(selectedSets.filter(s => 
-                                  !groupedSetsByConsonant[groupName].some(gs => gs.id === s.id)
-                                ));
-                              }
-                            }}
-                          />
-                          <div className="flex-1">
-                            <Label htmlFor={`group-${groupName}`} className="font-medium cursor-pointer capitalize">
-                              {formatGroupName(groupName)}
-                            </Label>
-                            <div className="flex flex-wrap mt-2 gap-1.5">
-                              {groupedSetsByConsonant[groupName][0]?.characters.map((char) => (
-                                <div 
-                                  key={char.id} 
-                                  className={`flex items-center justify-center h-8 w-8 rounded-sm border ${
-                                    groupedSetsByConsonant[groupName].every(set => isSetSelected(set)) ? 'bg-muted/60' : 'bg-background'
-                                  }`}
-                                >
-                                  <JapaneseCharacter 
-                                    character={char.character} 
-                                    size="sm" 
-                                    color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'} 
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Basic Characters</h3>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {groupedSets.basic.map(set => (
+                  <Card 
+                    key={set.id}
+                    className={`cursor-pointer hover:border-indigo transition-colors ${
+                      selectedSets.includes(set.id) ? 'border-indigo bg-indigo/5' : ''
+                    }`}
+                    onClick={() => toggleSetSelection(set.id)}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <div className="font-semibold">{set.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {set.characters.length} characters
                       </div>
-                    ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="vowel" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sortedVowelGroups
-                    .filter(groupName => groupName !== 'all' && groupName !== 'special') // Filter out redundant categories
-                    .map((groupName) => (
-                      <div key={groupName} className="border rounded-lg p-3 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-start gap-2">
-                          <Checkbox 
-                            id={`vowel-group-${groupName}`}
-                            className="mt-1.5"
-                            checked={groupedSetsByVowel[groupName].every(set => 
-                              selectedSets.some(s => s.id === set.id)
-                            )}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                // Select all sets in this group
-                                const setsToAdd = groupedSetsByVowel[groupName].filter(set => 
-                                  !selectedSets.some(s => s.id === set.id)
-                                );
-                                setSelectedSets([...selectedSets, ...setsToAdd]);
-                              } else {
-                                // Deselect all sets in this group
-                                setSelectedSets(selectedSets.filter(s => 
-                                  !groupedSetsByVowel[groupName].some(gs => gs.id === s.id)
-                                ));
-                              }
-                            }}
-                          />
-                          <div className="flex-1">
-                            <Label htmlFor={`vowel-group-${groupName}`} className="font-medium cursor-pointer capitalize">
-                              {groupName.toUpperCase()} Row
-                            </Label>
-                            <div className="flex flex-wrap mt-2 gap-1.5">
-                              {groupedSetsByVowel[groupName][0]?.characters.slice(0, 10).map((char) => (
-                                <div 
-                                  key={char.id} 
-                                  className={`flex items-center justify-center h-8 w-8 rounded-sm border ${
-                                    groupedSetsByVowel[groupName].every(set => isSetSelected(set)) ? 'bg-muted/60' : 'bg-background'
-                                  }`}
-                                >
-                                  <JapaneseCharacter 
-                                    character={char.character} 
-                                    size="sm" 
-                                    color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'} 
-                                  />
-                                </div>
-                              ))}
-                              {groupedSetsByVowel[groupName][0]?.characters.length > 10 && (
-                                <div className="flex items-center justify-center h-8 rounded-sm border bg-muted px-2">
-                                  <span className="text-xs text-muted-foreground">+{groupedSetsByVowel[groupName][0]?.characters.length - 10}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                      {selectedSets.includes(set.id) && (
+                        <div className="absolute top-2 right-2 text-indigo">
+                          <Check size={16} />
                         </div>
-                      </div>
-                    ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          )}
-          
-          {selectedSets.length > 0 && (
-            <div className="mt-4 p-2 bg-muted/80 rounded-md text-center">
-              <p className="text-sm font-medium">Selected: {selectedSets.length} set(s) with {selectedSets.reduce((count, set) => count + set.characters.length, 0)} characters</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            
+            {groupedSets.dakuten.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Dakuten & Handakuten</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {groupedSets.dakuten.map(set => (
+                    <Card 
+                      key={set.id}
+                      className={`cursor-pointer hover:border-indigo transition-colors ${
+                        selectedSets.includes(set.id) ? 'border-indigo bg-indigo/5' : ''
+                      }`}
+                      onClick={() => toggleSetSelection(set.id)}
+                    >
+                      <CardContent className="p-3 text-center">
+                        <div className="font-semibold">{set.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {set.characters.length} characters
+                        </div>
+                        {selectedSets.includes(set.id) && (
+                          <div className="absolute top-2 right-2 text-indigo">
+                            <Check size={16} />
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {groupedSets.special.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Special Characters</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {groupedSets.special.map(set => (
+                    <Card 
+                      key={set.id}
+                      className={`cursor-pointer hover:border-indigo transition-colors ${
+                        selectedSets.includes(set.id) ? 'border-indigo bg-indigo/5' : ''
+                      }`}
+                      onClick={() => toggleSetSelection(set.id)}
+                    >
+                      <CardContent className="p-3 text-center">
+                        <div className="font-semibold">{set.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {set.characters.length} characters
+                        </div>
+                        {selectedSets.includes(set.id) && (
+                          <div className="absolute top-2 right-2 text-indigo">
+                            <Check size={16} />
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl text-indigo">Quiz Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="speed-mode">Speed Mode</Label>
-                <p className="text-xs text-muted-foreground">Immediately advance after correct answer</p>
-              </div>
-              <Switch
-                id="speed-mode"
-                checked={settings.speedMode}
-                onCheckedChange={(checked) => handleSettingChange('speedMode', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="include-dakuten">Include Dakuten (が, ざ, だ, ば, etc.)</Label>
-                <p className="text-xs text-muted-foreground">Characters with two dots (゛)</p>
-              </div>
-              <Switch
-                id="include-dakuten"
-                checked={settings.includeDakuten}
-                onCheckedChange={(checked) => handleSettingChange('includeDakuten', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="include-handakuten">Include Handakuten (ぱ, etc.)</Label>
-                <p className="text-xs text-muted-foreground">Characters with a circle (゜)</p>
-              </div>
-              <Switch
-                id="include-handakuten"
-                checked={settings.includeHandakuten}
-                onCheckedChange={(checked) => handleSettingChange('includeHandakuten', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="basic-only">Basic Characters Only</Label>
-                <p className="text-xs text-muted-foreground">Exclude special combinations</p>
-              </div>
-              <Switch
-                id="basic-only"
-                checked={settings.showBasicOnly}
-                onCheckedChange={(checked) => handleSettingChange('showBasicOnly', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="previously-learned">Include Previously Learned</Label>
-                <p className="text-xs text-muted-foreground">Show characters already practiced</p>
-              </div>
-              <Switch
-                id="previously-learned"
-                checked={settings.showPreviouslyLearned}
-                onCheckedChange={(checked) => handleSettingChange('showPreviouslyLearned', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="trouble-chars">Focus on Trouble Characters</Label>
-                <p className="text-xs text-muted-foreground">Prioritize lower accuracy chars</p>
-              </div>
-              <Switch
-                id="trouble-chars"
-                checked={settings.showTroubleCharacters}
-                onCheckedChange={(checked) => handleSettingChange('showTroubleCharacters', checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="audio-feedback">Audio Feedback</Label>
-                <p className="text-xs text-muted-foreground">Play correct/incorrect sounds</p>
-              </div>
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Quiz Settings</h2>
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
               <Switch
                 id="audio-feedback"
                 checked={settings.audioFeedback}
-                onCheckedChange={(checked) => handleSettingChange('audioFeedback', checked)}
+                onCheckedChange={() => toggleSetting('audioFeedback')}
               />
+              <Label htmlFor="audio-feedback">Audio Feedback</Label>
             </div>
+            <span className="text-xs text-muted-foreground">Play sounds for correct/incorrect answers</span>
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="speed-mode"
+                checked={settings.speedMode}
+                onCheckedChange={() => toggleSetting('speedMode')}
+                disabled={enforceSpeedMode}
+              />
+              <Label htmlFor="speed-mode" className="flex items-center gap-1">
+                <Zap size={14} className={settings.speedMode ? "text-indigo" : "text-muted-foreground"} />
+                Speed Mode
+              </Label>
+            </div>
+            <span className="text-xs text-muted-foreground max-w-[60%]">
+              {settings.speedMode ? 
+                "Type the correct romaji to automatically advance." : 
+                "Click Check button to validate your answer."}
+            </span>
+          </div>
+          
+          {user && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="trouble-characters"
+                  checked={settings.showTroubleCharacters}
+                  onCheckedChange={() => toggleSetting('showTroubleCharacters')}
+                />
+                <Label htmlFor="trouble-characters" className="flex items-center gap-1">
+                  <AlertCircle size={14} className={settings.showTroubleCharacters ? "text-indigo" : "text-muted-foreground"} />
+                  Prioritize Trouble Characters
+                </Label>
+              </div>
+              <span className="text-xs text-muted-foreground max-w-[60%]">
+                Focus on characters you've had difficulty with
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
       
-      <div className="flex justify-center pt-4">
+      <div className="pt-4">
         <Button 
-          size="lg"
-          className="bg-indigo hover:bg-indigo/90 px-8"
-          disabled={selectedSets.length === 0}
           onClick={handleStartQuiz}
+          disabled={selectedSets.length === 0}
+          className="w-full"
+          size="lg"
         >
           Start Quiz
         </Button>
+        {selectedSets.length === 0 && (
+          <p className="text-xs text-red-500 mt-1 text-center">
+            Please select at least one character set
+          </p>
+        )}
       </div>
     </div>
   );

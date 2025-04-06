@@ -11,8 +11,7 @@ import QuizInterface from '@/components/quiz/QuizInterface';
 import QuizResults from '@/components/quiz/QuizResults';
 import { KanaType, QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const QuickQuiz: React.FC = () => {
   const { user } = useAuth();
@@ -28,7 +27,7 @@ const QuickQuiz: React.FC = () => {
     showTroubleCharacters: false,
     characterSize: 'large',
     audioFeedback: true,
-    speedMode: false,
+    speedMode: true, // Default to speed mode for quick quiz
   });
   const [quizResults, setQuizResults] = useState<QuizSessionStats | null>(null);
   const [userStats, setUserStats] = useState<{
@@ -90,11 +89,20 @@ const QuickQuiz: React.FC = () => {
   }, [user]);
 
   const handleStartQuiz = (kanaType: KanaType, characterSets: QuizCharacterSet[], settings: QuizSettings) => {
+    // Always enforce speed mode in Quick Quiz
+    settings.speedMode = true;
+    
     setSelectedKanaType(kanaType);
     setSelectedSets(characterSets);
     setQuizSettings(settings);
     setQuizState('active');
     setActiveTab('quiz');
+    
+    // Show toast with instructions
+    toast({
+      title: "Quick Quiz Started",
+      description: "Type the romaji (transliteration) for each character shown. Answers are checked automatically.",
+    });
   };
 
   const handleEndQuiz = async (results: QuizSessionStats) => {
@@ -121,13 +129,6 @@ const QuickQuiz: React.FC = () => {
   const handleReturnToSetup = () => {
     setQuizState('setup');
     setActiveTab('setup');
-  };
-
-  const toggleSpeedMode = () => {
-    setQuizSettings({
-      ...quizSettings,
-      speedMode: !quizSettings.speedMode
-    });
   };
 
   return (
@@ -248,29 +249,14 @@ const QuickQuiz: React.FC = () => {
                 </div>
               )}
               
-              <div className="mb-6 p-4 bg-indigo/5 rounded-lg">
-                <h3 className="text-sm font-medium mb-2">Quiz Mode</h3>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="speed-mode"
-                      checked={quizSettings.speedMode}
-                      onCheckedChange={toggleSpeedMode}
-                    />
-                    <Label htmlFor="speed-mode" className="flex items-center gap-1">
-                      <Zap size={14} className={quizSettings.speedMode ? "text-indigo" : "text-muted-foreground"} />
-                      Speed Mode
-                    </Label>
-                  </div>
-                  <span className="text-xs text-muted-foreground max-w-[60%]">
-                    {quizSettings.speedMode ? 
-                      "Type the correct romaji to automatically advance. Instant feedback." : 
-                      "Click Check button to validate your answer. More time to think."}
-                  </span>
-                </div>
-              </div>
+              <Alert className="mb-6">
+                <Zap className="h-4 w-4 text-indigo" />
+                <AlertDescription>
+                  <b>Quick Quiz</b> uses Speed Mode by default. Type the correct romaji to immediately advance to the next character.
+                </AlertDescription>
+              </Alert>
               
-              <QuizSetup onStartQuiz={handleStartQuiz} />
+              <QuizSetup onStartQuiz={handleStartQuiz} enforceSpeedMode={true} />
             </div>
           </TabsContent>
           

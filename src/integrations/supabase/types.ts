@@ -160,6 +160,7 @@ export type Database = {
           id: string
           kana_type: string
           start_time: string | null
+          streak: number | null
           updated_at: string | null
           user_id: string
         }
@@ -172,6 +173,7 @@ export type Database = {
           id?: string
           kana_type: string
           start_time?: string | null
+          streak?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -184,6 +186,7 @@ export type Database = {
           id?: string
           kana_type?: string
           start_time?: string | null
+          streak?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -334,9 +337,11 @@ export type Database = {
       user_kana_progress: {
         Row: {
           character_id: string
+          consecutive_correct: number
           created_at: string | null
           id: string
           last_practiced: string | null
+          mastery_level: number
           mistake_count: number
           proficiency: number
           review_due: string | null
@@ -346,9 +351,11 @@ export type Database = {
         }
         Insert: {
           character_id: string
+          consecutive_correct?: number
           created_at?: string | null
           id?: string
           last_practiced?: string | null
+          mastery_level?: number
           mistake_count?: number
           proficiency?: number
           review_due?: string | null
@@ -358,9 +365,11 @@ export type Database = {
         }
         Update: {
           character_id?: string
+          consecutive_correct?: number
           created_at?: string | null
           id?: string
           last_practiced?: string | null
+          mastery_level?: number
           mistake_count?: number
           proficiency?: number
           review_due?: string | null
