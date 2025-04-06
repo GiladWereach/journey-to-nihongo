@@ -1,3 +1,4 @@
+
 import { supabaseClient } from '@/lib/supabase';
 import { KanaType, QuizCharacterSet, QuizCharacter } from '@/types/quiz';
 import { UserKanaProgress } from '@/types/kana';
@@ -41,7 +42,7 @@ export const quizService = {
       if (kRow.length > 0) {
         characterSets.push({
           id: `${type}-k-row`,
-          name: 'K Group',
+          name: 'K',
           type,
           characters: kRow.map(kana => ({
             id: kana.id,
@@ -61,7 +62,7 @@ export const quizService = {
       if (sRow.length > 0) {
         characterSets.push({
           id: `${type}-s-row`,
-          name: 'S Group',
+          name: 'S',
           type,
           characters: sRow.map(kana => ({
             id: kana.id,
@@ -81,7 +82,7 @@ export const quizService = {
       if (tRow.length > 0) {
         characterSets.push({
           id: `${type}-t-row`,
-          name: 'T Group',
+          name: 'T',
           type,
           characters: tRow.map(kana => ({
             id: kana.id,
@@ -101,7 +102,7 @@ export const quizService = {
       if (nRow.length > 0) {
         characterSets.push({
           id: `${type}-n-row`,
-          name: 'N Group',
+          name: 'N',
           type,
           characters: nRow.map(kana => ({
             id: kana.id,
@@ -121,7 +122,7 @@ export const quizService = {
       if (hRow.length > 0) {
         characterSets.push({
           id: `${type}-h-row`,
-          name: 'H Group',
+          name: 'H',
           type,
           characters: hRow.map(kana => ({
             id: kana.id,
@@ -141,7 +142,7 @@ export const quizService = {
       if (mRow.length > 0) {
         characterSets.push({
           id: `${type}-m-row`,
-          name: 'M Group',
+          name: 'M',
           type,
           characters: mRow.map(kana => ({
             id: kana.id,
@@ -161,7 +162,7 @@ export const quizService = {
       if (yRow.length > 0) {
         characterSets.push({
           id: `${type}-y-row`,
-          name: 'Y Group',
+          name: 'Y',
           type,
           characters: yRow.map(kana => ({
             id: kana.id,
@@ -181,7 +182,7 @@ export const quizService = {
       if (rRow.length > 0) {
         characterSets.push({
           id: `${type}-r-row`,
-          name: 'R Group',
+          name: 'R',
           type,
           characters: rRow.map(kana => ({
             id: kana.id,
@@ -201,7 +202,7 @@ export const quizService = {
       if (wRow.length > 0) {
         characterSets.push({
           id: `${type}-w-row`,
-          name: 'W Group',
+          name: 'W',
           type,
           characters: wRow.map(kana => ({
             id: kana.id,
@@ -236,39 +237,98 @@ export const quizService = {
         });
       }
       
-      // 12. Dakuten characters
-      const dakuten = allKana.filter(k => 
-        /^(g|z|d|b)[aiueo]$/.test(k.romaji) || 
-        /^j[aio]$/.test(k.romaji)
-      );
-      
-      if (dakuten.length > 0) {
+      // 12. G-row (Dakuten K-row)
+      const gRow = allKana.filter(k => /^g[aiueo]$/.test(k.romaji));
+      if (gRow.length > 0) {
         characterSets.push({
-          id: `${type}-dakuten`,
-          name: 'Dakuten',
+          id: `${type}-g-row`,
+          name: 'G',
           type,
-          characters: dakuten.map(kana => ({
+          characters: gRow.map(kana => ({
             id: kana.id,
             character: kana.character,
             romaji: kana.romaji,
             type,
             isDakuten: true,
-            group: kana.romaji[0],
+            group: 'g',
             row: kana.romaji[1],
           })),
-          consonantGroup: 'dakuten',
+          consonantGroup: 'g',
           vowelGroup: 'all',
         });
       }
       
-      // 13. Handakuten characters
-      const handakuten = allKana.filter(k => /^p[aiueo]$/.test(k.romaji));
-      if (handakuten.length > 0) {
+      // 13. Z-row (Dakuten S-row)
+      const zRow = allKana.filter(k => /^z[aiueo]$/.test(k.romaji));
+      if (zRow.length > 0) {
         characterSets.push({
-          id: `${type}-handakuten`,
-          name: 'Handakuten',
+          id: `${type}-z-row`,
+          name: 'Z',
           type,
-          characters: handakuten.map(kana => ({
+          characters: zRow.map(kana => ({
+            id: kana.id,
+            character: kana.character,
+            romaji: kana.romaji,
+            type,
+            isDakuten: true,
+            group: 'z',
+            row: kana.romaji[1],
+          })),
+          consonantGroup: 'z',
+          vowelGroup: 'all',
+        });
+      }
+      
+      // 14. D-row (Dakuten T-row)
+      const dRow = allKana.filter(k => /^d[aiueo]$/.test(k.romaji));
+      if (dRow.length > 0) {
+        characterSets.push({
+          id: `${type}-d-row`,
+          name: 'D',
+          type,
+          characters: dRow.map(kana => ({
+            id: kana.id,
+            character: kana.character,
+            romaji: kana.romaji,
+            type,
+            isDakuten: true,
+            group: 'd',
+            row: kana.romaji[1],
+          })),
+          consonantGroup: 'd',
+          vowelGroup: 'all',
+        });
+      }
+      
+      // 15. B-row (Dakuten H-row)
+      const bRow = allKana.filter(k => /^b[aiueo]$/.test(k.romaji));
+      if (bRow.length > 0) {
+        characterSets.push({
+          id: `${type}-b-row`,
+          name: 'B',
+          type,
+          characters: bRow.map(kana => ({
+            id: kana.id,
+            character: kana.character,
+            romaji: kana.romaji,
+            type,
+            isDakuten: true,
+            group: 'b',
+            row: kana.romaji[1],
+          })),
+          consonantGroup: 'b',
+          vowelGroup: 'all',
+        });
+      }
+      
+      // 16. P-row (Handakuten H-row)
+      const pRow = allKana.filter(k => /^p[aiueo]$/.test(k.romaji));
+      if (pRow.length > 0) {
+        characterSets.push({
+          id: `${type}-p-row`,
+          name: 'P',
+          type,
+          characters: pRow.map(kana => ({
             id: kana.id,
             character: kana.character,
             romaji: kana.romaji,
@@ -277,12 +337,33 @@ export const quizService = {
             group: 'p',
             row: kana.romaji[1],
           })),
-          consonantGroup: 'handakuten',
+          consonantGroup: 'p',
           vowelGroup: 'all',
         });
       }
       
-      // 14. Combination characters (like きゃ / kya)
+      // 17. J-row (Dakuten S-row variant)
+      const jRow = allKana.filter(k => /^j[aio]$/.test(k.romaji));
+      if (jRow.length > 0) {
+        characterSets.push({
+          id: `${type}-j-row`,
+          name: 'J',
+          type,
+          characters: jRow.map(kana => ({
+            id: kana.id,
+            character: kana.character,
+            romaji: kana.romaji,
+            type,
+            isDakuten: true,
+            group: 'j',
+            row: kana.romaji[1],
+          })),
+          consonantGroup: 'j',
+          vowelGroup: 'special',
+        });
+      }
+      
+      // 18. Combination characters (like きゃ / kya)
       const combinations = allKana.filter(k => 
         /^[ksgzjtdnhbpmr]y[auo]$/.test(k.romaji)
       );

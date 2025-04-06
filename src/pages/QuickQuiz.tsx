@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Book, ArrowLeft, Settings } from 'lucide-react';
+import { Book, ArrowLeft, Settings, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuizSetup from '@/components/quiz/QuizSetup';
@@ -11,10 +11,13 @@ import QuizInterface from '@/components/quiz/QuizInterface';
 import QuizResults from '@/components/quiz/QuizResults';
 import { KanaType, QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const QuickQuiz: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>('setup');
   const [quizState, setQuizState] = useState<'setup' | 'active' | 'results'>('setup');
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType>('hiragana');
@@ -25,6 +28,7 @@ const QuickQuiz: React.FC = () => {
     showTroubleCharacters: false,
     characterSize: 'large',
     audioFeedback: true,
+    speedMode: false,
   });
   const [quizResults, setQuizResults] = useState<QuizSessionStats | null>(null);
   const [userStats, setUserStats] = useState<{
@@ -36,6 +40,13 @@ const QuickQuiz: React.FC = () => {
     totalCorrect: 0,
     totalQuizzes: 0
   });
+
+  // Handle navigation from kana learning page
+  useEffect(() => {
+    if (location.state?.fromKanaLearning) {
+      setSelectedKanaType(location.state.kanaType || 'hiragana');
+    }
+  }, [location]);
 
   // Load user's quiz stats when component mounts
   useEffect(() => {
@@ -110,6 +121,13 @@ const QuickQuiz: React.FC = () => {
   const handleReturnToSetup = () => {
     setQuizState('setup');
     setActiveTab('setup');
+  };
+
+  const toggleSpeedMode = () => {
+    setQuizSettings({
+      ...quizSettings,
+      speedMode: !quizSettings.speedMode
+    });
   };
 
   return (
@@ -206,9 +224,11 @@ const QuickQuiz: React.FC = () => {
                   </Button>
                 </Link>
                 <h1 className="text-2xl font-bold text-center text-indigo">Quick Quiz</h1>
-                <Button variant="ghost" size="sm" className="opacity-0">
-                  <Settings size={16} />
-                </Button>
+                <div className="opacity-0">
+                  <Button variant="ghost" size="sm">
+                    <Settings size={16} />
+                  </Button>
+                </div>
               </div>
               
               {user && userStats.totalQuizzes > 0 && (
@@ -227,6 +247,28 @@ const QuickQuiz: React.FC = () => {
                   </div>
                 </div>
               )}
+              
+              <div className="mb-6 p-4 bg-indigo/5 rounded-lg">
+                <h3 className="text-sm font-medium mb-2">Quiz Mode</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="speed-mode"
+                      checked={quizSettings.speedMode}
+                      onCheckedChange={toggleSpeedMode}
+                    />
+                    <Label htmlFor="speed-mode" className="flex items-center gap-1">
+                      <Zap size={14} className={quizSettings.speedMode ? "text-indigo" : "text-muted-foreground"} />
+                      Speed Mode
+                    </Label>
+                  </div>
+                  <span className="text-xs text-muted-foreground max-w-[60%]">
+                    {quizSettings.speedMode ? 
+                      "Type the correct romaji to automatically advance. Instant feedback." : 
+                      "Click Check button to validate your answer. More time to think."}
+                  </span>
+                </div>
+              </div>
               
               <QuizSetup onStartQuiz={handleStartQuiz} />
             </div>

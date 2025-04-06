@@ -1,4 +1,3 @@
-
 import { KanaCharacter } from './kana';
 
 export type KanaType = 'hiragana' | 'katakana';
@@ -31,6 +30,7 @@ export interface QuizSettings {
   showTroubleCharacters: boolean;
   characterSize: 'small' | 'medium' | 'large';
   audioFeedback: boolean;
+  speedMode?: boolean;
 }
 
 export interface CharacterResult {

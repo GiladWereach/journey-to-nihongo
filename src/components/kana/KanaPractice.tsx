@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabaseClient } from '@/lib/supabase';
 import { calculateNextReviewDate } from '@/lib/utils';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { useNavigate } from 'react-router-dom';
+import { Zap } from 'lucide-react';
 
 export interface PracticeResult {
   correct: number;
@@ -40,6 +42,7 @@ const MISTAKE_PENALTY = 2; // How many percentage points to reduce for mistakes
 const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onComplete, onCancel }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [kanaList, setKanaList] = useState<KanaCharacter[]>([]);
   const [currentKanaIndex, setCurrentKanaIndex] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
@@ -154,40 +157,34 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     setKanaList(newKanaList);
   }, [kanaType, user, userProgress]);
 
-  // Function to select characters with weighted randomization based on proficiency
   const weightedRandomSelection = (kanaList: KanaCharacter[], userProgress: any[]) => {
-    // If no progress data, return randomly shuffled list
     if (!userProgress.length) {
       return [...kanaList].sort(() => Math.random() - 0.5);
     }
     
-    // Calculate weights for each character
     const weightedList = kanaList.map(kana => {
       const progress = userProgress.find((p: any) => p.character_id === kana.id);
       
-      // Characters due for review get highest weight
       if (progress && new Date(progress.review_due) <= new Date()) {
-        return { kana, weight: 1.0 }; // Highest weight for due reviews
+        return { kana, weight: 1.0 };
       }
       
       const proficiency = progress ? progress.proficiency : 0;
-      // Lower proficiency = higher weight
       let weight = 0.5;
       
       if (proficiency < 30) {
-        weight = 0.8; // High weight for beginners
+        weight = 0.8;
       } else if (proficiency < 60) {
-        weight = 0.6; // Medium weight for intermediate
+        weight = 0.6;
       } else if (proficiency < 90) {
-        weight = 0.4; // Lower weight for advanced
+        weight = 0.4;
       } else {
-        weight = 0.2; // Lowest weight for mastered characters
+        weight = 0.2;
       }
       
       return { kana, weight };
     });
     
-    // Fisher-Yates shuffle with weighted randomization
     const result: KanaCharacter[] = [];
     const shuffled = [...weightedList];
     
@@ -272,11 +269,8 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
   };
 
   const calculateNextReviewInterval = (masteryLevel: number) => {
-    // Base interval in days
     let intervalDays = INITIAL_INTERVAL_DAYS;
     
-    // Apply multiplier based on mastery level
-    // masteryLevel 0 = learning, 1 = first disappearance, 2 = second disappearance, etc.
     if (masteryLevel > 0) {
       for (let i = 1; i < masteryLevel; i++) {
         intervalDays *= INTERVAL_MULTIPLIER;
@@ -369,58 +363,47 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     const existingProgress = userProgress.find((p: any) => p.character_id === kanaItem.id);
 
     if (existingProgress) {
-      // Update mistake count and total practice count
       const updatedMistakeCount = isCorrect ? 
         existingProgress.mistake_count : 
         existingProgress.mistake_count + 1;
       const updatedTotalPracticeCount = existingProgress.total_practice_count + 1;
       
-      // Update consecutive correct answers
       let consecutiveCorrect = isCorrect ? 
         (existingProgress.consecutive_correct || 0) + 1 : 
-        0; // Reset to 0 on mistake
+        0;
       
-      // Check if we need to advance mastery level
       let masteryLevel = existingProgress.mastery_level || 0;
       let newReviewDue = new Date(existingProgress.review_due || new Date());
       
-      // If consecutive correct reaches threshold and not already in mastery
       if (consecutiveCorrect >= MASTERY_CONSECUTIVE_CORRECT && masteryLevel === 0) {
-        masteryLevel = 1; // First disappearance phase
+        masteryLevel = 1;
         newReviewDue = calculateNextReviewInterval(masteryLevel);
       } 
-      // If already in mastery and correctly answered during a review
       else if (masteryLevel > 0 && isCorrect && new Date(existingProgress.review_due) <= new Date()) {
-        masteryLevel += 1; // Advance to next mastery level
+        masteryLevel += 1;
         newReviewDue = calculateNextReviewInterval(masteryLevel);
-        consecutiveCorrect = 0; // Reset counter after advancing mastery level
+        consecutiveCorrect = 0;
       }
-      // If mistake during review of mastered character
       else if (masteryLevel > 0 && !isCorrect && new Date(existingProgress.review_due) <= new Date()) {
-        masteryLevel = Math.max(masteryLevel - 1, 0); // Drop one mastery level, but not below 0
+        masteryLevel = Math.max(masteryLevel - 1, 0);
         newReviewDue = calculateNextReviewInterval(masteryLevel);
         consecutiveCorrect = 0;
       }
       
-      // Calculate new proficiency
       let newProficiency = existingProgress.proficiency;
       
       if (isCorrect) {
-        // Small boost for correct answers based on current proficiency
         const boost = Math.max(10 - Math.floor(newProficiency / 10), 2);
         newProficiency = Math.min(newProficiency + boost, 100);
       } else {
-        // Larger penalty for mistakes, especially if proficiency is high
-        const penalty = MISTAKE_PENALTY + Math.floor(newProficiency / 25); // Higher penalty for more advanced characters
+        const penalty = MISTAKE_PENALTY + Math.floor(newProficiency / 25);
         newProficiency = Math.max(newProficiency - penalty, 0);
         
-        // Additional penalty for consecutive mistakes
         if (updatedMistakeCount > 1 && updatedMistakeCount % 3 === 0) {
-          newProficiency = Math.max(newProficiency - 5, 0); // Extra penalty for repeated mistakes
+          newProficiency = Math.max(newProficiency - 5, 0);
         }
       }
       
-      // Update the database
       await supabaseClient
         .from('user_kana_progress')
         .update({
@@ -434,9 +417,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
         })
         .eq('id', existingProgress.id);
     } else {
-      // First time encountering this character
-      const initialProficiency = isCorrect ? 30 : 10; // Starting point based on first attempt
-      
+      const initialProficiency = isCorrect ? 30 : 10;
       await supabaseClient
         .from('user_kana_progress')
         .insert({
@@ -446,11 +427,20 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
           mistake_count: isCorrect ? 0 : 1,
           total_practice_count: 1,
           consecutive_correct: isCorrect ? 1 : 0,
-          mastery_level: 0, // Start at learning phase
+          mastery_level: 0,
           last_practiced: new Date().toISOString(),
-          review_due: new Date().toISOString() // Immediately available for practice
+          review_due: new Date().toISOString()
         });
     }
+  };
+
+  const handleQuickQuizRedirect = () => {
+    navigate('/quick-quiz', {
+      state: {
+        fromKanaLearning: true,
+        kanaType: kanaType === 'all' ? 'hiragana' : kanaType
+      }
+    });
   };
 
   if (isLoading) {
@@ -475,17 +465,33 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <JapaneseCharacter
-          character={kanaItem.character}
-          size="lg"
-          color={kanaType === 'hiragana' ? 'text-matcha' : kanaType === 'katakana' ? 'text-vermilion' : 'text-indigo'}
-          animated={false}
-          className="mx-auto mb-2"
-        />
-        <p className="text-gray-500">
-          {currentKanaIndex + 1} / {kanaList.length}
-        </p>
+      <div className="mb-4 flex justify-between items-center">
+        <Button variant="outline" onClick={onCancel} size="sm">
+          Cancel
+        </Button>
+        
+        <div className="text-center">
+          <JapaneseCharacter
+            character={kanaItem.character}
+            size="lg"
+            color={kanaType === 'hiragana' ? 'text-matcha' : kanaType === 'katakana' ? 'text-vermilion' : 'text-indigo'}
+            animated={false}
+            className="mx-auto mb-2"
+          />
+          <p className="text-gray-500">
+            {currentKanaIndex + 1} / {kanaList.length}
+          </p>
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleQuickQuizRedirect}
+          className="flex items-center gap-1 text-indigo hover:text-indigo-600"
+        >
+          <Zap size={14} />
+          Quick Quiz
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">

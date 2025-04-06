@@ -127,6 +127,28 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   // Current character being tested
   const currentCharacter = quizCharacters[currentCharacterIndex];
   
+  // Handle input change with auto-validation in speed mode
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newInput = e.target.value;
+    setInput(newInput);
+    
+    // In speed mode, validate automatically
+    if (settings.speedMode && currentCharacter && !isPaused) {
+      const userAnswer = newInput.trim().toLowerCase();
+      const correctAnswer = currentCharacter.romaji.toLowerCase();
+      
+      // If the input exactly matches the correct answer
+      if (userAnswer === correctAnswer) {
+        handleSubmit();
+      }
+      
+      // If the input has 3+ characters and is wrong, mark as incorrect
+      if (userAnswer.length >= 3 && userAnswer.length >= correctAnswer.length && userAnswer !== correctAnswer) {
+        handleSubmit();
+      }
+    }
+  };
+  
   // Handle user input submission
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
@@ -204,10 +226,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         incorrectAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
       }
       
-      // Show hint after 3 incorrect attempts
-      if (newAttemptCount >= 3) {
-        setShowHint(true);
-        
+      // For speed mode, instantly move to next character on incorrect
+      if (settings.speedMode) {
         // Update character results
         newStats.characterResults.push({
           characterId: currentCharacter.id,
@@ -226,7 +246,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           }
         }
         
-        // Move to next character after showing hint
+        // Show brief feedback then move on
         setTimeout(() => {
           setInput('');
           setFeedback('none');
@@ -234,22 +254,58 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           setAttemptCount(0);
           moveToNextCharacter();
           
-          // Focus input field
           if (inputRef.current) {
             inputRef.current.focus();
           }
-        }, 1500); // Slightly reduced time for hint viewing
+        }, 500); // Brief delay to show feedback in speed mode
       } else {
-        // Reset input for another attempt
-        setTimeout(() => {
-          setInput('');
-          setFeedback('none');
+        // Regular mode - show hint after 3 incorrect attempts
+        if (newAttemptCount >= 3) {
+          setShowHint(true);
           
-          // Focus input field
-          if (inputRef.current) {
-            inputRef.current.focus();
+          // Update character results
+          newStats.characterResults.push({
+            characterId: currentCharacter.id,
+            character: currentCharacter.character,
+            romaji: currentCharacter.romaji,
+            isCorrect: false,
+            attemptCount: newAttemptCount,
+          });
+          
+          // Update user progress if signed in
+          if (user) {
+            try {
+              await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
+            } catch (error) {
+              console.error('Error updating progress:', error);
+            }
           }
-        }, 800); // Slightly reduced delay for incorrect answers
+          
+          // Move to next character after showing hint
+          setTimeout(() => {
+            setInput('');
+            setFeedback('none');
+            setShowHint(false);
+            setAttemptCount(0);
+            moveToNextCharacter();
+            
+            // Focus input field
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+          }, 1500); // Slightly reduced time for hint viewing
+        } else {
+          // Reset input for another attempt
+          setTimeout(() => {
+            setInput('');
+            setFeedback('none');
+            
+            // Focus input field
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+          }, 800); // Slightly reduced delay for incorrect answers
+        }
       }
     }
     
@@ -450,23 +506,26 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     type="text"
                     placeholder="Enter romaji..."
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={handleInputChange}
                     className={`text-center text-base sm:text-lg ${isPaused ? 'bg-gray-100' : ''}`}
                     disabled={isPaused || showHint}
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck="false"
                   />
-                  <Button 
-                    type="submit" 
-                    disabled={isPaused || showHint || input.trim() === ''}
-                  >
-                    Check
-                  </Button>
+                  
+                  {!settings.speedMode && (
+                    <Button 
+                      type="submit" 
+                      disabled={isPaused || showHint || input.trim() === ''}
+                    >
+                      Check
+                    </Button>
+                  )}
                 </div>
               </form>
               
-              {attemptCount > 0 && attemptCount < 3 && feedback === 'none' && (
+              {!settings.speedMode && attemptCount > 0 && attemptCount < 3 && feedback === 'none' && (
                 <div className="mt-2">
                   <span className="text-xs sm:text-sm text-muted-foreground">
                     Attempt {attemptCount + 1} of 3
@@ -493,6 +552,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   Skip
                 </Button>
               </div>
+              
+              {settings.speedMode && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Speed Mode: Type the correct romaji to advance automatically
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -506,4 +571,3 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
 };
 
 export default QuizInterface;
-
