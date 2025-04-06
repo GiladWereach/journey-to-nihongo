@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Clock, BookOpen, Award, TrendingUp } from 'lucide-react';
+import { Clock, BookOpen, Award, TrendingUp, Calendar, Target, Flag } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Progress } from '@/components/ui/progress';
 
 interface ProgressStatsProps {
   totalStudyTime: number;
@@ -23,11 +24,15 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
 }) => {
   const { user } = useAuth();
   const [weeklyGoalMinutes, setWeeklyGoalMinutes] = useState(105); // Default to ~15 minutes per day
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(15);
+  const [weeklyGoalDays, setWeeklyGoalDays] = useState(7);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const fetchUserSettings = async () => {
       if (!user) return;
       
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('user_settings')
@@ -41,13 +46,18 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
         }
         
         if (data) {
-          // The data object now has the correct properties
-          const dailyGoal = data.daily_goal_minutes || 15;
-          const daysPerWeek = data.weekly_goal_days || 7;
-          setWeeklyGoalMinutes(dailyGoal * daysPerWeek);
+          // Extract user's goal settings
+          const extractedDailyGoal = data.daily_goal_minutes || 15;
+          const extractedWeeklyDays = data.weekly_goal_days || 7;
+          
+          setDailyGoalMinutes(extractedDailyGoal);
+          setWeeklyGoalDays(extractedWeeklyDays);
+          setWeeklyGoalMinutes(extractedDailyGoal * extractedWeeklyDays);
         }
       } catch (error) {
         console.error('Error in fetchUserSettings:', error);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -68,9 +78,20 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
 
   // Calculate weekly goal progress
   const goalProgress = Math.min(100, Math.round((totalStudyTime / weeklyGoalMinutes) * 100));
+  
+  // Calculate character mastery percentage
+  const characterMasteryPercent = Math.min(100, Math.round((learnedCharacters / 92) * 100));
+  
+  // Determine progress color based on percentage
+  const getProgressColorClass = (percent: number) => {
+    if (percent >= 90) return 'bg-green-500';
+    if (percent >= 60) return 'bg-emerald-500';
+    if (percent >= 30) return 'bg-amber-500';
+    return 'bg-red-500';
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
@@ -81,27 +102,26 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
         <CardContent>
           <div className="flex flex-col">
             <div className="text-2xl font-bold">{formatStudyTime(totalStudyTime)}</div>
-            <div className="mt-2 flex items-center">
-              <div className="h-2 flex-grow bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-indigo rounded-full" 
-                  style={{ width: `${goalProgress}%` }}
-                ></div>
-              </div>
+            <div className="mt-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      {goalProgress}%
-                    </span>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>Weekly Goal</span>
+                        <span className={goalProgress >= 100 ? 'text-green-600 font-medium' : ''}>{goalProgress}%</span>
+                      </div>
+                      <Progress value={goalProgress} className={`h-2 ${getProgressColorClass(goalProgress)}`} />
+                    </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Weekly goal: {weeklyGoalMinutes} minutes</p>
+                    <p>Goal: {formatStudyTime(weeklyGoalMinutes)} per week</p>
+                    <p>Daily target: {dailyGoalMinutes} min × {weeklyGoalDays} days</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-2">
               Across {totalSessions} {totalSessions === 1 ? 'session' : 'sessions'}
             </p>
           </div>
@@ -118,25 +138,27 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
         <CardContent>
           <div className="text-2xl font-bold flex items-baseline">
             {learnedCharacters}
-            <TrendingUp className="ml-2 h-4 w-4 text-green-500" />
+            <span className="text-sm text-muted-foreground ml-2">/ 92</span>
+            {learnedCharacters > 0 && <TrendingUp className="ml-2 h-4 w-4 text-green-500" />}
           </div>
-          <div className="flex items-center mt-2">
-            <div className="flex-grow h-2 bg-gray-100 rounded-full">
-              <div 
-                className={`h-full rounded-full ${
-                  learnedCharacters > 46 ? 'bg-green-500' : 'bg-amber-500'
-                }`}
-                style={{ width: `${Math.min(100, Math.round((learnedCharacters / 92) * 100))}%` }}
-              ></div>
+          <div className="mt-2">
+            <div className="flex justify-between text-xs">
+              <span>Mastery Progress</span>
+              <span className={characterMasteryPercent >= 100 ? 'text-green-600 font-medium' : ''}>
+                {characterMasteryPercent}%
+              </span>
             </div>
-            <span className="ml-2 text-xs text-muted-foreground">
-              {Math.min(100, Math.round((learnedCharacters / 92) * 100))}%
-            </span>
+            <Progress 
+              value={characterMasteryPercent} 
+              className={`h-2 ${getProgressColorClass(characterMasteryPercent)}`} 
+            />
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {learnedCharacters >= 92 
-              ? 'Mastered both hiragana and katakana!' 
-              : 'Basic kana mastery in progress'}
+          <p className="text-xs text-muted-foreground mt-2">
+            {characterMasteryPercent >= 100 
+              ? '✨ Complete mastery of basic kana!' 
+              : characterMasteryPercent >= 50
+                ? 'Good progress on kana mastery' 
+                : 'Focus on learning new characters'}
           </p>
         </CardContent>
       </Card>
@@ -144,7 +166,7 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
       <Card className={currentStreak > 0 ? 'border-vermilion/20 bg-vermilion/5' : ''}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
-            <Award className={`mr-2 h-4 w-4 ${currentStreak > 0 ? 'text-vermilion' : ''}`} />
+            <Calendar className={`mr-2 h-4 w-4 ${currentStreak > 0 ? 'text-vermilion' : ''}`} />
             Learning Streak
           </CardTitle>
         </CardHeader>
@@ -159,18 +181,63 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
               <div
                 key={index}
                 className={`h-2 flex-1 rounded ${
-                  index < currentStreak ? 'bg-vermilion' : 'bg-gray-200'
+                  index < currentStreak % 7 ? 'bg-vermilion' : 'bg-gray-200'
                 }`}
               />
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-2">
             {currentStreak > 0
               ? currentStreak > longestStreak 
-                ? 'New record! Keep going!' 
+                ? '🔥 New record! Keep going!' 
                 : `Longest streak: ${longestStreak} days`
-              : 'Start your streak by studying today!'}
+              : '⚠️ Start your streak by studying today!'}
           </p>
+        </CardContent>
+      </Card>
+      
+      <Card className="bg-indigo/5 border-indigo/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
+            <Target className="mr-2 h-4 w-4 text-indigo" />
+            Learning Goals
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="flex items-center">
+                  <Clock className="h-3 w-3 mr-1" /> Daily Study
+                </span>
+                <span>{dailyGoalMinutes} minutes</span>
+              </div>
+              <Progress value={75} className="h-1.5 bg-indigo" />
+            </div>
+            
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" /> Days per Week
+                </span>
+                <span>{weeklyGoalDays} days</span>
+              </div>
+              <Progress value={Math.round((currentStreak % 7) / weeklyGoalDays * 100)} className="h-1.5 bg-vermilion" />
+            </div>
+            
+            <div className="pt-1">
+              <div className="text-xs flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center">
+                  <Flag className="h-3 w-3 mr-1" /> Study consistency
+                </span>
+                <span className={currentStreak > 2 ? 'text-green-600 font-medium' : ''}>
+                  {currentStreak > 6 ? 'Excellent' : 
+                   currentStreak > 3 ? 'Good' : 
+                   currentStreak > 1 ? 'Starting' : 'Needs work'}
+                </span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
