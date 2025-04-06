@@ -9,7 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseClient } from '@/lib/supabase';
-import { kanaLearningService, updateKanaCharacterProgress, completeKanaLearningSession } from '@/services/kanaModules';
+import { 
+  kanaLearningService, 
+  updateKanaCharacterProgress, 
+  completeKanaLearningSession 
+} from '@/services/kanaModules';
 
 interface WritingPracticeExerciseProps {
   kanaList: KanaCharacter[];

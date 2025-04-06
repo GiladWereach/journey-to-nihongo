@@ -9,7 +9,11 @@ import { calculateNextReviewDate } from '@/lib/utils';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
-import { kanaLearningService } from '@/services/kanaModules';
+import { 
+  kanaLearningService, 
+  updateKanaCharacterProgress, 
+  completeKanaLearningSession 
+} from '@/services/kanaModules';
 
 export interface PracticeResult {
   correct: number;
@@ -354,8 +358,8 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
             isCorrect: result.correct
           })).filter(update => update.characterId !== '');
           
-          // Record using the kanaLearningService
-          kanaLearningService.completeKanaLearningSession(
+          // Record using the imported completeKanaLearningSession function
+          completeKanaLearningSession(
             user.id,
             sessionId,
             {
@@ -366,12 +370,11 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
           );
           
           // Also record as a general study session
-          const practiceTime = Math.max(5, Math.round(total * 0.5)); // Estimate practice time
           kanaLearningService.recordStudyActivity(
             user.id,
             kanaType === 'hiragana' ? 'hiragana_practice' : 'katakana_practice',
             ['recognition', 'kana'],
-            practiceTime,
+            Math.max(5, Math.round(total * 0.5)), // Estimate practice time
             accuracy
           );
           
@@ -404,8 +407,8 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     if (!user) return;
     
     try {
-      // Use the centralized service to update character progress
-      await kanaLearningService.updateKanaCharacterProgress(
+      // Use the imported updateKanaCharacterProgress function
+      await updateKanaCharacterProgress(
         user.id,
         kanaItem.id,
         isCorrect
