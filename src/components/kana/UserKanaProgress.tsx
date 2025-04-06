@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -178,12 +177,12 @@ const UserKanaProgress: React.FC = () => {
           hiragana: { 
             learned: hiraganaStats.learned, 
             total: hiraganaStats.total, 
-            avgProficiency: hiraganaStats.averageProficiency 
+            avgProficiency: hiraganaStats.avgProficiency 
           },
           katakana: { 
             learned: katakanaStats.learned, 
             total: katakanaStats.total, 
-            avgProficiency: katakanaStats.averageProficiency 
+            avgProficiency: katakanaStats.avgProficiency 
           }
         });
       } catch (error) {
