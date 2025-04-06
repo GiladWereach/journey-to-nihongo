@@ -1,66 +1,126 @@
 
-export type KanaType = 'hiragana' | 'katakana';
-
-export interface KanaExample {
-  word: string;
-  romaji: string;
-  meaning: string;
-  reading?: string; // Add this to fix the errors in data files
-}
+// Add or update types as needed to align with the database schema
 
 export interface KanaCharacter {
   id: string;
   character: string;
   romaji: string;
-  type: KanaType;
-  stroke_count: number;
+  type: 'hiragana' | 'katakana';
+  stroke_count: number; // Use snake_case to match database
   stroke_order: string[];
   mnemonic?: string;
   sound_file?: string;
-  examples?: KanaExample[];
-  group?: string;
+  examples?: {
+    word: string;
+    reading?: string; // Make reading optional
+    meaning: string;
+    romaji: string; // Make romaji required
+  }[];
+  created_at?: string;
 }
 
-// Updated UserKanaProgress interface to match how it's used in the codebase
+export interface KanaGroup {
+  id: string;
+  name: string;
+  type: 'hiragana' | 'katakana';
+  description?: string;
+  characters?: string[]; // Array of character IDs
+  created_at?: string;
+}
+
+export interface KanaGroupCharacter {
+  id: string;
+  group_id: string;
+  character_id: string;
+  sequence_order: number;
+  created_at?: string;
+}
+
+export interface KanaLearningSession {
+  id: string;
+  user_id: string;
+  start_time: string;
+  end_time?: string;
+  kana_type: string;
+  characters_studied: string[];
+  accuracy?: number;
+  completed: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface UserKanaProgress {
-  id?: string;
+  id: string;
   user_id: string;
   character_id: string;
   proficiency: number;
-  total_practice_count: number; // Changed from practice_count
-  mistake_count: number; // Added this field
+  mistake_count: number;
+  total_practice_count: number;
+  consecutive_correct: number; // Track consecutive correct answers
   last_practiced: Date;
-  consecutive_correct: number;
-  mastery_level: number; // Added this field
-  review_due: Date; // Changed from next_review
-  created_at?: Date | string; // Allow both Date and string
-  updated_at?: Date | string; // Allow both Date and string
+  review_due: Date;
+  mastery_level: number; // 0=learning, 1=first disappearance, 2=second disappearance, etc.
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Updated to include characterId and correct fields used in the codebase
-export interface KanaPracticeResult {
-  id?: string;
+export interface Profile {
+  id: string;
+  username?: string;
+  display_name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  learning_level?: string;
+  learning_goal?: string;
+  daily_goal_minutes?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserSettings {
+  id: string;
+  theme?: string;
+  daily_goal?: number;
+  reminder_time?: string;
+  study_reminder?: boolean;
+  preferred_study_time?: string;
+  notifications_enabled?: boolean;
+  display_furigana?: boolean;
+  prior_knowledge?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StudySession {
+  id: string;
   user_id: string;
-  session_id?: string;
-  date: Date | string; // Allow both Date and string
-  kana_type: KanaType | 'mixed';
-  correct_count: number;
-  incorrect_count: number;
-  total_questions: number;
-  accuracy: number;
-  duration_seconds: number;
-  created_at?: Date | string; // Allow both Date and string
-  details?: string; // JSON string with detailed results
-  characterId?: string; // Added this field
-  correct?: boolean; // Added this field
+  module: string;
+  topics: string[];
+  duration_minutes: number;
+  session_date: string;
+  completed: boolean;
+  performance_score?: number;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
+export type KanaType = 'hiragana' | 'katakana';
+
+// Add interface for tracking practice results
+export interface KanaPracticeResult {
+  characterId: string;
+  correct: boolean;
+  timestamp: Date;
+}
+
+// Updated PracticeResult interface for KanaPracticeResults component
 export interface PracticeResult {
   correct: number;
   incorrect: number;
   total: number;
   kanaType: KanaType | 'all';
-  practiceType: 'recognition' | 'matching' | 'typing'; // Added 'typing' as a valid practice type
+  practiceType: 'recognition' | 'matching';
   accuracy: number;
   totalQuestions: number;
   correctAnswers: number;
@@ -68,51 +128,4 @@ export interface PracticeResult {
     character: string;
     correct: boolean;
   }>;
-}
-
-export interface KanaLearningSession {
-  id?: string;
-  user_id: string;
-  start_time: Date | string; // Allow both Date and string
-  end_time?: Date | string; // Allow both Date and string
-  duration_minutes?: number;
-  kana_type: KanaType | 'mixed';
-  characters_studied: number;
-  created_at?: Date | string; // Allow both Date and string
-}
-
-// Update Profile interface to match what's being used in Dashboard.tsx
-export interface Profile {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url?: string;
-  bio?: string;
-  learning_goal?: string;
-  full_name?: string; // Added this field
-  learning_level?: string; // Added this field
-  daily_goal_minutes?: number; // Added this field
-  created_at?: Date | string; // Allow both Date and string
-  updated_at?: Date | string; // Allow both Date and string
-}
-
-// Update UserSettings interface to match what's being used
-export interface UserSettings {
-  id: string;
-  user_id?: string;
-  theme?: 'light' | 'dark' | 'system';
-  font_size?: 'small' | 'medium' | 'large';
-  show_romaji?: boolean;
-  show_english?: boolean;
-  quiz_speed?: 'slow' | 'medium' | 'fast';
-  daily_goal?: number;
-  notification_enabled?: boolean;
-  prior_knowledge?: string; // Added this field
-  display_furigana?: boolean; // Added this field
-  notifications_enabled?: boolean; // Added this field
-  preferred_study_time?: string; // Added this field
-  reminder_time?: string; // Added this field
-  study_reminder?: boolean; // Added this field
-  created_at?: Date | string; // Allow both Date and string
-  updated_at?: Date | string; // Allow both Date and string
 }
