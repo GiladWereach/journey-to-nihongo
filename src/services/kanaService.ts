@@ -1,4 +1,3 @@
-
 import { supabaseClient } from '@/lib/supabase';
 import { KanaCharacter, KanaType, UserKanaProgress, KanaPracticeResult } from '@/types/kana';
 import { hiraganaCharacters } from '@/data/hiraganaData';
@@ -68,7 +67,7 @@ export const kanaService = {
         mastery_level: progress.mastery_level || 0,
         last_practiced: new Date(progress.last_practiced),
         review_due: new Date(progress.review_due)
-      }));
+      })) as UserKanaProgress[];
     } catch (error) {
       console.error('Error fetching user progress:', error);
       return [];
@@ -235,8 +234,8 @@ export const kanaService = {
       for (const result of results) {
         await kanaService.updateKanaProgress(
           userId,
-          result.characterId,
-          result.correct
+          result.characterId || '',
+          result.correct || false
         );
       }
       console.log(`Updated progress for ${results.length} characters`);
