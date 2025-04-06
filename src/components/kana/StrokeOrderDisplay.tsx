@@ -4,6 +4,7 @@ import { KanaCharacter } from '@/types/kana';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface StrokeOrderDisplayProps {
   character: KanaCharacter;
@@ -25,21 +26,21 @@ const StrokeOrderDisplay: React.FC<StrokeOrderDisplayProps> = ({
   }
   
   return (
-    <div className={`${className || ''}`}>
+    <div className={cn("stroke-order-display", className)}>
       <h3 className="text-sm font-medium mb-2">Stroke Order</h3>
       
-      <div className="flex items-center justify-between gap-1 mb-4">
+      <div className={`flex ${isMobile ? 'flex-wrap justify-center' : 'items-center justify-between'} gap-2 mb-4`}>
         {character.stroke_order.map((stroke, index) => (
           <React.Fragment key={index}>
-            <Card className="flex-1 max-w-24 bg-white">
-              <CardContent className="p-3 text-center">
+            <Card className={`${isMobile ? 'w-16' : 'flex-1 max-w-24'} bg-white shadow-sm transition-all hover:shadow`}>
+              <CardContent className="p-3 text-center flex flex-col items-center justify-center">
                 <div className="text-xs text-gray-500 mb-1">Step {index + 1}</div>
                 <div className="font-japanese text-xl">{stroke}</div>
               </CardContent>
             </Card>
             
             {index < character.stroke_order.length - 1 && !isMobile && (
-              <ArrowRight className="h-4 w-4 text-gray-400" />
+              <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
             )}
           </React.Fragment>
         ))}

@@ -19,7 +19,8 @@ import NotFound from './pages/NotFound';
 import Achievements from './pages/Achievements';
 import KanaLearning from './pages/KanaLearning';
 import QuickQuiz from './pages/QuickQuiz';
-import WritingPractice from './pages/WritingPractice'; // Add this import
+import WritingPractice from './pages/WritingPractice'; 
+import TimedChallenge from './pages/TimedChallenge'; // Add this import
 
 function App() {
   return (
@@ -35,7 +36,8 @@ function App() {
             {/* Learning routes (protected, but accessible for demo) */}
             <Route path="/kana-learning" element={<KanaLearning />} />
             <Route path="/quick-quiz" element={<QuickQuiz />} />
-            <Route path="/writing-practice" element={<WritingPractice />} /> {/* Add this route */}
+            <Route path="/writing-practice" element={<WritingPractice />} />
+            <Route path="/timed-challenge" element={<TimedChallenge />} /> {/* Add this route */}
             
             {/* Protected routes */}
             <Route path="/" element={<RequireAuth />}>

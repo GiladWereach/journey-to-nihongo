@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
@@ -35,7 +34,7 @@ interface PracticeCardProps {
   featured?: boolean;
   badgeText?: string;
   completed?: boolean;
-  disabled?: boolean; // Add disabled prop
+  disabled?: boolean;
 }
 
 const PracticeCard: React.FC<PracticeCardProps> = ({ 
@@ -46,7 +45,7 @@ const PracticeCard: React.FC<PracticeCardProps> = ({
   featured = false,
   badgeText,
   completed = false,
-  disabled = false // Default to false
+  disabled = false
 }) => {
   return (
     <Card 
@@ -82,7 +81,7 @@ const PracticeCard: React.FC<PracticeCardProps> = ({
             <Button 
               onClick={onClick}
               className={featured ? 'bg-indigo hover:bg-indigo/90' : ''}
-              disabled={disabled} // Add disabled attribute
+              disabled={disabled}
             >
               Start Practice
             </Button>
@@ -151,11 +150,9 @@ const Practice: React.FC = () => {
       
       setIsLoading(true);
       try {
-        // Fetch recent quiz sessions
         const sessions = await quizService.getRecentQuizSessions(user.id, 5);
         setRecentSessions(sessions);
         
-        // Fetch kana statistics
         const hStats = await kanaProgressService.getKanaProficiencyStats(user.id, 'hiragana');
         const kStats = await kanaProgressService.getKanaProficiencyStats(user.id, 'katakana');
         
@@ -196,7 +193,6 @@ const Practice: React.FC = () => {
       <Navbar />
       <div className="min-h-screen pt-24 px-4 bg-softgray/30">
         <div className="max-w-7xl mx-auto flex">
-          {/* Sidebar Navigation for Desktop */}
           <div className="hidden md:block w-64 mr-8">
             <div className="sticky top-24">
               <PrimaryNavigation />
@@ -260,7 +256,6 @@ const Practice: React.FC = () => {
             </div>
           </div>
           
-          {/* Mobile Menu Button */}
           <div className="md:hidden fixed bottom-4 right-4 z-40">
             <Sheet>
               <SheetTrigger asChild>
@@ -302,7 +297,6 @@ const Practice: React.FC = () => {
             </Sheet>
           </div>
           
-          {/* Main Content */}
           <div className="flex-1">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-indigo mb-2">Practice Hub</h1>
@@ -341,8 +335,8 @@ const Practice: React.FC = () => {
                     description="Race against the clock to identify as many characters as you can."
                     icon={Clock}
                     onClick={() => navigate('/timed-challenge')}
-                    badgeText="Coming Soon"
-                    disabled={true} // This feature is coming soon
+                    badgeText="New!"
+                    disabled={false}
                   />
                   
                   <PracticeCard
@@ -351,7 +345,7 @@ const Practice: React.FC = () => {
                     icon={BookOpen}
                     onClick={() => navigate('/vocabulary-drill')}
                     badgeText="Coming Soon"
-                    disabled={true} // This feature is coming soon
+                    disabled={true}
                   />
                 </div>
               </TabsContent>
@@ -445,7 +439,6 @@ const Practice: React.FC = () => {
                     />
                   )}
                   
-                  {/* If we don't have enough recommendations based on progress */}
                   {hiraganaStats.learned < 5 && katakanaStats.learned < 5 && (
                     <PracticeCard
                       title="First Characters Quiz"

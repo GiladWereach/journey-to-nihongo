@@ -1,7 +1,8 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, RotateCcw, Check } from 'lucide-react';
+import { Trash2, RotateCcw, Check, Save } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface KanaCanvasProps {
   width?: number;
@@ -26,6 +27,7 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [strokePath, setStrokePath] = useState<Array<{x: number, y: number}[]>>([]);
   
   useEffect(() => {
     if (canvasRef.current) {
@@ -75,6 +77,9 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({
     
     context.beginPath();
     context.moveTo(x, y);
+    
+    // Start a new stroke path
+    setStrokePath([...strokePath, [{x, y}]]);
   };
   
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -99,6 +104,12 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({
     
     context.lineTo(x, y);
     context.stroke();
+    
+    // Add point to current stroke
+    const currentStrokePath = [...strokePath];
+    const currentStroke = [...currentStrokePath[currentStrokePath.length - 1], {x, y}];
+    currentStrokePath[currentStrokePath.length - 1] = currentStroke;
+    setStrokePath(currentStrokePath);
   };
   
   const endDrawing = () => {
@@ -113,6 +124,39 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({
     
     context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     setHasDrawn(false);
+    setStrokePath([]);
+  };
+  
+  const undoLastStroke = () => {
+    if (!context || !canvasRef.current || strokePath.length === 0) return;
+    
+    // Remove the last stroke
+    const newStrokePath = [...strokePath];
+    newStrokePath.pop();
+    setStrokePath(newStrokePath);
+    
+    // Redraw the canvas
+    context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    if (newStrokePath.length === 0) {
+      setHasDrawn(false);
+      return;
+    }
+    
+    // Redraw all remaining strokes
+    newStrokePath.forEach(stroke => {
+      if (stroke.length > 0) {
+        context.beginPath();
+        context.moveTo(stroke[0].x, stroke[0].y);
+        
+        for (let i = 1; i < stroke.length; i++) {
+          context.lineTo(stroke[i].x, stroke[i].y);
+        }
+        
+        context.stroke();
+        context.closePath();
+      }
+    });
   };
   
   const handleComplete = () => {
@@ -125,14 +169,14 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({
   };
   
   return (
-    <div className={`flex flex-col items-center ${className || ''}`}>
+    <div className={cn(`flex flex-col items-center`, className)}>
       {referenceCharacter && (
-        <div className="mb-2 text-3xl font-japanese opacity-20 text-center">
+        <div className="mb-2 text-4xl font-japanese opacity-20 text-center">
           {referenceCharacter}
         </div>
       )}
       
-      <div className="relative border-2 border-gray-200 rounded-lg mb-4 bg-white">
+      <div className="relative border-2 border-gray-200 rounded-lg mb-4 bg-white overflow-hidden transition-all hover:shadow-md">
         <canvas
           ref={canvasRef}
           className="touch-none cursor-crosshair"
@@ -149,6 +193,17 @@ const KanaCanvas: React.FC<KanaCanvasProps> = ({
       </div>
       
       <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={undoLastStroke}
+          disabled={!hasDrawn || strokePath.length === 0}
+          className="flex items-center gap-1"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Undo
+        </Button>
+        
         <Button
           variant="outline"
           size="sm"
