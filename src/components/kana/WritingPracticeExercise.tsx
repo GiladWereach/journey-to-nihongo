@@ -43,30 +43,50 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     if (!user || !currentKana) return;
     
     try {
+      console.log("Updating progress for character:", currentKana.id);
+      
       // Check if progress exists
-      const { data: existingProgress } = await supabaseClient
+      const { data: existingProgress, error: progressError } = await supabaseClient
         .from('user_kana_progress')
         .select('*')
         .eq('user_id', user.id)
         .eq('character_id', currentKana.id)
         .single();
       
+      if (progressError && progressError.code !== 'PGRST116') {
+        console.error('Error checking for existing progress:', progressError);
+      }
+      
       if (existingProgress) {
         // Update existing progress
         const newProficiency = Math.min(existingProgress.proficiency + 5, 100);
         const newTotalPractice = existingProgress.total_practice_count + 1;
         
-        await supabaseClient
+        console.log("Updating existing progress:", {
+          id: existingProgress.id,
+          new_proficiency: newProficiency,
+          new_total_practice: newTotalPractice
+        });
+        
+        const { error: updateError } = await supabaseClient
           .from('user_kana_progress')
           .update({
             proficiency: newProficiency,
             total_practice_count: newTotalPractice,
-            last_practiced: new Date().toISOString()
+            last_practiced: new Date().toISOString(),
+            review_due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Set review due in 7 days
           })
           .eq('id', existingProgress.id);
+          
+        if (updateError) {
+          console.error('Error updating progress:', updateError);
+          throw updateError;
+        }
       } else {
         // Create new progress
-        await supabaseClient
+        console.log("Creating new progress for character:", currentKana.id);
+        
+        const { error: insertError } = await supabaseClient
           .from('user_kana_progress')
           .insert({
             user_id: user.id,
@@ -74,8 +94,16 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
             proficiency: 20, // Initial proficiency
             total_practice_count: 1,
             last_practiced: new Date().toISOString(),
-            review_due: new Date().toISOString()
+            review_due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // Set review due in 3 days
+            mastery_level: 0,
+            consecutive_correct: 0,
+            mistake_count: 0
           });
+          
+        if (insertError) {
+          console.error('Error creating progress:', insertError);
+          throw insertError;
+        }
       }
       
       // Record the learning session
@@ -133,7 +161,9 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     if (!user) return;
     
     try {
-      await supabaseClient
+      console.log("Creating kana learning session with characters:", charactersCompleted);
+      
+      const { data, error } = await supabaseClient
         .from('kana_learning_sessions')
         .insert({
           user_id: user.id,
@@ -141,7 +171,16 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
           characters_studied: charactersCompleted,
           completed: true,
           end_time: new Date().toISOString()
-        });
+        })
+        .select('id')
+        .single();
+        
+      if (error) {
+        console.error('Error creating learning session:', error);
+        throw error;
+      }
+      
+      console.log("Created learning session:", data.id);
     } catch (error) {
       console.error('Error creating learning session:', error);
     }

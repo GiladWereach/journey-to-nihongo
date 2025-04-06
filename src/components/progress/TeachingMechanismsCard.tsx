@@ -1,19 +1,80 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, BrainCircuit, Lightbulb, Microscope } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabaseClient } from '@/lib/supabase';
 
 interface TeachingMechanismsCardProps {
-  currentStage: 'beginner' | 'intermediate' | 'advanced';
+  currentStage?: 'beginner' | 'intermediate' | 'advanced';
   className?: string;
 }
 
 const TeachingMechanismsCard: React.FC<TeachingMechanismsCardProps> = ({
-  currentStage,
+  currentStage: initialStage,
   className
 }) => {
-  // Define the teaching mechanisms based on the learning stage
+  const { user } = useAuth();
+  const [currentStage, setCurrentStage] = useState<'beginner' | 'intermediate' | 'advanced'>(initialStage || 'beginner');
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    if (!user) return;
+    
+    const determineUserStage = async () => {
+      setIsLoading(true);
+      try {
+        const { data: profile, error: profileError } = await supabaseClient
+          .from('profiles')
+          .select('learning_level')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Error fetching user profile:', profileError);
+        }
+        
+        if (profile?.learning_level) {
+          if (['intermediate', 'advanced'].includes(profile.learning_level)) {
+            setCurrentStage(profile.learning_level as 'intermediate' | 'advanced');
+          } else {
+            setCurrentStage('beginner');
+          }
+        } else {
+          const { data: progress, error: progressError } = await supabaseClient
+            .from('user_kana_progress')
+            .select('*')
+            .eq('user_id', user.id);
+            
+          if (progressError) {
+            console.error('Error fetching user progress:', progressError);
+          } else {
+            if (!progress || progress.length === 0) {
+              setCurrentStage('beginner');
+            } else {
+              const totalProficiency = progress.reduce((sum, item) => sum + (item.proficiency || 0), 0);
+              const avgProficiency = totalProficiency / progress.length;
+              
+              if (avgProficiency >= 80) {
+                setCurrentStage('advanced');
+              } else if (avgProficiency >= 50) {
+                setCurrentStage('intermediate');
+              } else {
+                setCurrentStage('beginner');
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error determining user stage:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    determineUserStage();
+  }, [user]);
+
   const mechanisms = {
     beginner: [
       {
@@ -68,10 +129,8 @@ const TeachingMechanismsCard: React.FC<TeachingMechanismsCardProps> = ({
     ]
   };
 
-  // Determine the current learning stage mechanisms
   const currentMechanisms = mechanisms[currentStage];
   
-  // Define stage-specific colors and titles
   const stageInfo = {
     beginner: {
       title: 'Beginner Learning Techniques',
@@ -96,31 +155,45 @@ const TeachingMechanismsCard: React.FC<TeachingMechanismsCardProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {currentMechanisms.map((mechanism, index) => (
-            <div key={index} className="flex items-start">
-              <div className="mt-0.5 mr-3">{mechanism.icon}</div>
-              <div className="flex-1">
-                <h4 className="text-sm font-medium">{mechanism.title}</h4>
-                <p className="text-xs text-gray-500 mt-1">{mechanism.description}</p>
-                
-                {/* Add simple progress indicator */}
-                <div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className={
-                      currentStage === 'beginner' ? "bg-matcha h-full rounded-full" :
-                      currentStage === 'intermediate' ? "bg-vermilion h-full rounded-full" :
-                      "bg-indigo h-full rounded-full"
-                    }
-                    style={{ 
-                      width: `${index === 0 ? 75 : index === 1 ? 45 : 25}%` 
-                    }}
-                  />
+        {isLoading ? (
+          <div className="space-y-4 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-start">
+                <div className="mt-0.5 mr-3 h-5 w-5 bg-gray-200 rounded"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  <div className="mt-2 h-1 w-full bg-gray-100 rounded-full"></div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {currentMechanisms.map((mechanism, index) => (
+              <div key={index} className="flex items-start">
+                <div className="mt-0.5 mr-3">{mechanism.icon}</div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium">{mechanism.title}</h4>
+                  <p className="text-xs text-gray-500 mt-1">{mechanism.description}</p>
+                  
+                  <div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className={
+                        currentStage === 'beginner' ? "bg-matcha h-full rounded-full" :
+                        currentStage === 'intermediate' ? "bg-vermilion h-full rounded-full" :
+                        "bg-indigo h-full rounded-full"
+                      }
+                      style={{ 
+                        width: `${index === 0 ? 75 : index === 1 ? 45 : 25}%` 
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         
         <Separator className="my-4" />
         

@@ -17,7 +17,7 @@ import StudySessionsList from '@/components/progress/StudySessionsList';
 import StudyHabitsCard from '@/components/progress/StudyHabitsCard';
 import { progressTrackingService } from '@/services/progressTrackingService';
 import { KanaType } from '@/types/kana';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseClient } from '@/lib/supabase';
 
 const Progress: React.FC = () => {
   const { user } = useAuth();
@@ -67,77 +67,106 @@ const Progress: React.FC = () => {
     weeklyGoalDays: 5
   });
   
-  useEffect(() => {
+  // This is the key function that fetches progress data
+  const fetchProgressData = async () => {
     if (!user) return;
     
-    const fetchProgressData = async () => {
-      setLoading(true);
-      try {
-        const streak = await progressTrackingService.getLearningStreak(user.id);
-        setStreakData(streak);
+    setLoading(true);
+    try {
+      console.log("Fetching progress data for user:", user.id);
+      
+      // Fetch streak data
+      const streak = await progressTrackingService.getLearningStreak(user.id);
+      console.log("Streak data:", streak);
+      setStreakData(streak);
+      
+      // Fetch study sessions
+      const sessions = await progressTrackingService.getAllStudySessions(user.id);
+      console.log("Study sessions:", sessions);
+      setStudySessions(sessions);
+      
+      // Calculate total study time
+      const studyTime = await progressTrackingService.calculateTotalStudyTime(user.id, 7);
+      console.log("Total study time:", studyTime);
+      setTotalStudyTime(studyTime);
+      
+      // Get progress timeline
+      const timeline = await progressTrackingService.getProgressTimeline(user.id, 14);
+      console.log("Timeline data:", timeline);
+      setTimelineData(timeline);
+      
+      // Get hiragana mastery distribution
+      const hiraganaDistribution = await kanaProgressService.getMasteryDistribution(user.id, 'hiragana');
+      const hiraganaTotal = kanaService.getKanaByType('hiragana').length;
+      console.log("Hiragana distribution:", hiraganaDistribution, "Total:", hiraganaTotal);
+      setHiraganaStats({
+        ...hiraganaDistribution,
+        total: hiraganaTotal
+      });
+      
+      // Get katakana mastery distribution
+      const katakanaDistribution = await kanaProgressService.getMasteryDistribution(user.id, 'katakana');
+      const katakanaTotal = kanaService.getKanaByType('katakana').length;
+      console.log("Katakana distribution:", katakanaDistribution, "Total:", katakanaTotal);
+      setKatakanaStats({
+        ...katakanaDistribution,
+        total: katakanaTotal
+      });
+      
+      // Calculate overall proficiency
+      const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
+      const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
+      console.log("Overall proficiency - Hiragana:", hiraganaProgress, "Katakana:", katakanaProgress);
+      
+      setOverallProgress({
+        hiragana: hiraganaProgress,
+        katakana: katakanaProgress,
+        basic_kanji: 10,
+        grammar: 5
+      });
+      
+      // Fetch user settings
+      const { data: settingsData, error: settingsError } = await supabaseClient
+        .from('user_settings')
+        .select('daily_goal_minutes, weekly_goal_days')
+        .eq('id', user.id)
+        .single();
         
-        const sessions = await progressTrackingService.getAllStudySessions(user.id);
-        setStudySessions(sessions);
-        
-        const studyTime = await progressTrackingService.calculateTotalStudyTime(user.id, 7);
-        setTotalStudyTime(studyTime);
-        
-        const timeline = await progressTrackingService.getProgressTimeline(user.id, 14);
-        setTimelineData(timeline);
-        
-        const hiraganaDistribution = await kanaProgressService.getMasteryDistribution(user.id, 'hiragana');
-        const hiraganaTotal = kanaService.getKanaByType('hiragana').length;
-        setHiraganaStats({
-          ...hiraganaDistribution,
-          total: hiraganaTotal
+      if (!settingsError && settingsData) {
+        console.log("User settings:", settingsData);
+        setUserSettings({
+          dailyGoalMinutes: settingsData.daily_goal_minutes || 15,
+          weeklyGoalDays: settingsData.weekly_goal_days || 5
         });
-        
-        const katakanaDistribution = await kanaProgressService.getMasteryDistribution(user.id, 'katakana');
-        const katakanaTotal = kanaService.getKanaByType('katakana').length;
-        setKatakanaStats({
-          ...katakanaDistribution,
-          total: katakanaTotal
-        });
-        
-        const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
-        const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
-        
-        setOverallProgress({
-          hiragana: hiraganaProgress,
-          katakana: katakanaProgress,
-          basic_kanji: 10,
-          grammar: 5
-        });
-        
-        // Fetch user settings
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('user_settings')
-          .select('daily_goal_minutes, weekly_goal_days')
-          .eq('id', user.id)
-          .single();
-          
-        if (!settingsError && settingsData) {
-          setUserSettings({
-            dailyGoalMinutes: settingsData.daily_goal_minutes || 15,
-            weeklyGoalDays: settingsData.weekly_goal_days || 5
-          });
-        }
-        
-        // Calculate study habits data
-        const studyHabitsData = await progressTrackingService.analyzeStudyHabits(user.id);
-        if (studyHabitsData) {
-          setStudyHabits(studyHabitsData);
-        }
-      } catch (error) {
-        console.error('Error fetching progress data:', error);
-      } finally {
-        setLoading(false);
+      } else if (settingsError && settingsError.code !== 'PGRST116') {
+        console.error('Error fetching user settings:', settingsError);
       }
-    };
-    
+      
+      // Calculate study habits data
+      const studyHabitsData = await progressTrackingService.analyzeStudyHabits(user.id);
+      if (studyHabitsData) {
+        console.log("Study habits:", studyHabitsData);
+        setStudyHabits(studyHabitsData);
+      }
+    } catch (error) {
+      console.error('Error fetching progress data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch progress data on initial load and whenever user changes
+  useEffect(() => {
+    if (!user) return;
     fetchProgressData();
+    
+    // Also refresh data every 2 minutes if the page is kept open
+    const intervalId = setInterval(fetchProgressData, 120000);
+    
+    return () => clearInterval(intervalId);
   }, [user]);
   
+  // Force navigation to login if not authenticated
   if (!user) {
     navigate('/auth');
     return null;
@@ -145,6 +174,11 @@ const Progress: React.FC = () => {
   
   const learnedCharacters = hiraganaStats.level1 + hiraganaStats.level2 + hiraganaStats.level3Plus + 
                            katakanaStats.level1 + katakanaStats.level2 + katakanaStats.level3Plus;
+
+  // Add a refresh button handler
+  const handleRefresh = () => {
+    fetchProgressData();
+  };
 
   return (
     <>
@@ -193,9 +227,19 @@ const Progress: React.FC = () => {
                       variant="ghost" 
                       className="w-full justify-start" 
                       size="sm"
-                      onClick={() => navigate('/achievements')}
+                      onClick={() => navigate('/writing-practice')}
                     >
-                      Achievements
+                      Writing Practice
+                    </Button>
+                  </li>
+                  <li>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start" 
+                      size="sm"
+                      onClick={() => navigate('/quick-quiz')}
+                    >
+                      Quick Quiz
                     </Button>
                   </li>
                 </ul>
@@ -223,11 +267,21 @@ const Progress: React.FC = () => {
           </div>
           
           <div className="flex-1">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-indigo mb-2">Your Progress</h1>
-              <p className="text-gray-600">
-                Track your Japanese learning journey and see how far you've come.
-              </p>
+            <div className="mb-8 flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-indigo mb-2">Your Progress</h1>
+                <p className="text-gray-600">
+                  Track your Japanese learning journey and see how far you've come.
+                </p>
+              </div>
+              <Button 
+                onClick={handleRefresh} 
+                variant="outline"
+                className="flex items-center"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Data
+              </Button>
             </div>
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>

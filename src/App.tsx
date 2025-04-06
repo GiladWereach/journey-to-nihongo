@@ -20,9 +20,40 @@ import Achievements from './pages/Achievements';
 import KanaLearning from './pages/KanaLearning';
 import QuickQuiz from './pages/QuickQuiz';
 import WritingPractice from './pages/WritingPractice'; 
-import TimedChallenge from './pages/TimedChallenge'; // Add this import
+import TimedChallenge from './pages/TimedChallenge';
+
+// When adding routes, use this function to ensure we don't have conflicting routes
+const checkForConflictingRoutes = (routes: string[]) => {
+  const duplicates = routes.filter((item, index) => routes.indexOf(item) !== index);
+  if (duplicates.length > 0) {
+    console.error('WARNING: Duplicate routes detected:', duplicates);
+  }
+};
 
 function App() {
+  // Define all our routes for easy checking
+  const allRoutes = [
+    '/',
+    '/auth',
+    '/reset-password',
+    '/kana-learning',
+    '/quick-quiz',
+    '/writing-practice',
+    '/timed-challenge',
+    '/dashboard',
+    '/learn',
+    '/practice',
+    '/progress',
+    '/edit-profile',
+    '/assessment',
+    '/achievements',
+    '/courses',
+    '/resources'
+  ];
+  
+  // Check for any conflicting routes
+  checkForConflictingRoutes(allRoutes);
+  
   return (
     <DarkModeProvider>
       <AuthProvider>
@@ -33,11 +64,11 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Learning routes (protected, but accessible for demo) */}
+            {/* Learning routes (accessible for demo) */}
             <Route path="/kana-learning" element={<KanaLearning />} />
             <Route path="/quick-quiz" element={<QuickQuiz />} />
             <Route path="/writing-practice" element={<WritingPractice />} />
-            <Route path="/timed-challenge" element={<TimedChallenge />} /> {/* Add this route */}
+            <Route path="/timed-challenge" element={<TimedChallenge />} />
             
             {/* Protected routes */}
             <Route path="/" element={<RequireAuth />}>
