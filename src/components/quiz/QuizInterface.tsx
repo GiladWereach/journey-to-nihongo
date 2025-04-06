@@ -46,21 +46,17 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const correctAudioRef = useRef<HTMLAudioElement>(null);
   const incorrectAudioRef = useRef<HTMLAudioElement>(null);
   
-  // Initialize quiz with characters from selected sets
   useEffect(() => {
     const initializeQuiz = async () => {
       try {
-        // Merge all characters from selected sets
         const allCharacters = characterSets.flatMap(set => set.characters);
         
-        // Filter based on settings if needed
         let filteredCharacters = [...allCharacters];
         
         if (settings.showBasicOnly) {
           filteredCharacters = filteredCharacters.filter(char => !char.isDakuten && !char.isHandakuten);
         }
         
-        // Apply user-specific filters if logged in
         if (user) {
           const userProgress = await quizService.getUserKanaProgress(user.id, kanaType);
           
@@ -72,7 +68,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           }
           
           if (settings.showTroubleCharacters) {
-            // Prioritize characters with low accuracy
             filteredCharacters.sort((a, b) => {
               const progressA = userProgress.find(p => p.character_id === a.id);
               const progressB = userProgress.find(p => p.character_id === b.id);
@@ -86,11 +81,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
         
         if (filteredCharacters.length === 0) {
-          // If no characters match filters, use all characters
           filteredCharacters = allCharacters;
         }
         
-        // Randomize character order using Fisher-Yates shuffle
         for (let i = filteredCharacters.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [filteredCharacters[i], filteredCharacters[j]] = [filteredCharacters[j], filteredCharacters[i]];
@@ -98,7 +91,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         
         setQuizCharacters(filteredCharacters);
         
-        // Initialize session stats
         setSessionStats({
           startTime: new Date(),
           endTime: null,
@@ -111,7 +103,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           characterResults: [],
         });
         
-        // Focus input field
         if (inputRef.current) {
           inputRef.current.focus();
         }
@@ -122,50 +113,51 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     
     initializeQuiz();
   }, [kanaType, characterSets, settings, user]);
-
-  // Keep input field focused
+  
   useEffect(() => {
     if (!isPaused && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isPaused, currentCharacterIndex, feedback]);
   
-  // Current character being tested
   const currentCharacter = quizCharacters[currentCharacterIndex];
   
-  // Handle input change with auto-validation in speed mode
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newInput = e.target.value;
     setInput(newInput);
     
-    // In speed mode, validate automatically
     if (settings.speedMode && currentCharacter && !isPaused) {
       const userAnswer = newInput.trim().toLowerCase();
       const correctAnswer = currentCharacter.romaji.toLowerCase();
       
-      // If the input exactly matches the correct answer
       if (userAnswer === correctAnswer) {
         handleCorrectAnswer();
+        return;
       }
       
-      // If the input has 3+ characters and is wrong, mark as incorrect
-      if (userAnswer.length >= 3 && userAnswer.length >= correctAnswer.length) {
-        if (userAnswer !== correctAnswer) {
-          handleWrongAnswer();
-        }
+      if (userAnswer.length === correctAnswer.length && userAnswer !== correctAnswer) {
+        handleWrongAnswer();
+        return;
+      }
+      
+      if (userAnswer.length > correctAnswer.length) {
+        handleWrongAnswer();
+        return;
+      }
+      
+      if (userAnswer.length >= 2 && !correctAnswer.startsWith(userAnswer)) {
+        handleWrongAnswer();
+        return;
       }
     }
   };
   
-  // Handle correct answer
   const handleCorrectAnswer = async () => {
     if (!currentCharacter || isPaused) return;
     
-    // Update attempt count
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
     
-    // Update session stats
     const newStats = { ...sessionStats };
     newStats.totalAttempts++;
     newStats.correctCount++;
@@ -175,12 +167,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       newStats.longestStreak = newStats.currentStreak;
     }
     
-    // Play correct sound
     if (settings.audioFeedback && correctAudioRef.current) {
       correctAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
     }
     
-    // Update character results
     newStats.characterResults.push({
       characterId: currentCharacter.id,
       character: currentCharacter.character,
@@ -189,7 +179,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       attemptCount: newAttemptCount,
     });
     
-    // Update user progress if signed in
     if (user) {
       try {
         await quizService.updateKanaProgress(user.id, currentCharacter.id, true);
@@ -198,12 +187,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       }
     }
     
-    // Calculate accuracy
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
     setSessionStats(newStats);
     setFeedback('correct');
     
-    // Move to next character after a brief delay (REDUCED TO 100ms)
     setTimeout(() => {
       setInput('');
       setFeedback('none');
@@ -211,39 +198,32 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       setAttemptCount(0);
       moveToNextCharacter();
       
-      // Focus input field
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, 400); // Slightly increased delay to make the correct feedback visible
+    }, 400);
   };
   
-  // Handle wrong answer
   const handleWrongAnswer = async () => {
     if (!currentCharacter || isPaused) return;
     
-    // Update attempt count
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
     
-    // Update session stats
     const newStats = { ...sessionStats };
     newStats.totalAttempts++;
     newStats.incorrectCount++;
     newStats.currentStreak = 0;
     
-    // Play incorrect sound
     if (settings.audioFeedback && incorrectAudioRef.current) {
       incorrectAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
     }
     
     setFeedback('incorrect');
     
-    // For speed mode, show hint after 3 incorrect attempts
     if (settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
       
-      // Update character results
       newStats.characterResults.push({
         characterId: currentCharacter.id,
         character: currentCharacter.character,
@@ -252,7 +232,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         attemptCount: newAttemptCount,
       });
       
-      // Update user progress if signed in
       if (user) {
         try {
           await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
@@ -261,7 +240,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
       }
       
-      // Move to next character after showing hint
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -269,16 +247,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         setAttemptCount(0);
         moveToNextCharacter();
         
-        // Focus input field
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 2000); // Slight increase to ensure users can see the hint
+      }, 2000);
     } else if (!settings.speedMode && newAttemptCount >= 3) {
-      // Regular mode - show hint after 3 incorrect attempts
       setShowHint(true);
       
-      // Update character results
       newStats.characterResults.push({
         characterId: currentCharacter.id,
         character: currentCharacter.character,
@@ -287,7 +262,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         attemptCount: newAttemptCount,
       });
       
-      // Update user progress if signed in
       if (user) {
         try {
           await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
@@ -296,7 +270,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
       }
       
-      // Move to next character after showing hint
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -304,30 +277,25 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         setAttemptCount(0);
         moveToNextCharacter();
         
-        // Focus input field
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 2000); // Allow time for user to see the hint
+      }, 2000);
     } else {
-      // Reset input for another attempt after a short delay to show feedback
       setTimeout(() => {
         setInput('');
         setFeedback('none');
         
-        // Focus input field
         if (inputRef.current) {
           inputRef.current.focus();
         }
       }, 800);
     }
     
-    // Calculate accuracy
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
     setSessionStats(newStats);
   };
   
-  // Handle user input submission (for non-speed mode)
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
@@ -346,13 +314,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }
   };
   
-  // Move to next character
   const moveToNextCharacter = () => {
     const nextIndex = (currentCharacterIndex + 1) % quizCharacters.length;
     setCurrentCharacterIndex(nextIndex);
   };
   
-  // Handle end quiz
   const handleEndQuiz = async () => {
     const endTime = new Date();
     const finalStats = {
@@ -361,7 +327,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       durationSeconds: Math.round((endTime.getTime() - sessionStats.startTime.getTime()) / 1000),
     };
     
-    // Record quiz session in database if user is logged in
     if (user) {
       try {
         await quizService.recordQuizSession(user.id, {
@@ -381,11 +346,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     onEndQuiz(finalStats);
   };
   
-  // Handle pause/resume
   const togglePause = () => {
     setIsPaused(!isPaused);
     
-    // Focus input when resuming
     if (isPaused && inputRef.current) {
       setTimeout(() => {
         inputRef.current?.focus();
@@ -393,14 +356,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }
   };
   
-  // Character size mapping
   const characterSizeMap = {
     small: 'md',
     medium: 'lg',
     large: 'xl',
   } as const;
   
-  // Get similar characters for hints
   const getSimilarCharacters = () => {
     if (!currentCharacter) return [];
     
@@ -465,7 +426,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
             <div className="flex flex-col items-center">
               <div className="flex justify-center items-center mb-4 sm:mb-6 relative">
-                {/* Quiz progress */}
                 <div className="absolute top-0 -mt-8 sm:-mt-10 w-full max-w-xs">
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span>{sessionStats.correctCount} correct</span>
@@ -474,7 +434,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   <Progress value={sessionStats.currentStreak} max={10} className="h-1" />
                 </div>
                 
-                {/* Character display */}
                 <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full ${feedback === 'correct' ? 'bg-green-100' : feedback === 'incorrect' ? 'bg-red-100' : 'bg-muted'}`}>
                   <JapaneseCharacter 
                     character={currentCharacter.character} 
@@ -483,7 +442,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   />
                 </div>
                 
-                {/* Feedback icon */}
                 {feedback !== 'none' && (
                   <div className="absolute top-0 right-0 -mt-4 -mr-4">
                     {feedback === 'correct' ? (
@@ -499,7 +457,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                 )}
               </div>
               
-              {/* Streak indicator */}
               {sessionStats.currentStreak > 0 && (
                 <div className="mb-3 sm:mb-4">
                   <span className="text-xs sm:text-sm font-medium text-indigo">
@@ -509,7 +466,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                 </div>
               )}
               
-              {/* Hint display */}
               {showHint && (
                 <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-md w-full max-w-md">
                   <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
@@ -538,7 +494,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                 </div>
               )}
               
-              {/* Input form */}
               <form onSubmit={handleSubmit} className="w-full max-w-md">
                 <div className="flex items-center gap-2">
                   <Input
@@ -578,7 +533,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   variant="outline" 
                   size="sm"
                   onClick={() => {
-                    // Skip current character
                     setInput('');
                     setFeedback('none');
                     setShowHint(false);
@@ -603,7 +557,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         </Card>
       </div>
       
-      {/* Hidden audio elements for feedback sounds */}
       <audio ref={correctAudioRef} src="/sounds/correct.mp3" className="hidden" />
       <audio ref={incorrectAudioRef} src="/sounds/incorrect.mp3" className="hidden" />
     </div>
