@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { BarChart2, Menu } from 'lucide-react';
+import { BarChart2, Menu, RefreshCw } from 'lucide-react';
 import PrimaryNavigation from '@/components/layout/PrimaryNavigation';
 import UserKanaProgress from '@/components/kana/UserKanaProgress';
 import { kanaProgressService } from '@/services/kanaProgressService';
