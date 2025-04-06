@@ -40,9 +40,9 @@ const LearningStreakCard: React.FC<LearningStreakCardProps> = ({
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    if (date.toDateString() === today.toDateString()) {
+    if (lastPracticeDate.toDateString() === today.toDateString()) {
       return 'active';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (lastPracticeDate.toDateString() === yesterday.toDateString()) {
       return 'warning'; // Streak will break if not practiced today
     } else {
       return 'broken'; // Streak is already broken

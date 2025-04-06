@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { Info, TrendingUp } from 'lucide-react';
+import { Info, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface ProgressTimelineData {
   date: string;
