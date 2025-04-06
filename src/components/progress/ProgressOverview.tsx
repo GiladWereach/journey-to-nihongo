@@ -6,6 +6,7 @@ import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import LearningStreakCard from '@/components/progress/LearningStreakCard';
 import MasteryDistributionCard from '@/components/progress/MasteryDistributionCard';
 import ProgressTimelineCard from '@/components/progress/ProgressTimelineCard';
+import LearningPathProgress from '@/components/progress/LearningPathProgress';
 
 interface ProgressOverviewProps {
   hiraganaStats: {
@@ -63,6 +64,14 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
         currentStreak={streakData.currentStreak}
         longestStreak={streakData.longestStreak}
         lastPracticeDate={streakData.lastPracticeDate}
+        className="mb-8"
+      />
+      
+      <LearningPathProgress
+        hiraganaProgress={overallProgress.hiragana}
+        katakanaProgress={overallProgress.katakana}
+        basicKanjiProgress={overallProgress.basic_kanji}
+        grammarProgress={overallProgress.grammar}
         className="mb-8"
       />
       

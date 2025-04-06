@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
@@ -13,8 +14,10 @@ import { kanaService } from '@/services/kanaService';
 import ProgressStats from '@/components/progress/ProgressStats';
 import ProgressOverview from '@/components/progress/ProgressOverview';
 import StudySessionsList from '@/components/progress/StudySessionsList';
+import StudyHabitsCard from '@/components/progress/StudyHabitsCard';
 import { progressTrackingService } from '@/services/progressTrackingService';
 import { KanaType } from '@/types/kana';
+import { supabase } from '@/integrations/supabase/client';
 
 const Progress: React.FC = () => {
   const { user } = useAuth();
@@ -49,6 +52,20 @@ const Progress: React.FC = () => {
     grammar: 5
   });
   const [totalStudyTime, setTotalStudyTime] = useState(0);
+  const [studyHabits, setStudyHabits] = useState({
+    timeDistribution: {
+      morning: 25,
+      afternoon: 30,
+      evening: 40,
+      night: 5
+    },
+    averageSessionDuration: 15,
+    frequencyPerWeek: 4.2
+  });
+  const [userSettings, setUserSettings] = useState({
+    dailyGoalMinutes: 15,
+    weeklyGoalDays: 5
+  });
   
   useEffect(() => {
     if (!user) return;
@@ -91,6 +108,26 @@ const Progress: React.FC = () => {
           basic_kanji: 10,
           grammar: 5
         });
+        
+        // Fetch user settings
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('user_settings')
+          .select('daily_goal_minutes, weekly_goal_days')
+          .eq('id', user.id)
+          .single();
+          
+        if (!settingsError && settingsData) {
+          setUserSettings({
+            dailyGoalMinutes: settingsData.daily_goal_minutes || 15,
+            weeklyGoalDays: settingsData.weekly_goal_days || 5
+          });
+        }
+        
+        // Calculate study habits data
+        const studyHabitsData = await progressTrackingService.analyzeStudyHabits(user.id);
+        if (studyHabitsData) {
+          setStudyHabits(studyHabitsData);
+        }
       } catch (error) {
         console.error('Error fetching progress data:', error);
       } finally {
@@ -146,6 +183,16 @@ const Progress: React.FC = () => {
                       variant="ghost" 
                       className="w-full justify-start" 
                       size="sm"
+                      onClick={() => setActiveTab('habits')}
+                    >
+                      Study Habits
+                    </Button>
+                  </li>
+                  <li>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start" 
+                      size="sm"
                       onClick={() => navigate('/achievements')}
                     >
                       Achievements
@@ -187,6 +234,7 @@ const Progress: React.FC = () => {
               <TabsList className="mb-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="kana">Kana Progress</TabsTrigger>
+                <TabsTrigger value="habits">Study Habits</TabsTrigger>
                 <TabsTrigger value="study-sessions">Study Sessions</TabsTrigger>
               </TabsList>
               
@@ -211,6 +259,18 @@ const Progress: React.FC = () => {
               
               <TabsContent value="kana" className="animate-fade-in">
                 <UserKanaProgress />
+              </TabsContent>
+              
+              <TabsContent value="habits" className="animate-fade-in">
+                <StudyHabitsCard 
+                  timeDistribution={studyHabits.timeDistribution}
+                  dailyGoalMinutes={userSettings.dailyGoalMinutes}
+                  weeklyGoalDays={userSettings.weeklyGoalDays}
+                  averageSessionDuration={studyHabits.averageSessionDuration}
+                  currentStreak={streakData.currentStreak}
+                  frequencyPerWeek={studyHabits.frequencyPerWeek}
+                  className="mb-8"
+                />
               </TabsContent>
               
               <TabsContent value="study-sessions" className="animate-fade-in">
