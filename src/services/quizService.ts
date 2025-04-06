@@ -5,18 +5,13 @@ import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
 import { calculateNextReviewDate } from '@/lib/utils';
 
-// Create and export the quizService
 export const quizService = {
-  // Get all available character sets for quiz
   getAvailableCharacterSets: async (type: KanaType): Promise<QuizCharacterSet[]> => {
     try {
-      // Get all kana characters of the specified type
       const allKana = type === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
       
-      // Define character groupings
       const characterSets: QuizCharacterSet[] = [];
       
-      // 1. Basic vowels
       const vowels = allKana.filter(k => /^(a|i|u|e|o)$/.test(k.romaji));
       if (vowels.length > 0) {
         characterSets.push({
@@ -36,7 +31,6 @@ export const quizService = {
         });
       }
       
-      // 2. K-row
       const kRow = allKana.filter(k => /^k[aiueo]$/.test(k.romaji));
       if (kRow.length > 0) {
         characterSets.push({
@@ -56,7 +50,6 @@ export const quizService = {
         });
       }
       
-      // 3. S-row
       const sRow = allKana.filter(k => /^s[aiueo]$/.test(k.romaji));
       if (sRow.length > 0) {
         characterSets.push({
@@ -76,7 +69,6 @@ export const quizService = {
         });
       }
       
-      // 4. T-row
       const tRow = allKana.filter(k => /^t[aiueo]$/.test(k.romaji));
       if (tRow.length > 0) {
         characterSets.push({
@@ -96,7 +88,6 @@ export const quizService = {
         });
       }
       
-      // 5. N-row
       const nRow = allKana.filter(k => /^n[aiueo]$/.test(k.romaji));
       if (nRow.length > 0) {
         characterSets.push({
@@ -116,7 +107,6 @@ export const quizService = {
         });
       }
       
-      // 6. H-row
       const hRow = allKana.filter(k => /^h[aiueo]$/.test(k.romaji));
       if (hRow.length > 0) {
         characterSets.push({
@@ -136,7 +126,6 @@ export const quizService = {
         });
       }
       
-      // 7. M-row
       const mRow = allKana.filter(k => /^m[aiueo]$/.test(k.romaji));
       if (mRow.length > 0) {
         characterSets.push({
@@ -156,7 +145,6 @@ export const quizService = {
         });
       }
       
-      // 8. Y-row
       const yRow = allKana.filter(k => /^y[auo]$/.test(k.romaji));
       if (yRow.length > 0) {
         characterSets.push({
@@ -176,7 +164,6 @@ export const quizService = {
         });
       }
       
-      // 9. R-row
       const rRow = allKana.filter(k => /^r[aiueo]$/.test(k.romaji));
       if (rRow.length > 0) {
         characterSets.push({
@@ -196,7 +183,6 @@ export const quizService = {
         });
       }
       
-      // 10. W-row
       const wRow = allKana.filter(k => /^w[aoe]$/.test(k.romaji));
       if (wRow.length > 0) {
         characterSets.push({
@@ -216,7 +202,6 @@ export const quizService = {
         });
       }
       
-      // 11. Special characters (e.g., ん/n)
       const special = allKana.filter(k => /^n$/.test(k.romaji));
       if (special.length > 0) {
         characterSets.push({
@@ -236,7 +221,6 @@ export const quizService = {
         });
       }
       
-      // 12. G-row (Dakuten K-row)
       const gRow = allKana.filter(k => /^g[aiueo]$/.test(k.romaji));
       if (gRow.length > 0) {
         characterSets.push({
@@ -257,7 +241,6 @@ export const quizService = {
         });
       }
       
-      // 13. Z-row (Dakuten S-row)
       const zRow = allKana.filter(k => /^z[aiueo]$/.test(k.romaji));
       if (zRow.length > 0) {
         characterSets.push({
@@ -278,7 +261,6 @@ export const quizService = {
         });
       }
       
-      // 14. D-row (Dakuten T-row)
       const dRow = allKana.filter(k => /^d[aiueo]$/.test(k.romaji));
       if (dRow.length > 0) {
         characterSets.push({
@@ -299,7 +281,6 @@ export const quizService = {
         });
       }
       
-      // 15. B-row (Dakuten H-row)
       const bRow = allKana.filter(k => /^b[aiueo]$/.test(k.romaji));
       if (bRow.length > 0) {
         characterSets.push({
@@ -320,7 +301,6 @@ export const quizService = {
         });
       }
       
-      // 16. P-row (Handakuten H-row)
       const pRow = allKana.filter(k => /^p[aiueo]$/.test(k.romaji));
       if (pRow.length > 0) {
         characterSets.push({
@@ -341,7 +321,6 @@ export const quizService = {
         });
       }
       
-      // 17. J-row (Dakuten S-row variant)
       const jRow = allKana.filter(k => /^j[aio]$/.test(k.romaji));
       if (jRow.length > 0) {
         characterSets.push({
@@ -362,7 +341,6 @@ export const quizService = {
         });
       }
       
-      // 18. Combination characters (like きゃ / kya)
       const combinations = allKana.filter(k => 
         /^[ksgzjtdnhbpmr]y[auo]$/.test(k.romaji)
       );
@@ -385,7 +363,6 @@ export const quizService = {
         });
       }
       
-      // Also create sets by vowel groups
       const aRow = allKana.filter(k => k.romaji.endsWith('a'));
       if (aRow.length > 0) {
         characterSets.push({
@@ -488,7 +465,6 @@ export const quizService = {
     }
   },
   
-  // Get user's kana progress
   getUserKanaProgress: async (userId: string, type?: KanaType): Promise<UserKanaProgress[]> => {
     try {
       let query = supabaseClient
@@ -525,7 +501,6 @@ export const quizService = {
     }
   },
   
-  // Get user's quiz statistics
   getUserQuizStats: async (userId: string, kanaType?: KanaType): Promise<{
     totalQuizzes: number;
     averageAccuracy: number;
@@ -549,14 +524,11 @@ export const quizService = {
         throw error;
       }
       
-      // Calculate statistics
       const totalQuizzes = data.length;
       
-      // Calculate average accuracy
       const accuracySum = data.reduce((sum, session) => sum + (session.accuracy || 0), 0);
       const averageAccuracy = totalQuizzes > 0 ? Math.round(accuracySum / totalQuizzes) : 0;
       
-      // Find best streak
       const bestStreak = data.length > 0 ? Math.max(...data.map(session => session.streak || 0)) : 0;
       
       return {
@@ -574,14 +546,12 @@ export const quizService = {
     }
   },
   
-  // Update user's kana progress for a specific character
   updateKanaProgress: async (
     userId: string, 
     characterId: string, 
     isCorrect: boolean
   ): Promise<void> => {
     try {
-      // First check if we already have a record for this user and character
       const { data, error } = await supabaseClient
         .from('user_kana_progress')
         .select('*')
@@ -596,75 +566,51 @@ export const quizService = {
       
       const now = new Date().toISOString();
       
-      // If we already have a record, update it - this prevents database overload
       if (data) {
-        // Get current values or defaults
         const currentProficiency = data.proficiency || 0;
         const currentConsecutiveCorrect = data.consecutive_correct || 0;
         const currentMasteryLevel = data.mastery_level || 0;
         
-        // Update consecutive correct answers
         let newConsecutiveCorrect = isCorrect ? 
-          currentConsecutiveCorrect + 1 : 0; // Reset on mistake
+          currentConsecutiveCorrect + 1 : 0;
         
-        // Check if character is due for review
         const isDueForReview = new Date(data.review_due) <= new Date();
         
-        // Determine new mastery level
         let newMasteryLevel = currentMasteryLevel;
         let newReviewDue = new Date(data.review_due);
         
-        // Calculate new proficiency
         let proficiencyChange = 0;
         
-        // Constant for consecutive correct threshold
         const CONSECUTIVE_THRESHOLD = 8;
         
         if (isCorrect) {
-          // Boost proficiency for correct answers
           proficiencyChange = Math.max(10 - Math.floor(currentProficiency / 10), 2);
           
-          // Handle mastery level transitions
           if (newConsecutiveCorrect >= CONSECUTIVE_THRESHOLD && newMasteryLevel === 0) {
-            // Transition to first mastery level
             newMasteryLevel = 1;
-            
-            // Calculate new review date based on mastery level
             newReviewDue = calculateNextReviewDate(currentProficiency, newMasteryLevel);
-            
-            // Reset consecutive counter after advancing
             newConsecutiveCorrect = 0;
           }
           else if (newMasteryLevel > 0 && isDueForReview) {
-            // Correctly remembered after disappearance - advance to next level
             newMasteryLevel += 1;
-            
-            // Calculate extended interval for next review
             newReviewDue = calculateNextReviewDate(currentProficiency, newMasteryLevel);
-            
-            // Reset consecutive counter after advancing
             newConsecutiveCorrect = 0;
           }
         } else {
-          // Penalty for incorrect answers - higher penalty for more proficient characters
           proficiencyChange = -1 * (2 + Math.floor(currentProficiency / 25));
           
-          // If in mastery mode and answer wrong during review, drop a level
           if (newMasteryLevel > 0 && isDueForReview) {
             newMasteryLevel = Math.max(0, newMasteryLevel - 1);
             
-            // Calculate new review period
             if (newMasteryLevel > 0) {
               newReviewDue = calculateNextReviewDate(currentProficiency, newMasteryLevel);
             } else {
-              // Back to learning mode
-              newReviewDue = new Date(); // Available immediately
+              newReviewDue = new Date();
             }
           }
         }
         
-        // Calculate new proficiency value (clamped to 0-100)
-        let newProficiency = Math.min(Math.max(currentProficiency + proficiencyChange, 0), 100);
+        const newProficiency = Math.min(Math.max(currentProficiency + proficiencyChange, 0), 100);
         
         const { error: updateError } = await supabaseClient
           .from('user_kana_progress')
@@ -685,7 +631,6 @@ export const quizService = {
           throw updateError;
         }
       } else {
-        // Create a new record with initial values
         const initialProficiency = isCorrect ? 15 : 5;
         
         const { error: insertError } = await supabaseClient
@@ -697,9 +642,9 @@ export const quizService = {
             total_practice_count: 1,
             mistake_count: isCorrect ? 0 : 1,
             consecutive_correct: isCorrect ? 1 : 0,
-            mastery_level: 0, // Start at learning phase
+            mastery_level: 0,
             last_practiced: now,
-            review_due: now // Immediately available for practice
+            review_due: now
           });
           
         if (insertError) {
@@ -712,7 +657,6 @@ export const quizService = {
     }
   },
   
-  // Record quiz session
   recordQuizSession: async (
     userId: string,
     quizData: {
@@ -725,7 +669,6 @@ export const quizService = {
     }
   ): Promise<string | null> => {
     try {
-      // Calculate streak by checking most recent session
       const { data: recentSessions } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
@@ -734,27 +677,20 @@ export const quizService = {
         .limit(1)
         .maybeSingle();
       
-      // Calculate current streak
       let streak = 0;
       
       if (recentSessions) {
-        // If the last session had a streak and the accuracy was good (>70%)
         if (recentSessions.streak && recentSessions.accuracy && recentSessions.accuracy >= 70) {
-          // Continue the streak
           streak = recentSessions.streak + 1;
         } else {
-          // Start a new streak
           streak = 1;
         }
       } else {
-        // First session - start with streak of 1
         streak = 1;
       }
       
-      // Calculate accuracy
       const accuracy = Math.round((quizData.correctCount / Math.max(quizData.totalAttempts, 1)) * 100);
       
-      // Reset streak if accuracy is poor
       if (accuracy < 50) {
         streak = 0;
       }
@@ -786,7 +722,6 @@ export const quizService = {
     }
   },
   
-  // Get user's recent quiz sessions
   getRecentQuizSessions: async (
     userId: string,
     limit: number = 5
@@ -812,10 +747,8 @@ export const quizService = {
     }
   },
   
-  // Get characters for a quick quiz
   getQuickQuizCharacters: async (type: KanaType, userId?: string, limit: number = 10): Promise<QuizCharacter[]> => {
     try {
-      // Get base characters for the selected type
       const allKana = type === 'hiragana' ? 
         hiraganaCharacters : 
         type === 'katakana' ? 
@@ -824,7 +757,6 @@ export const quizService = {
       
       let characters: QuizCharacter[] = [];
       
-      // If user is logged in, prioritize characters based on their progress
       if (userId) {
         const { data: progressData } = await supabaseClient
           .from('user_kana_progress')
@@ -832,11 +764,6 @@ export const quizService = {
           .eq('user_id', userId);
         
         if (progressData && progressData.length > 0) {
-          // Sort characters by priority:
-          // 1. Characters due for review
-          // 2. Characters with low proficiency
-          // 3. Characters they haven't practiced yet
-          
           const now = new Date();
           const userProgress = progressData.map(p => ({
             ...p,
@@ -844,21 +771,16 @@ export const quizService = {
             proficiency: p.proficiency || 0
           }));
           
-          // Map characters with their priority scores
           const scoredCharacters = allKana.map(kana => {
             const progress = userProgress.find(p => p.character_id === kana.id);
             
-            // Calculate priority score
             let priorityScore = 0;
             
             if (!progress) {
-              // New characters get medium priority
-              priorityScore = 50; 
+              priorityScore = 50;
             } else if (progress.review_due <= now) {
-              // Due for review - high priority
-              priorityScore = 100 - progress.proficiency; 
+              priorityScore = 100 - progress.proficiency;
             } else {
-              // Not due yet - lower priority based on proficiency
               priorityScore = 40 - (progress.proficiency / 2.5);
             }
             
@@ -868,44 +790,38 @@ export const quizService = {
             };
           });
           
-          // Sort by priority score (higher = more important)
           scoredCharacters.sort((a, b) => b.priorityScore - a.priorityScore);
           
-          // Take top N characters
           characters = scoredCharacters.slice(0, limit).map(sc => ({
             id: sc.character.id,
             character: sc.character.character,
             romaji: sc.character.romaji,
             type: sc.character.type as KanaType,
-            group: sc.character.group,
-            quizMode: 'both'
+            group: sc.character.group || 'unknown',
+            quizMode: 'both' as const
           }));
         }
       }
       
-      // If we don't have enough characters yet (or no user), add random ones
       if (characters.length < limit) {
         const remainingChars = allKana.filter(kana => 
           !characters.some(c => c.id === kana.id)
         );
         
-        // Shuffle remaining characters
         const shuffled = [...remainingChars].sort(() => Math.random() - 0.5);
         
-        // Add enough to reach the limit
         const additional = shuffled.slice(0, limit - characters.length).map(kana => ({
           id: kana.id,
           character: kana.character,
           romaji: kana.romaji,
           type: kana.type as KanaType,
-          group: kana.group,
-          quizMode: 'both'
+          group: kana.group || 'unknown',
+          quizMode: 'both' as const
         }));
         
         characters = [...characters, ...additional];
       }
       
-      // Final shuffle to prevent predictability
       return characters.sort(() => Math.random() - 0.5);
     } catch (error) {
       console.error('Error preparing quick quiz characters:', error);
