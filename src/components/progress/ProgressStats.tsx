@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Clock, BookOpen, Award, TrendingUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProgressStatsProps {
   totalStudyTime: number;
@@ -10,7 +12,6 @@ interface ProgressStatsProps {
   learnedCharacters: number;
   currentStreak: number;
   longestStreak: number;
-  weeklyGoalMinutes?: number;
 }
 
 const ProgressStats: React.FC<ProgressStatsProps> = ({
@@ -18,9 +19,41 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
   totalSessions,
   learnedCharacters,
   currentStreak,
-  longestStreak,
-  weeklyGoalMinutes = 105 // Default to ~15 minutes per day
+  longestStreak
 }) => {
+  const { user } = useAuth();
+  const [weeklyGoalMinutes, setWeeklyGoalMinutes] = useState(105); // Default to ~15 minutes per day
+  
+  useEffect(() => {
+    const fetchUserSettings = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('daily_goal_minutes, weekly_goal_days')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+          console.error('Error fetching user settings:', error);
+          return;
+        }
+        
+        if (data) {
+          // Calculate weekly goal based on daily goal and days per week
+          const dailyGoal = data.daily_goal_minutes || 15;
+          const daysPerWeek = data.weekly_goal_days || 7;
+          setWeeklyGoalMinutes(dailyGoal * daysPerWeek);
+        }
+      } catch (error) {
+        console.error('Error in fetchUserSettings:', error);
+      }
+    };
+    
+    fetchUserSettings();
+  }, [user]);
+  
   // Format time in a more readable way
   const formatStudyTime = (minutes: number): string => {
     if (minutes < 60) {

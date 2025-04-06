@@ -52,10 +52,73 @@ export const progressTrackingService = {
         return null;
       }
       
+      // Also update or create a streak entry for today
+      await progressTrackingService.updateLearningStreak(userId);
+      
       return data as StudySession;
     } catch (error) {
       console.error('Error in recordStudySession:', error);
       return null;
+    }
+  },
+
+  /**
+   * Update the user's learning streak for the current day
+   * @param userId User ID
+   * @returns True if successful, false otherwise
+   */
+  updateLearningStreak: async (userId: string): Promise<boolean> => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Check if there's already an entry for today
+      const { data: existingEntry, error: checkError } = await supabase
+        .from('user_learning_streaks')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', todayStr)
+        .single();
+        
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" which is expected
+        console.error('Error checking streak entry:', checkError);
+        return false;
+      }
+      
+      if (existingEntry) {
+        // Update existing entry
+        const { error: updateError } = await supabase
+          .from('user_learning_streaks')
+          .update({ 
+            activity_count: (existingEntry as UserLearningStreak).activity_count + 1
+          })
+          .eq('id', (existingEntry as UserLearningStreak).id);
+          
+        if (updateError) {
+          console.error('Error updating streak entry:', updateError);
+          return false;
+        }
+      } else {
+        // Create new entry
+        const { error: insertError } = await supabase
+          .from('user_learning_streaks')
+          .insert({
+            user_id: userId,
+            date: todayStr,
+            activity_count: 1
+          });
+          
+        if (insertError) {
+          console.error('Error creating streak entry:', insertError);
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in updateLearningStreak:', error);
+      return false;
     }
   },
 
