@@ -9,6 +9,7 @@ import { calculateNextReviewDate } from '@/lib/utils';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
+import { kanaLearningService } from '@/services/kanaModules';
 
 export interface PracticeResult {
   correct: number;
