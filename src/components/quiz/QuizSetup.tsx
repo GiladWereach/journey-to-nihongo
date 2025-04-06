@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -123,14 +124,14 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
 
   const renderCharacterPreview = (set: QuizCharacterSet) => {
     return (
-      <div className="mt-1 overflow-hidden flex flex-wrap gap-1 text-xs">
+      <div className="mt-2 flex justify-center items-center flex-wrap gap-1.5 text-sm japanese-text">
         {set.characters.slice(0, 5).map(char => (
           <span key={char.id} className="inline-block">
             {char.character}
           </span>
         ))}
         {set.characters.length > 5 && (
-          <span className="text-muted-foreground">+{set.characters.length - 5}</span>
+          <span className="text-muted-foreground text-xs">+{set.characters.length - 5}</span>
         )}
       </div>
     );
