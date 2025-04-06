@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseClient } from '@/lib/supabase';
+import { kanaLearningService } from '@/services/kanaLearningService';
 
 interface WritingPracticeExerciseProps {
   kanaList: KanaCharacter[];
@@ -29,8 +30,36 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
   const [charactersCompleted, setCharactersCompleted] = useState<string[]>([]);
   const [showReference, setShowReference] = useState(false);
   const [feedbackMode, setFeedbackMode] = useState<'success' | 'normal'>('normal');
+  const [sessionStartTime] = useState<Date>(new Date());
+  const [sessionId, setSessionId] = useState<string | null>(null);
   
   const currentKana = kanaList[currentIndex];
+  
+  // Create a learning session when the component mounts
+  useEffect(() => {
+    if (user && kanaList.length > 0) {
+      const createSession = async () => {
+        try {
+          console.log("Creating writing practice session for:", kanaType);
+          const characterIds = kanaList.map(k => k.id);
+          const session = await kanaLearningService.startKanaLearningSession(
+            user.id, 
+            kanaType, 
+            characterIds
+          );
+          
+          if (session) {
+            console.log("Created writing practice session:", session.id);
+            setSessionId(session.id);
+          }
+        } catch (error) {
+          console.error("Error creating writing practice session:", error);
+        }
+      };
+      
+      createSession();
+    }
+  }, [user, kanaList, kanaType]);
   
   useEffect(() => {
     setAttempts(0);
@@ -61,11 +90,20 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
         // Update existing progress
         const newProficiency = Math.min(existingProgress.proficiency + 5, 100);
         const newTotalPractice = existingProgress.total_practice_count + 1;
+        const newConsecutiveCorrect = existingProgress.consecutive_correct + 1;
+        let newMasteryLevel = existingProgress.mastery_level || 0;
+        
+        // Increase mastery level if enough consecutive correct attempts
+        if (newConsecutiveCorrect >= 5 && newMasteryLevel < 3) {
+          newMasteryLevel = Math.min(3, newMasteryLevel + 1);
+        }
         
         console.log("Updating existing progress:", {
           id: existingProgress.id,
           new_proficiency: newProficiency,
-          new_total_practice: newTotalPractice
+          new_total_practice: newTotalPractice,
+          new_mastery_level: newMasteryLevel,
+          new_consecutive_correct: newConsecutiveCorrect
         });
         
         const { error: updateError } = await supabaseClient
@@ -73,6 +111,8 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
           .update({
             proficiency: newProficiency,
             total_practice_count: newTotalPractice,
+            consecutive_correct: newConsecutiveCorrect,
+            mastery_level: newMasteryLevel,
             last_practiced: new Date().toISOString(),
             review_due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Set review due in 7 days
           })
@@ -93,10 +133,10 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
             character_id: currentKana.id,
             proficiency: 20, // Initial proficiency
             total_practice_count: 1,
+            consecutive_correct: 1,
+            mastery_level: 0,
             last_practiced: new Date().toISOString(),
             review_due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // Set review due in 3 days
-            mastery_level: 0,
-            consecutive_correct: 0,
             mistake_count: 0
           });
           
@@ -109,6 +149,13 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
       // Record the learning session
       if (!charactersCompleted.includes(currentKana.id)) {
         setCharactersCompleted([...charactersCompleted, currentKana.id]);
+      }
+      
+      // Update the learning streak
+      try {
+        await kanaLearningService.updateKanaCharacterProgress(user.id, currentKana.id, true);
+      } catch (error) {
+        console.error("Error updating kana character progress:", error);
       }
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -144,7 +191,7 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     } else {
       // Create or update learning session
       if (user && charactersCompleted.length > 0) {
-        createLearningSession();
+        completeSession();
       }
       
       onComplete();
@@ -157,32 +204,57 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     }
   };
   
-  const createLearningSession = async () => {
-    if (!user) return;
+  const completeSession = async () => {
+    if (!user || !sessionId) return;
     
     try {
-      console.log("Creating kana learning session with characters:", charactersCompleted);
+      console.log("Completing writing practice session with characters:", charactersCompleted);
       
-      const { data, error } = await supabaseClient
+      // Calculate session duration in minutes
+      const endTime = new Date();
+      const durationMinutes = Math.round((endTime.getTime() - sessionStartTime.getTime()) / 60000);
+      
+      // Complete the session in the database
+      const { error } = await supabaseClient
         .from('kana_learning_sessions')
-        .insert({
+        .update({
           user_id: user.id,
           kana_type: kanaType,
           characters_studied: charactersCompleted,
           completed: true,
-          end_time: new Date().toISOString()
+          end_time: endTime.toISOString(),
+          accuracy: 100 // Writing practice assumes 100% accuracy since we're not testing recognition
         })
-        .select('id')
-        .single();
+        .eq('id', sessionId);
         
       if (error) {
-        console.error('Error creating learning session:', error);
+        console.error('Error completing writing practice session:', error);
         throw error;
       }
       
-      console.log("Created learning session:", data.id);
+      // Also record as a study session for broader analytics
+      await kanaLearningService.recordStudyActivity(
+        user.id,
+        `${kanaType}_writing`,
+        charactersCompleted.map(id => id.split(':')[1]), // Extract the character part from the ID
+        durationMinutes,
+        100 // Writing practice assumes 100% accuracy
+      );
+      
+      // Update learning streak
+      await kanaLearningService.completeKanaLearningSession(
+        user.id,
+        sessionId,
+        {
+          accuracy: 100,
+          charactersStudied: charactersCompleted,
+          progressUpdates: charactersCompleted.map(id => ({ characterId: id, isCorrect: true }))
+        }
+      );
+      
+      console.log("Successfully completed writing practice session");
     } catch (error) {
-      console.error('Error creating learning session:', error);
+      console.error('Error in completeSession:', error);
     }
   };
   

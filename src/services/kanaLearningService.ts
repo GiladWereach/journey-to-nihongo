@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+
+import { supabaseClient } from '@/lib/supabase';
 import { UserKanaProgress } from '@/types/kana';
 import { progressTrackingService } from './progressTrackingService';
 
@@ -19,7 +20,9 @@ export const kanaLearningService = {
     characterIds: string[]
   ): Promise<{ id: string } | null> => {
     try {
-      const { data, error } = await supabase
+      console.log("Starting new kana learning session:", { userId, kanaType, characterCount: characterIds.length });
+      
+      const { data, error } = await supabaseClient
         .from('kana_learning_sessions')
         .insert({
           user_id: userId,
@@ -36,6 +39,7 @@ export const kanaLearningService = {
         return null;
       }
       
+      console.log("Created kana learning session with ID:", data.id);
       return data;
     } catch (error) {
       console.error('Error in startKanaLearningSession:', error);
@@ -59,7 +63,7 @@ export const kanaLearningService = {
     completed: boolean
   } | null> => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
         .eq('id', sessionId)
@@ -74,6 +78,48 @@ export const kanaLearningService = {
     } catch (error) {
       console.error('Error in getKanaLearningSession:', error);
       return null;
+    }
+  },
+  
+  /**
+   * Record a study session for any learning activity
+   * @param userId User ID
+   * @param module Module (e.g., 'hiragana', 'katakana', 'quiz')
+   * @param topics Topics covered
+   * @param durationMinutes Duration in minutes
+   * @param score Optional performance score
+   */
+  recordStudyActivity: async (
+    userId: string,
+    module: string,
+    topics: string[],
+    durationMinutes: number,
+    score?: number
+  ): Promise<boolean> => {
+    try {
+      console.log("Recording study activity:", { userId, module, topics, durationMinutes, score });
+      
+      // Use the progressTrackingService to record the study session
+      const result = await progressTrackingService.recordStudySession(
+        userId,
+        module,
+        topics,
+        durationMinutes,
+        score
+      );
+      
+      if (!result) {
+        console.error('Failed to record study session');
+        return false;
+      }
+      
+      // Also update the learning streak
+      await progressTrackingService.updateLearningStreak(userId);
+      
+      return true;
+    } catch (error) {
+      console.error('Error recording study activity:', error);
+      return false;
     }
   }
 };
@@ -90,8 +136,10 @@ export const updateKanaCharacterProgress = async (
   isCorrect: boolean
 ): Promise<boolean> => {
   try {
+    console.log("Updating kana character progress:", { userId, characterId, isCorrect });
+    
     // Get the current progress
-    const { data: currentProgress, error: progressError } = await supabase
+    const { data: currentProgress, error: progressError } = await supabaseClient
       .from('user_kana_progress')
       .select('*')
       .eq('user_id', userId)
@@ -124,7 +172,7 @@ export const updateKanaCharacterProgress = async (
       }
       
       // Update the progress
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseClient
         .from('user_kana_progress')
         .update({
           proficiency: newProficiency,
@@ -141,11 +189,17 @@ export const updateKanaCharacterProgress = async (
         console.error('Error updating user kana progress:', updateError);
         return false;
       }
+      
+      console.log("Updated kana progress:", { 
+        proficiency: newProficiency, 
+        masteryLevel: newMasteryLevel,
+        consecutiveCorrect: newConsecutiveCorrect 
+      });
     } else {
       // Create new progress
       newProficiency = isCorrect ? 50 : 20;
       
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseClient
         .from('user_kana_progress')
         .insert({
           user_id: userId,
@@ -163,6 +217,8 @@ export const updateKanaCharacterProgress = async (
         console.error('Error creating user kana progress:', insertError);
         return false;
       }
+      
+      console.log("Created new kana progress entry:", { characterId, proficiency: newProficiency });
     }
     
     return true;
@@ -185,8 +241,10 @@ export const completeKanaLearningSession = async (
   }
 ): Promise<boolean> => {
   try {
+    console.log("Completing kana learning session:", { userId, sessionId, results });
+    
     // Update the session as completed
-    const { error: sessionError } = await supabase
+    const { error: sessionError } = await supabaseClient
       .from('kana_learning_sessions')
       .update({ 
         completed: true,
@@ -209,6 +267,16 @@ export const completeKanaLearningSession = async (
     
     // Update the learning streak
     await progressTrackingService.updateLearningStreak(userId);
+    
+    // Record this as a study session for broader progress tracking
+    const sessionDuration = 10; // Estimate 10 minutes for a kana session
+    await kanaLearningService.recordStudyActivity(
+      userId,
+      results.charactersStudied[0]?.startsWith('hiragana') ? 'hiragana' : 'katakana',
+      ['characters', 'recognition'],
+      sessionDuration,
+      results.accuracy
+    );
     
     return true;
   } catch (error) {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ import StudyHabitsCard from '@/components/progress/StudyHabitsCard';
 import { progressTrackingService } from '@/services/progressTrackingService';
 import { KanaType } from '@/types/kana';
 import { supabaseClient } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 
 const Progress: React.FC = () => {
   const { user } = useAuth();
@@ -25,6 +26,8 @@ const Progress: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [studySessions, setStudySessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
@@ -68,10 +71,12 @@ const Progress: React.FC = () => {
   });
   
   // This is the key function that fetches progress data
-  const fetchProgressData = async () => {
+  const fetchProgressData = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
+    setRefreshing(true);
+    
     try {
       console.log("Fetching progress data for user:", user.id);
       
@@ -85,8 +90,12 @@ const Progress: React.FC = () => {
       console.log("Study sessions:", sessions);
       setStudySessions(sessions);
       
+      // Fetch kana learning sessions to merge with study sessions
+      const kanaSessions = await progressTrackingService.getKanaLearningSessions(user.id);
+      console.log("Kana learning sessions:", kanaSessions);
+      
       // Calculate total study time
-      const studyTime = await progressTrackingService.calculateTotalStudyTime(user.id, 7);
+      const studyTime = await progressTrackingService.calculateTotalStudyTime(user.id, 30); // Extended to 30 days
       console.log("Total study time:", studyTime);
       setTotalStudyTime(studyTime);
       
@@ -148,23 +157,31 @@ const Progress: React.FC = () => {
         console.log("Study habits:", studyHabitsData);
         setStudyHabits(studyHabitsData);
       }
+      
+      setLastRefreshed(new Date());
     } catch (error) {
       console.error('Error fetching progress data:', error);
+      toast({
+        title: "Error loading progress data",
+        description: "Please try refreshing the page",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [user]);
   
   // Fetch progress data on initial load and whenever user changes
   useEffect(() => {
     if (!user) return;
     fetchProgressData();
     
-    // Also refresh data every 2 minutes if the page is kept open
-    const intervalId = setInterval(fetchProgressData, 120000);
+    // Also refresh data every minute if the page is kept open
+    const intervalId = setInterval(fetchProgressData, 60000);
     
     return () => clearInterval(intervalId);
-  }, [user]);
+  }, [user, fetchProgressData]);
   
   // Force navigation to login if not authenticated
   if (!user) {
@@ -178,6 +195,21 @@ const Progress: React.FC = () => {
   // Add a refresh button handler
   const handleRefresh = () => {
     fetchProgressData();
+    toast({
+      title: "Refreshing data",
+      description: "Your progress is being updated..."
+    });
+  };
+
+  // Get time since last refresh
+  const getRefreshTime = () => {
+    const now = new Date();
+    const diffMs = now.getTime() - lastRefreshed.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    
+    if (diffMin < 1) return "just now";
+    if (diffMin === 1) return "1 minute ago";
+    return `${diffMin} minutes ago`;
   };
 
   return (
@@ -273,14 +305,18 @@ const Progress: React.FC = () => {
                 <p className="text-gray-600">
                   Track your Japanese learning journey and see how far you've come.
                 </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Last updated: {getRefreshTime()}
+                </p>
               </div>
               <Button 
                 onClick={handleRefresh} 
                 variant="outline"
                 className="flex items-center"
+                disabled={refreshing}
               >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh Data
+                <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh Data'}
               </Button>
             </div>
             

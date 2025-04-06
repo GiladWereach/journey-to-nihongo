@@ -342,6 +342,48 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       const incorrect = incorrectCount;
       const accuracy = total > 0 ? (correct / total) * 100 : 0;
       
+      // Record the completed practice session
+      if (user) {
+        try {
+          // Create a completed kana learning session
+          const sessionId = `session-${Date.now()}`;
+          const characterIdsStudied = characterResults.map(result => result.character);
+          const progressUpdates = characterResults.map(result => ({
+            characterId: kanaList.find(k => k.character === result.character)?.id || '',
+            isCorrect: result.correct
+          })).filter(update => update.characterId !== '');
+          
+          // Record using the kanaLearningService
+          kanaLearningService.completeKanaLearningSession(
+            user.id,
+            sessionId,
+            {
+              accuracy,
+              charactersStudied: characterIdsStudied,
+              progressUpdates
+            }
+          );
+          
+          // Also record as a general study session
+          const practiceTime = Math.max(5, Math.round(total * 0.5)); // Estimate practice time
+          kanaLearningService.recordStudyActivity(
+            user.id,
+            kanaType === 'hiragana' ? 'hiragana_practice' : 'katakana_practice',
+            ['recognition', 'kana'],
+            practiceTime,
+            accuracy
+          );
+          
+          console.log("Practice session recorded:", {
+            accuracy,
+            charactersStudied: characterIdsStudied.length,
+            correctAnswers: correct
+          });
+        } catch (error) {
+          console.error("Error recording practice session:", error);
+        }
+      }
+      
       const results: PracticeResult = {
         correct,
         incorrect,
@@ -359,78 +401,18 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
 
   const updateUserProgress = async (isCorrect: boolean, kanaItem: KanaCharacter) => {
     if (!user) return;
-
-    const existingProgress = userProgress.find((p: any) => p.character_id === kanaItem.id);
-
-    if (existingProgress) {
-      const updatedMistakeCount = isCorrect ? 
-        existingProgress.mistake_count : 
-        existingProgress.mistake_count + 1;
-      const updatedTotalPracticeCount = existingProgress.total_practice_count + 1;
+    
+    try {
+      // Use the centralized service to update character progress
+      await kanaLearningService.updateKanaCharacterProgress(
+        user.id,
+        kanaItem.id,
+        isCorrect
+      );
       
-      let consecutiveCorrect = isCorrect ? 
-        (existingProgress.consecutive_correct || 0) + 1 : 
-        0;
-      
-      let masteryLevel = existingProgress.mastery_level || 0;
-      let newReviewDue = new Date(existingProgress.review_due || new Date());
-      
-      if (consecutiveCorrect >= MASTERY_CONSECUTIVE_CORRECT && masteryLevel === 0) {
-        masteryLevel = 1;
-        newReviewDue = calculateNextReviewInterval(masteryLevel);
-      } 
-      else if (masteryLevel > 0 && isCorrect && new Date(existingProgress.review_due) <= new Date()) {
-        masteryLevel += 1;
-        newReviewDue = calculateNextReviewInterval(masteryLevel);
-        consecutiveCorrect = 0;
-      }
-      else if (masteryLevel > 0 && !isCorrect && new Date(existingProgress.review_due) <= new Date()) {
-        masteryLevel = Math.max(masteryLevel - 1, 0);
-        newReviewDue = calculateNextReviewInterval(masteryLevel);
-        consecutiveCorrect = 0;
-      }
-      
-      let newProficiency = existingProgress.proficiency;
-      
-      if (isCorrect) {
-        const boost = Math.max(10 - Math.floor(newProficiency / 10), 2);
-        newProficiency = Math.min(newProficiency + boost, 100);
-      } else {
-        const penalty = MISTAKE_PENALTY + Math.floor(newProficiency / 25);
-        newProficiency = Math.max(newProficiency - penalty, 0);
-        
-        if (updatedMistakeCount > 1 && updatedMistakeCount % 3 === 0) {
-          newProficiency = Math.max(newProficiency - 5, 0);
-        }
-      }
-      
-      await supabaseClient
-        .from('user_kana_progress')
-        .update({
-          proficiency: newProficiency,
-          mistake_count: updatedMistakeCount,
-          total_practice_count: updatedTotalPracticeCount,
-          consecutive_correct: consecutiveCorrect,
-          mastery_level: masteryLevel,
-          last_practiced: new Date().toISOString(),
-          review_due: newReviewDue.toISOString()
-        })
-        .eq('id', existingProgress.id);
-    } else {
-      const initialProficiency = isCorrect ? 30 : 10;
-      await supabaseClient
-        .from('user_kana_progress')
-        .insert({
-          user_id: user.id,
-          character_id: kanaItem.id,
-          proficiency: initialProficiency,
-          mistake_count: isCorrect ? 0 : 1,
-          total_practice_count: 1,
-          consecutive_correct: isCorrect ? 1 : 0,
-          mastery_level: 0,
-          last_practiced: new Date().toISOString(),
-          review_due: new Date().toISOString()
-        });
+      console.log(`Progress updated for ${kanaItem.character} (${isCorrect ? 'correct' : 'incorrect'})`);
+    } catch (error) {
+      console.error('Error updating character progress:', error);
     }
   };
 
