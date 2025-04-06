@@ -881,8 +881,7 @@ export const quizService = {
             character: sc.character.character,
             romaji: sc.character.romaji,
             type: sc.character.type as KanaType,
-            group: sc.character.group,
-            quizMode: 'both'
+            quizMode: 'both' as const
           }));
         }
       }
@@ -902,8 +901,7 @@ export const quizService = {
           character: kana.character,
           romaji: kana.romaji,
           type: kana.type as KanaType,
-          group: kana.group,
-          quizMode: 'both'
+          quizMode: 'both' as const
         }));
         
         characters = [...characters, ...additional];
