@@ -810,5 +810,106 @@ export const quizService = {
       console.error('Error fetching quiz sessions:', error);
       return [];
     }
+  },
+  
+  // Get characters for a quick quiz
+  getQuickQuizCharacters: async (type: KanaType, userId?: string, limit: number = 10): Promise<QuizCharacter[]> => {
+    try {
+      // Get base characters for the selected type
+      const allKana = type === 'hiragana' ? 
+        hiraganaCharacters : 
+        type === 'katakana' ? 
+          katakanaCharacters : 
+          [...hiraganaCharacters, ...katakanaCharacters];
+      
+      let characters: QuizCharacter[] = [];
+      
+      // If user is logged in, prioritize characters based on their progress
+      if (userId) {
+        const { data: progressData } = await supabaseClient
+          .from('user_kana_progress')
+          .select('*')
+          .eq('user_id', userId);
+        
+        if (progressData && progressData.length > 0) {
+          // Sort characters by priority:
+          // 1. Characters due for review
+          // 2. Characters with low proficiency
+          // 3. Characters they haven't practiced yet
+          
+          const now = new Date();
+          const userProgress = progressData.map(p => ({
+            ...p,
+            review_due: new Date(p.review_due),
+            proficiency: p.proficiency || 0
+          }));
+          
+          // Map characters with their priority scores
+          const scoredCharacters = allKana.map(kana => {
+            const progress = userProgress.find(p => p.character_id === kana.id);
+            
+            // Calculate priority score
+            let priorityScore = 0;
+            
+            if (!progress) {
+              // New characters get medium priority
+              priorityScore = 50; 
+            } else if (progress.review_due <= now) {
+              // Due for review - high priority
+              priorityScore = 100 - progress.proficiency; 
+            } else {
+              // Not due yet - lower priority based on proficiency
+              priorityScore = 40 - (progress.proficiency / 2.5);
+            }
+            
+            return {
+              character: kana,
+              priorityScore
+            };
+          });
+          
+          // Sort by priority score (higher = more important)
+          scoredCharacters.sort((a, b) => b.priorityScore - a.priorityScore);
+          
+          // Take top N characters
+          characters = scoredCharacters.slice(0, limit).map(sc => ({
+            id: sc.character.id,
+            character: sc.character.character,
+            romaji: sc.character.romaji,
+            type: sc.character.type as KanaType,
+            group: sc.character.group,
+            quizMode: 'both'
+          }));
+        }
+      }
+      
+      // If we don't have enough characters yet (or no user), add random ones
+      if (characters.length < limit) {
+        const remainingChars = allKana.filter(kana => 
+          !characters.some(c => c.id === kana.id)
+        );
+        
+        // Shuffle remaining characters
+        const shuffled = [...remainingChars].sort(() => Math.random() - 0.5);
+        
+        // Add enough to reach the limit
+        const additional = shuffled.slice(0, limit - characters.length).map(kana => ({
+          id: kana.id,
+          character: kana.character,
+          romaji: kana.romaji,
+          type: kana.type as KanaType,
+          group: kana.group,
+          quizMode: 'both'
+        }));
+        
+        characters = [...characters, ...additional];
+      }
+      
+      // Final shuffle to prevent predictability
+      return characters.sort(() => Math.random() - 0.5);
+    } catch (error) {
+      console.error('Error preparing quick quiz characters:', error);
+      return [];
+    }
   }
 };

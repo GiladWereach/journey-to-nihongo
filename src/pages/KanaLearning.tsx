@@ -1,17 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { kanaService } from '@/services/kanaService';
 import KanaGrid from '@/components/kana/KanaGrid';
 import KanaPractice from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
 import { KanaType, UserKanaProgress, PracticeResult } from '@/types/kana';
 import { Button } from '@/components/ui/button';
-import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft, GraduationCap, Bookmark, Calendar, Award, TrendingUp, Clock, Medal } from 'lucide-react';
+import { Book, PenTool, BookOpen, Activity, BarChart, Layers, ChevronLeft, GraduationCap, Bookmark, Calendar, Award, TrendingUp, Clock, Medal, Zap } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
@@ -36,6 +35,8 @@ const KanaLearning = () => {
   const katakana = kanaService.getKanaByType('katakana');
   const allKana = kanaService.getAllKana();
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (user) {
       try {
@@ -56,7 +57,6 @@ const KanaLearning = () => {
     }
   }, [user]);
 
-  // Load progress data when user or userProgress changes
   useEffect(() => {
     const loadProgressData = async () => {
       if (user) {
@@ -134,10 +134,8 @@ const KanaLearning = () => {
     setPracticeResults(results);
     setPracticeMode('results');
     
-    // Convert the results to the format expected by our service
     if (user && results.characterResults.length > 0) {
       const practiceResults = results.characterResults.map(result => {
-        // Find the kana character from our data
         const kanaChar = kanaService.getAllKana().find(k => k.character === result.character);
         if (!kanaChar) return null;
         
@@ -148,10 +146,8 @@ const KanaLearning = () => {
         };
       }).filter(Boolean) as Array<{ characterId: string; correct: boolean; timestamp: Date }>;
       
-      // Update the progress in the database
       await kanaService.updateProgressFromResults(user.id, practiceResults);
       
-      // Refresh the user progress data
       const updatedProgress = await kanaService.getUserKanaProgress(user.id);
       setUserProgress(updatedProgress);
     }
@@ -175,7 +171,15 @@ const KanaLearning = () => {
     setActiveTab('practice');
   };
 
-  // Progress rendering helper
+  const handleQuickQuizStart = (kanaType: KanaType) => {
+    navigate('/quick-quiz', {
+      state: {
+        fromKanaLearning: true,
+        kanaType
+      }
+    });
+  };
+
   const renderProgressIndicator = (type: KanaType | 'all') => {
     const progress = type === 'all' 
       ? overallProgress.all
@@ -439,6 +443,44 @@ const KanaLearning = () => {
                         <span className="text-lg font-medium mb-2">Mixed</span>
                         <span className="text-3xl mb-3">あア=a</span>
                       </div>
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium mb-3 text-indigo">Quick Quiz</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-4">
+                    <Button 
+                      onClick={() => handleQuickQuizStart('hiragana')}
+                      className="h-auto py-5 bg-matcha hover:bg-matcha/90 flex flex-col items-center space-y-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Zap size={18} />
+                        <span className="text-lg font-medium">Hiragana Quiz</span>
+                      </div>
+                      <span className="text-sm opacity-80">Test your hiragana knowledge</span>
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => handleQuickQuizStart('katakana')}
+                      className="h-auto py-5 bg-vermilion hover:bg-vermilion/90 flex flex-col items-center space-y-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Zap size={18} />
+                        <span className="text-lg font-medium">Katakana Quiz</span>
+                      </div>
+                      <span className="text-sm opacity-80">Test your katakana knowledge</span>
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => handleQuickQuizStart('all' as KanaType)}
+                      className="h-auto py-5 bg-indigo hover:bg-indigo/90 flex flex-col items-center space-y-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Zap size={18} />
+                        <span className="text-lg font-medium">Mixed Quiz</span>
+                      </div>
+                      <span className="text-sm opacity-80">Challenge with both writing systems</span>
                     </Button>
                   </div>
                 </div>
