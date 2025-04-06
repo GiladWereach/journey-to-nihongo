@@ -98,6 +98,12 @@ const TypingPractice: React.FC<TypingPracticeProps> = ({
         totalQuestions: characters.length,
         correctAnswers: correctCount,
         characterResults: results,
+        // Add the missing properties required by PracticeResult type
+        correct: correctCount,
+        incorrect: characters.length - correctCount,
+        total: characters.length,
+        kanaType: kanaType,
+        practiceType: 'recognition'
       };
       onComplete(practiceResult);
     }

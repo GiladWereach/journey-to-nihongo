@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { kanaService } from '@/services/kanaService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
-import { QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
+import { QuizCharacterSet, QuizSettings, QuizSessionStats, CharacterResult } from '@/types/quiz';
 import { Check, X } from 'lucide-react';
 
 interface QuizInterfaceProps {
@@ -27,9 +26,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   onCancel,
   onEndQuiz
 }) => {
-  // If onEndQuiz is provided, use that, otherwise use onComplete
   const handleCompletion = useCallback((correct: number, total: number, characterResults: Array<{character: string, correct: boolean}>) => {
     if (onEndQuiz) {
+      const formattedResults: CharacterResult[] = characterResults.map((res, index) => ({
+        characterId: `char-${index}`,
+        character: res.character,
+        romaji: '',
+        isCorrect: res.correct,
+        attemptCount: 1
+      }));
+      
       const results: QuizSessionStats = {
         startTime: new Date(),
         endTime: new Date(),
@@ -39,7 +45,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         currentStreak: 0,
         longestStreak: currentStreak > longestStreak ? currentStreak : longestStreak,
         accuracy: Math.round((correct / total) * 100),
-        characterResults: characterResults
+        characterResults: formattedResults
       };
       onEndQuiz(results);
     } else if (onComplete) {
@@ -77,19 +83,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   }, [getKanaByType, selectedKanaType]);
 
   const getPrioritizedKana = useCallback(() => {
-    // If character sets are provided, use those instead of prioritized kana
     if (characterSets && characterSets.length > 0) {
-      // Flatten all characters from all sets
       const allCharacters = characterSets.flatMap(set => set.characters);
-      // Convert QuizCharacter to KanaCharacter
       const kanaCharacters = allCharacters.map(char => {
         return {
           id: char.id,
           character: char.character,
           romaji: char.romaji,
           type: char.type as KanaType,
-          stroke_count: 0, // We don't have this info from QuizCharacter
-          stroke_order: [], // We don't have this info from QuizCharacter
+          stroke_count: 0,
+          stroke_order: [],
           group: char.group || ''
         } as KanaCharacter;
       });
@@ -98,16 +101,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
 
     if (userProgress.length === 0) return getRandomKana();
     
-    // First, get characters with low proficiency or that need review
     const allKana = getKanaByType(selectedKanaType);
     const lowProficiencyKana = allKana
       .filter(kana => {
         const progress = userProgress.find(p => p.character_id === kana.id);
         
-        // Filter based on selected kana type
         if (selectedKanaType !== 'all' && kana.type !== selectedKanaType) return false;
         
-        // Prioritize characters with low proficiency
         return !progress || progress.proficiency < 70;
       })
       .sort((a, b) => {
@@ -117,16 +117,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         const practiceA = progressA ? progressA.total_practice_count : 0;
         const practiceB = progressB ? progressB.total_practice_count : 0;
         
-        // Sort by practice count (less practiced first)
         return practiceA - practiceB;
       });
     
-    // If we have enough low proficiency kana, use them
     if (lowProficiencyKana.length >= 5) {
       return lowProficiencyKana.slice(0, 10);
     }
     
-    // Otherwise, supplement with random kana
     const randomKana = getRandomKana();
     const combinedKana = [...lowProficiencyKana, ...randomKana]
       .slice(0, 10)
@@ -165,14 +162,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   useEffect(() => {
     if (kanaList.length > 0) {
       generateOptions();
-      // Auto-focus input field in speed mode
       if (settings.speedMode && inputRef.current) {
         inputRef.current.focus();
       }
     }
   }, [kanaList, currentKanaIndex, settings.speedMode]);
 
-  // Play sound effect when answer is correct/incorrect
   useEffect(() => {
     if (isCorrect !== null && settings.audioFeedback) {
       const sound = new Audio(isCorrect ? '/sounds/correct.mp3' : '/sounds/incorrect.mp3');
@@ -229,7 +224,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           message: "Correct!" 
         });
         
-        // In speed mode, we automatically move to the next question after a brief delay
         setTimeout(() => {
           handleNext();
         }, 500);
@@ -264,7 +258,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     if (currentKanaIndex < kanaList.length - 1) {
       setCurrentKanaIndex(currentKanaIndex + 1);
     } else {
-      // Use the appropriate completion handler
       handleCompletion(correctCount, kanaList.length, characterResults);
     }
   };
