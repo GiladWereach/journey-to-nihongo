@@ -426,6 +426,7 @@ export type Database = {
         Row: {
           created_at: string | null
           daily_goal: number | null
+          daily_goal_minutes: number | null
           display_furigana: boolean | null
           id: string
           notifications_enabled: boolean | null
@@ -435,10 +436,12 @@ export type Database = {
           study_reminder: boolean | null
           theme: string | null
           updated_at: string | null
+          weekly_goal_days: number | null
         }
         Insert: {
           created_at?: string | null
           daily_goal?: number | null
+          daily_goal_minutes?: number | null
           display_furigana?: boolean | null
           id: string
           notifications_enabled?: boolean | null
@@ -448,10 +451,12 @@ export type Database = {
           study_reminder?: boolean | null
           theme?: string | null
           updated_at?: string | null
+          weekly_goal_days?: number | null
         }
         Update: {
           created_at?: string | null
           daily_goal?: number | null
+          daily_goal_minutes?: number | null
           display_furigana?: boolean | null
           id?: string
           notifications_enabled?: boolean | null
@@ -461,6 +466,7 @@ export type Database = {
           study_reminder?: boolean | null
           theme?: string | null
           updated_at?: string | null
+          weekly_goal_days?: number | null
         }
         Relationships: [
           {

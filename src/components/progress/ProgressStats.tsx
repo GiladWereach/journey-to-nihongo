@@ -32,7 +32,7 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
         const { data, error } = await supabase
           .from('user_settings')
           .select('daily_goal_minutes, weekly_goal_days')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
           
         if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"

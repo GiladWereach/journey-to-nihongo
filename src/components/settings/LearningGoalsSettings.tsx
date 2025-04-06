@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,7 +23,7 @@ const LearningGoalsSettings: React.FC = () => {
         const { data, error } = await supabase
           .from('user_settings')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
           
         if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
@@ -54,30 +53,32 @@ const LearningGoalsSettings: React.FC = () => {
     
     setLoading(true);
     try {
-      const settingsData = {
-        user_id: user.id,
-        daily_goal_minutes: dailyGoalMinutes,
-        weekly_goal_days: weeklyGoalDays,
-      };
-      
-      let query;
       if (userSettings) {
         // Update existing settings
-        query = supabase
+        const { error } = await supabase
           .from('user_settings')
-          .update(settingsData)
-          .eq('user_id', user.id);
+          .update({
+            daily_goal_minutes: dailyGoalMinutes,
+            weekly_goal_days: weeklyGoalDays
+          })
+          .eq('id', user.id);
+          
+        if (error) {
+          throw error;
+        }
       } else {
         // Insert new settings
-        query = supabase
+        const { error } = await supabase
           .from('user_settings')
-          .insert(settingsData);
-      }
-      
-      const { error } = await query;
-      
-      if (error) {
-        throw error;
+          .insert({
+            id: user.id,
+            daily_goal_minutes: dailyGoalMinutes,
+            weekly_goal_days: weeklyGoalDays
+          });
+          
+        if (error) {
+          throw error;
+        }
       }
       
       toast({
