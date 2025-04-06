@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
@@ -16,7 +15,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { kanaService } from '@/services/kanaService';
 import { Progress } from '@/components/ui/progress';
-import { KanaType, QuizCharacter } from '@/types/quiz';
+import { KanaType, KanaCharacter } from '@/types/kana';
+import { QuizCharacter } from '@/types/quiz';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 
 // Default time in seconds
@@ -65,10 +65,19 @@ const TimedChallenge: React.FC<TimedChallengeProps> = () => {
   useEffect(() => {
     const fetchCharacters = async () => {
       try {
-        // Fetch all characters for the selected kana type
-        const allCharacters = await kanaService.getKanaCharacters(kanaType);
+        // Fix: Use getKanaByType instead of getKanaCharacters which doesn't exist
+        const allKanaCharacters = kanaService.getKanaByType(kanaType);
+        
+        // Convert KanaCharacter[] to QuizCharacter[]
+        const quizCharacters: QuizCharacter[] = allKanaCharacters.map(kana => ({
+          id: kana.id,
+          character: kana.character,
+          romaji: kana.romaji,
+          type: kana.type as KanaType
+        }));
+        
         // Shuffle the characters
-        const shuffled = [...allCharacters].sort(() => Math.random() - 0.5);
+        const shuffled = [...quizCharacters].sort(() => Math.random() - 0.5);
         setCharacters(shuffled);
       } catch (error) {
         console.error('Error fetching characters:', error);
