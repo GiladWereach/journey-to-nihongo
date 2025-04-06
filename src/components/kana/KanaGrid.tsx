@@ -17,11 +17,11 @@ interface KanaGridProps {
   userProgress?: UserKanaProgress[];
 }
 
-// Group kana by their first letter in romaji
+// Group kana by their first letter in romaji or by special categories
 const groupKanaBySection = (kanaList: KanaCharacter[]): Record<string, KanaCharacter[]> => {
   const groups: Record<string, KanaCharacter[]> = {};
   
-  // Define section order to ensure B, D, J, P, V are included
+  // Define section order to ensure all sections are included
   const sectionOrder = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
                         'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z'];
   
@@ -30,13 +30,29 @@ const groupKanaBySection = (kanaList: KanaCharacter[]): Record<string, KanaChara
     groups[section] = [];
   });
   
-  // Group by first letter of romaji
+  // Special handling for dakuten and handakuten variations
   kanaList.forEach(kana => {
-    const firstLetter = kana.romaji.charAt(0).toUpperCase();
-    if (!groups[firstLetter]) {
-      groups[firstLetter] = [];
+    // Check if this is a dakuten or handakuten variation
+    if (kana.romaji.startsWith('g') || kana.romaji.startsWith('z') || 
+        kana.romaji.startsWith('d') || kana.romaji.startsWith('b') || 
+        kana.romaji.startsWith('p') || kana.romaji.startsWith('j')) {
+      
+      let firstLetter = kana.romaji.charAt(0).toUpperCase();
+      
+      // Ensure the section exists
+      if (!groups[firstLetter]) {
+        groups[firstLetter] = [];
+      }
+      
+      groups[firstLetter].push(kana);
+    } else {
+      // Regular kana grouping by first letter
+      const firstLetter = kana.romaji.charAt(0).toUpperCase();
+      if (!groups[firstLetter]) {
+        groups[firstLetter] = [];
+      }
+      groups[firstLetter].push(kana);
     }
-    groups[firstLetter].push(kana);
   });
   
   return groups;

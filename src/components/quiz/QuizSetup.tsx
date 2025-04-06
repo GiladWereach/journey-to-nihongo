@@ -26,10 +26,18 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
     showTroubleCharacters: false,
     characterSize: 'large',
     audioFeedback: true,
+    speedMode: false,
+    includeDakuten: true,
+    includeHandakuten: true,
   });
   const [availableSets, setAvailableSets] = useState<QuizCharacterSet[]>([]);
   const [loadingCharacterSets, setLoadingCharacterSets] = useState(true);
   const [groupingTab, setGroupingTab] = useState<'consonant' | 'vowel'>('consonant');
+  const [quizStats, setQuizStats] = useState<{
+    totalQuizzes: number;
+    averageAccuracy: number;
+    bestStreak: number;
+  } | null>(null);
 
   // Load character sets when kana type changes
   useEffect(() => {
@@ -44,6 +52,12 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
         if (selectedSets.length === 0 && sets.length > 0) {
           setSelectedSets([sets[0]]);
         }
+
+        // Load quiz stats for user if logged in
+        if (user) {
+          const stats = await quizService.getUserQuizStats(user.id, kanaType);
+          setQuizStats(stats);
+        }
       } catch (error) {
         console.error('Error loading character sets:', error);
       } finally {
@@ -52,7 +66,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
     };
     
     loadCharacterSets();
-  }, [kanaType]);
+  }, [kanaType, user]);
 
   const handleKanaTypeChange = (type: KanaType) => {
     setKanaType(type);
@@ -111,7 +125,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
   }, {});
 
   // Sort group keys for better display order
-  const consonantOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'special', 'dakuten', 'handakuten', 'combinations', 'all', 'other'];
+  const consonantOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'j', 'special', 'dakuten', 'handakuten', 'combinations', 'all', 'other'];
   const vowelOrder = ['a', 'i', 'u', 'e', 'o', 'all', 'special', 'other'];
 
   const sortedConsonantGroups = Object.keys(groupedSetsByConsonant).sort((a, b) => {
@@ -124,6 +138,17 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
 
   const isSetSelected = (set: QuizCharacterSet) => {
     return selectedSets.some(s => s.id === set.id);
+  };
+
+  // Format group name to remove "Group" suffix
+  const formatGroupName = (groupName: string) => {
+    if (groupName === 'vowels') return 'Vowels';
+    if (groupName === 'dakuten') return 'Dakuten';
+    if (groupName === 'handakuten') return 'Handakuten';
+    if (groupName === 'special') return 'Special';
+    if (groupName === 'combinations') return 'Combinations';
+    if (groupName === 'all') return 'All';
+    return groupName.toUpperCase();
   };
 
   return (
@@ -156,6 +181,23 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
               </div>
             </Button>
           </div>
+
+          {quizStats && (
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div className="border rounded-lg p-2">
+                <p className="text-xs text-muted-foreground">Total Quizzes</p>
+                <p className="font-bold text-lg">{quizStats.totalQuizzes}</p>
+              </div>
+              <div className="border rounded-lg p-2">
+                <p className="text-xs text-muted-foreground">Avg. Accuracy</p>
+                <p className="font-bold text-lg">{quizStats.averageAccuracy}%</p>
+              </div>
+              <div className="border rounded-lg p-2">
+                <p className="text-xs text-muted-foreground">Best Streak</p>
+                <p className="font-bold text-lg">{quizStats.bestStreak}</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -219,7 +261,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
                           />
                           <div className="flex-1">
                             <Label htmlFor={`group-${groupName}`} className="font-medium cursor-pointer capitalize">
-                              {groupName === 'vowels' ? 'Vowels' : `${groupName.toUpperCase()} Group`}
+                              {formatGroupName(groupName)}
                             </Label>
                             <div className="flex flex-wrap mt-2 gap-1.5">
                               {groupedSetsByConsonant[groupName][0]?.characters.map((char) => (
@@ -322,8 +364,44 @@ const QuizSetup: React.FC<QuizSetupProps> = ({ onStartQuiz }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
+                <Label htmlFor="speed-mode">Speed Mode</Label>
+                <p className="text-xs text-muted-foreground">Immediately advance after correct answer</p>
+              </div>
+              <Switch
+                id="speed-mode"
+                checked={settings.speedMode}
+                onCheckedChange={(checked) => handleSettingChange('speedMode', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="include-dakuten">Include Dakuten (が, ざ, だ, ば, etc.)</Label>
+                <p className="text-xs text-muted-foreground">Characters with two dots (゛)</p>
+              </div>
+              <Switch
+                id="include-dakuten"
+                checked={settings.includeDakuten}
+                onCheckedChange={(checked) => handleSettingChange('includeDakuten', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="include-handakuten">Include Handakuten (ぱ, etc.)</Label>
+                <p className="text-xs text-muted-foreground">Characters with a circle (゜)</p>
+              </div>
+              <Switch
+                id="include-handakuten"
+                checked={settings.includeHandakuten}
+                onCheckedChange={(checked) => handleSettingChange('includeHandakuten', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
                 <Label htmlFor="basic-only">Basic Characters Only</Label>
-                <p className="text-xs text-muted-foreground">Exclude dakuten and handakuten</p>
+                <p className="text-xs text-muted-foreground">Exclude special combinations</p>
               </div>
               <Switch
                 id="basic-only"
