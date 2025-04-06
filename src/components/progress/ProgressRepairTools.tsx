@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { progressTrackingService } from '@/services/progressTrackingService';
-import { RefreshCw, Tool, AlertTriangle, Check } from 'lucide-react';
+import { RefreshCw, Wrench, AlertTriangle, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ProgressRepairToolsProps {
@@ -81,7 +81,7 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
             </>
           ) : (
             <>
-              <Tool className="mr-2 h-4 w-4" />
+              <Wrench className="mr-2 h-4 w-4" />
               Repair Progress Data
             </>
           )}
