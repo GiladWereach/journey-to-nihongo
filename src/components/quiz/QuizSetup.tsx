@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { KanaType, QuizCharacterSet, QuizSettings } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
 import { AlertCircle, Zap, Check } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface QuizSetupProps {
   onStartQuiz: (
@@ -37,7 +37,6 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     speedMode: enforceSpeedMode,
   });
 
-  // Fetch available character sets when kana type changes
   useEffect(() => {
     const fetchCharacterSets = async () => {
       setLoading(true);
@@ -45,7 +44,6 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
         const sets = await quizService.getAvailableCharacterSets(kanaType);
         setCharacterSets(sets);
         
-        // Default selection: vowels group
         if (sets.length > 0 && selectedSets.length === 0) {
           const vowelsSet = sets.find(set => set.id === `${kanaType}-vowels`);
           if (vowelsSet) {
@@ -64,7 +62,6 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     fetchCharacterSets();
   }, [kanaType]);
   
-  // Update speed mode when enforceSpeedMode changes
   useEffect(() => {
     if (enforceSpeedMode) {
       setSettings(prev => ({
@@ -74,7 +71,6 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     }
   }, [enforceSpeedMode]);
 
-  // Handle character set selection
   const toggleSetSelection = (setId: string) => {
     if (selectedSets.includes(setId)) {
       setSelectedSets(selectedSets.filter(id => id !== setId));
@@ -83,9 +79,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     }
   };
 
-  // Handle settings toggle
   const toggleSetting = (setting: keyof QuizSettings) => {
-    // Don't allow toggling speed mode if enforced
     if (setting === 'speedMode' && enforceSpeedMode) {
       return;
     }
@@ -96,7 +90,6 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     });
   };
 
-  // Handle start quiz button
   const handleStartQuiz = () => {
     if (selectedSets.length === 0) return;
     
@@ -104,24 +97,19 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     onStartQuiz(kanaType, selectedCharacterSets, settings);
   };
 
-  // Group character sets by category
   const groupCharacterSets = () => {
-    // Basic groups
     const basic = characterSets.filter(set => 
       ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w'].includes(set.consonantGroup || '')
     );
     
-    // Dakuten/Handakuten groups
     const dakuten = characterSets.filter(set => 
       ['g', 'z', 'd', 'b', 'p'].includes(set.consonantGroup || '')
     );
     
-    // Special groups
     const special = characterSets.filter(set => 
       ['special', 'combinations'].includes(set.consonantGroup || '')
     );
     
-    // Vowel groups
     const vowels = characterSets.filter(set => 
       set.id.includes('-a-row') || 
       set.id.includes('-i-row') || 
@@ -131,6 +119,21 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
     );
     
     return { basic, dakuten, special, vowels };
+  };
+
+  const renderCharacterPreview = (set: QuizCharacterSet) => {
+    return (
+      <div className="mt-1 overflow-hidden flex flex-wrap gap-1 text-xs">
+        {set.characters.slice(0, 5).map(char => (
+          <span key={char.id} className="inline-block">
+            {char.character}
+          </span>
+        ))}
+        {set.characters.length > 5 && (
+          <span className="text-muted-foreground">+{set.characters.length - 5}</span>
+        )}
+      </div>
+    );
   };
 
   const groupedSets = groupCharacterSets();
@@ -180,7 +183,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
           <div className="space-y-6">
             <div className="space-y-3">
               <h3 className="text-sm font-medium">Basic Characters</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                 {groupedSets.basic.map(set => (
                   <Card 
                     key={set.id}
@@ -190,10 +193,8 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
                     onClick={() => toggleSetSelection(set.id)}
                   >
                     <CardContent className="p-3 text-center">
-                      <div className="font-semibold">{set.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {set.characters.length} characters
-                      </div>
+                      <div className="font-semibold">{set.name.replace(' Group', '')}</div>
+                      {renderCharacterPreview(set)}
                       {selectedSets.includes(set.id) && (
                         <div className="absolute top-2 right-2 text-indigo">
                           <Check size={16} />
@@ -208,7 +209,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
             {groupedSets.dakuten.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-medium">Dakuten & Handakuten</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   {groupedSets.dakuten.map(set => (
                     <Card 
                       key={set.id}
@@ -218,10 +219,8 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
                       onClick={() => toggleSetSelection(set.id)}
                     >
                       <CardContent className="p-3 text-center">
-                        <div className="font-semibold">{set.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {set.characters.length} characters
-                        </div>
+                        <div className="font-semibold">{set.name.replace(' Group', '')}</div>
+                        {renderCharacterPreview(set)}
                         {selectedSets.includes(set.id) && (
                           <div className="absolute top-2 right-2 text-indigo">
                             <Check size={16} />
@@ -237,7 +236,7 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
             {groupedSets.special.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-medium">Special Characters</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   {groupedSets.special.map(set => (
                     <Card 
                       key={set.id}
@@ -247,10 +246,8 @@ const QuizSetup: React.FC<QuizSetupProps> = ({
                       onClick={() => toggleSetSelection(set.id)}
                     >
                       <CardContent className="p-3 text-center">
-                        <div className="font-semibold">{set.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {set.characters.length} characters
-                        </div>
+                        <div className="font-semibold">{set.name.replace(' Group', '')}</div>
+                        {renderCharacterPreview(set)}
                         {selectedSets.includes(set.id) && (
                           <div className="absolute top-2 right-2 text-indigo">
                             <Check size={16} />

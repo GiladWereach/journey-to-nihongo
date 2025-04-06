@@ -201,7 +201,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, 400);
+    }, 250);
   };
   
   const handleWrongAnswer = async () => {
@@ -250,7 +250,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 2000);
+      }, 1500);
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
       
@@ -280,7 +280,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 2000);
+      }, 1500);
     } else {
       setTimeout(() => {
         setInput('');
@@ -289,7 +289,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 800);
+      }, 500);
     }
     
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
@@ -398,12 +398,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         </div>
         
         <div className="text-center">
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-xs sm:text-sm font-medium">Set:</span>
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {characterSets.map(s => s.name.replace(' Group', '')).join(', ')}
-            </span>
-          </div>
           <div className="flex items-center justify-center gap-1">
             <span className="text-xs sm:text-sm text-muted-foreground">
               {sessionStats.correctCount} / {quizCharacters.length}
