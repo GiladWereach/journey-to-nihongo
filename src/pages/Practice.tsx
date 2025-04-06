@@ -35,6 +35,7 @@ interface PracticeCardProps {
   featured?: boolean;
   badgeText?: string;
   completed?: boolean;
+  disabled?: boolean; // Add disabled prop
 }
 
 const PracticeCard: React.FC<PracticeCardProps> = ({ 
@@ -44,13 +45,14 @@ const PracticeCard: React.FC<PracticeCardProps> = ({
   onClick,
   featured = false,
   badgeText,
-  completed = false
+  completed = false,
+  disabled = false // Default to false
 }) => {
   return (
     <Card 
       className={`overflow-hidden transition-all hover:shadow-md ${
         featured ? 'border-indigo' : completed ? 'border-green-400' : ''
-      }`}
+      } ${disabled ? 'opacity-70' : ''}`}
     >
       <CardContent className="p-6">
         <div className="flex items-start">
@@ -80,6 +82,7 @@ const PracticeCard: React.FC<PracticeCardProps> = ({
             <Button 
               onClick={onClick}
               className={featured ? 'bg-indigo hover:bg-indigo/90' : ''}
+              disabled={disabled} // Add disabled attribute
             >
               Start Practice
             </Button>
@@ -331,7 +334,6 @@ const Practice: React.FC = () => {
                     description="Practice writing hiragana and katakana characters with stroke order guidance."
                     icon={Pen}
                     onClick={() => navigate('/writing-practice')}
-                    badgeText="Coming Soon"
                   />
                   
                   <PracticeCard
@@ -340,6 +342,7 @@ const Practice: React.FC = () => {
                     icon={Clock}
                     onClick={() => navigate('/timed-challenge')}
                     badgeText="Coming Soon"
+                    disabled={true} // This feature is coming soon
                   />
                   
                   <PracticeCard
@@ -348,6 +351,7 @@ const Practice: React.FC = () => {
                     icon={BookOpen}
                     onClick={() => navigate('/vocabulary-drill')}
                     badgeText="Coming Soon"
+                    disabled={true} // This feature is coming soon
                   />
                 </div>
               </TabsContent>
