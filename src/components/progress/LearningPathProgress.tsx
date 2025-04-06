@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Circle, MapPin } from 'lucide-react';
+import { MapPin, CheckCircle2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 
@@ -77,28 +77,28 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
     <Card className={className}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-2xl font-semibold">
-          <MapPin className="mr-2 h-5 w-5 text-indigo" />
+          <MapPin className="mr-2 h-5 w-5 text-gray-700" />
           Learning Path Progress
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-2">
         <div className="relative">
           {/* Vertical timeline line */}
-          <div className="absolute left-3 top-4 bottom-4 w-0.5 bg-gray-200" />
+          <div className="absolute left-[26px] top-4 bottom-0 w-[1px] bg-gray-200" />
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             {stages.map((stage, index) => (
               <div key={stage.id} className="relative">
-                <div className="flex items-start">
+                <div className="flex">
                   {/* Stage indicator dot */}
-                  <div className="absolute left-3 -translate-x-1/2 mt-1.5">
+                  <div className="relative flex-shrink-0 mt-1">
                     {stage.completed ? (
-                      <CheckCircle2 className="h-6 w-6 text-matcha bg-white rounded-full" />
+                      <CheckCircle2 className="h-[26px] w-[26px] text-matcha" />
                     ) : stage.current ? (
-                      <MapPin className="h-6 w-6 text-vermilion bg-white rounded-full" />
+                      <MapPin className="h-[26px] w-[26px] text-vermilion" />
                     ) : (
                       <Circle className={cn(
-                        "h-6 w-6 bg-white rounded-full",
+                        "h-[26px] w-[26px]",
                         index <= stages.findIndex(s => s.current) ? "text-gray-400" : "text-gray-300"
                       )} />
                     )}
@@ -106,8 +106,8 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
                   
                   {/* Stage content */}
                   <div className={cn(
-                    "ml-10 pb-2 w-full",
-                    stage.current && "bg-gray-50 p-4 rounded-lg -ml-1"
+                    "ml-5 w-full",
+                    stage.current ? "pb-6" : "pb-0"
                   )}>
                     <h3 className={cn(
                       "text-lg font-medium",
@@ -117,11 +117,11 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
                     )}>
                       {stage.title}
                     </h3>
-                    <p className="text-gray-500 mt-1 text-sm">{stage.description}</p>
+                    <p className="text-gray-500 mt-1">{stage.description}</p>
                     
-                    {/* Progress indicator for current stage */}
-                    {(stage.current || stage.completed) && stage.progress > 0 && (
-                      <div className="mt-3">
+                    {/* Progress indicator for current or completed stage */}
+                    {(stage.current || (stage.completed && index === 0)) && stage.progress > 0 && (
+                      <div className="mt-4">
                         <div className="flex justify-between items-center text-xs mb-1">
                           <span className="text-gray-600 font-medium">Progress</span>
                           <span className="text-gray-600">{Math.round(stage.progress)}%</span>
