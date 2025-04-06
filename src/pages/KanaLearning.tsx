@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Book, ArrowLeft, Settings } from 'lucide-react';
+import { Book, ArrowLeft, Settings, Keyboard, MousePointer2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,7 @@ import { KanaType, KanaCharacter, PracticeResult, KanaPracticeResult } from '@/t
 import CharacterGrid from '@/components/kana/CharacterGrid';
 import PracticeInterface from '@/components/practice/PracticeInterface';
 import PracticeResults from '@/components/practice/PracticeResults';
+import TypingPractice from '@/components/practice/TypingPractice';
 import { useToast } from '@/hooks/use-toast';
 
 const KanaLearning: React.FC = () => {
@@ -18,8 +19,9 @@ const KanaLearning: React.FC = () => {
   const { toast } = useToast();
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
   const [kanaList, setKanaList] = useState<KanaCharacter[]>([]);
-  const [practiceType, setPracticeType] = useState<'recognition' | 'matching'>('recognition');
+  const [practiceType, setPracticeType] = useState<'recognition' | 'typing'>('recognition');
   const [showPractice, setShowPractice] = useState(false);
+  const [showTypingPractice, setShowTypingPractice] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [practiceResults, setPracticeResults] = useState<PracticeResult | null>(null);
   const [currentKanaType, setCurrentKanaType] = useState<KanaType>('hiragana');
@@ -54,12 +56,17 @@ const KanaLearning: React.FC = () => {
   };
 
   const handlePracticeStart = () => {
-    setShowPractice(true);
+    if (practiceType === 'recognition') {
+      setShowPractice(true);
+    } else {
+      setShowTypingPractice(true);
+    }
     setShowResults(false);
   };
 
   const handlePracticeCancel = () => {
     setShowPractice(false);
+    setShowTypingPractice(false);
   };
 
   const handlePracticeComplete = (results: PracticeResult) => {
@@ -71,9 +78,9 @@ const KanaLearning: React.FC = () => {
       correct: result.correct,
       date: new Date(),
       kana_type: currentKanaType,
-      correct_count: results.correct,
-      incorrect_count: results.incorrect,
-      total_questions: results.total,
+      correct_count: results.correctAnswers,
+      incorrect_count: results.totalQuestions - results.correctAnswers,
+      total_questions: results.totalQuestions,
       accuracy: results.accuracy,
       duration_seconds: 0
     }));
@@ -82,6 +89,84 @@ const KanaLearning: React.FC = () => {
     
     setShowResults(true);
     setPracticeResults(results);
+    setShowPractice(false);
+    setShowTypingPractice(false);
+  };
+
+  const handlePracticeAgain = () => {
+    setShowResults(false);
+    if (practiceType === 'recognition') {
+      setShowPractice(true);
+    } else {
+      setShowTypingPractice(true);
+    }
+  };
+
+  const renderPracticeSection = () => {
+    const bgColorClass = kanaType === 'hiragana' ? 'bg-matcha/5' : 'bg-vermilion/5';
+    
+    return (
+      <div className={`mb-6 p-4 ${bgColorClass} rounded-lg`}>
+        <h3 className="text-sm font-medium mb-2">Practice {kanaType === 'hiragana' ? 'Hiragana' : 'Katakana'}</h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Choose your practice method and customize your settings.
+        </p>
+        
+        <div className="mb-4">
+          <Label className="text-xs mb-2 block">Practice Mode</Label>
+          <div className="flex gap-2">
+            <Button 
+              variant={practiceType === 'recognition' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setPracticeType('recognition')}
+              className="flex items-center gap-1"
+            >
+              <MousePointer2 size={14} />
+              Multiple Choice
+            </Button>
+            <Button 
+              variant={practiceType === 'typing' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setPracticeType('typing')}
+              className="flex items-center gap-1"
+            >
+              <Keyboard size={14} />
+              Typing Practice
+            </Button>
+          </div>
+        </div>
+        
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="character-size" className="text-xs">Character Size</Label>
+            <Slider
+              id="character-size"
+              defaultValue={[50]}
+              max={100}
+              step={10}
+              onValueChange={(value) => setPracticeCharSize(value[0])}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="character-count" className="text-xs">Character Count</Label>
+            <Slider
+              id="character-count"
+              defaultValue={[10]}
+              max={50}
+              step={5}
+              onValueChange={(value) => setPracticeCharCount(value[0])}
+            />
+          </div>
+        </div>
+        
+        <div className="mt-4 flex justify-between">
+          <Button onClick={handlePracticeStart}>
+            Start {practiceType === 'recognition' ? 'Multiple Choice' : 'Typing'} Practice
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -176,40 +261,7 @@ const KanaLearning: React.FC = () => {
               
               <CharacterGrid kanaType="hiragana" />
               
-              <div className="mb-6 p-4 bg-matcha/5 rounded-lg">
-                <h3 className="text-sm font-medium mb-2">Practice Hiragana</h3>
-                <p className="text-xs text-muted-foreground">
-                  Practice recognizing and matching hiragana characters.
-                </p>
-                
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="character-size" className="text-xs">Character Size</Label>
-                    <Slider
-                      id="character-size"
-                      defaultValue={[50]}
-                      max={100}
-                      step={10}
-                      onValueChange={(value) => setPracticeCharSize(value[0])}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="character-count" className="text-xs">Character Count</Label>
-                    <Slider
-                      id="character-count"
-                      defaultValue={[10]}
-                      max={50}
-                      step={5}
-                      onValueChange={(value) => setPracticeCharCount(value[0])}
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4 flex justify-between">
-                  <Button onClick={handlePracticeStart}>Start Practice</Button>
-                </div>
-              </div>
+              {renderPracticeSection()}
             </div>
           </TabsContent>
           
@@ -246,40 +298,7 @@ const KanaLearning: React.FC = () => {
               
               <CharacterGrid kanaType="katakana" />
               
-              <div className="mb-6 p-4 bg-vermilion/5 rounded-lg">
-                <h3 className="text-sm font-medium mb-2">Practice Katakana</h3>
-                <p className="text-xs text-muted-foreground">
-                  Practice recognizing and matching katakana characters.
-                </p>
-                
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="character-size" className="text-xs">Character Size</Label>
-                    <Slider
-                      id="character-size"
-                      defaultValue={[50]}
-                      max={100}
-                      step={10}
-                      onValueChange={(value) => setPracticeCharSize(value[0])}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="character-count" className="text-xs">Character Count</Label>
-                    <Slider
-                      id="character-count"
-                      defaultValue={[10]}
-                      max={50}
-                      step={5}
-                      onValueChange={(value) => setPracticeCharCount(value[0])}
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4 flex justify-between">
-                  <Button onClick={handlePracticeStart}>Start Practice</Button>
-                </div>
-              </div>
+              {renderPracticeSection()}
             </div>
           </TabsContent>
         </Tabs>
@@ -287,8 +306,17 @@ const KanaLearning: React.FC = () => {
         {showPractice && (
           <PracticeInterface
             kanaType={kanaType}
-            practiceType={practiceType}
+            practiceType="recognition"
             characterSize={practiceCharSize}
+            characterCount={practiceCharCount}
+            onComplete={handlePracticeComplete}
+            onCancel={handlePracticeCancel}
+          />
+        )}
+        
+        {showTypingPractice && (
+          <TypingPractice
+            kanaType={kanaType}
             characterCount={practiceCharCount}
             onComplete={handlePracticeComplete}
             onCancel={handlePracticeCancel}
@@ -299,6 +327,7 @@ const KanaLearning: React.FC = () => {
           <PracticeResults
             results={practiceResults}
             onReturn={() => setShowResults(false)}
+            onPracticeAgain={handlePracticeAgain}
           />
         )}
       </div>

@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 interface PracticeResultsProps {
   results: PracticeResult;
   onReturn: () => void;
+  onPracticeAgain?: () => void;
 }
 
-const PracticeResults: React.FC<PracticeResultsProps> = ({ results, onReturn }) => {
+const PracticeResults: React.FC<PracticeResultsProps> = ({ results, onReturn, onPracticeAgain }) => {
   // Calculate performance metrics
   const accuracy = results.accuracy;
   const correctCount = results.correctAnswers;
@@ -116,13 +117,23 @@ const PracticeResults: React.FC<PracticeResultsProps> = ({ results, onReturn }) 
             Return to Learning
           </Button>
           
-          <Button 
-            onClick={onReturn} 
-            className="flex items-center gap-1"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Practice Again
-          </Button>
+          {onPracticeAgain ? (
+            <Button 
+              onClick={onPracticeAgain} 
+              className="flex items-center gap-1"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Practice Again
+            </Button>
+          ) : (
+            <Button 
+              onClick={onReturn} 
+              className="flex items-center gap-1"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Practice Again
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

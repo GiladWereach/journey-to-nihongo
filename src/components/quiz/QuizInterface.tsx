@@ -1,12 +1,14 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { kanaService } from '@/services/kanaService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
+import { Check, X } from 'lucide-react';
 
 interface QuizInterfaceProps {
   kanaType: KanaType | 'all';
@@ -20,13 +22,13 @@ interface QuizInterfaceProps {
 const QuizInterface: React.FC<QuizInterfaceProps> = ({ 
   kanaType, 
   characterSets,
-  settings,
+  settings = { speedMode: false, audioFeedback: true, showBasicOnly: false, showPreviouslyLearned: true, showTroubleCharacters: false, characterSize: 'large' },
   onComplete, 
   onCancel,
   onEndQuiz
 }) => {
   // If onEndQuiz is provided, use that, otherwise use onComplete
-  const handleCompletion = useCallback((correct: number, total: number) => {
+  const handleCompletion = useCallback((correct: number, total: number, characterResults: Array<{character: string, correct: boolean}>) => {
     if (onEndQuiz) {
       const results: QuizSessionStats = {
         startTime: new Date(),
@@ -34,10 +36,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         totalAttempts: total,
         correctCount: correct,
         incorrectCount: total - correct,
-        currentStreak: 0, // This would be tracked during the quiz
-        longestStreak: 0, // This would be tracked during the quiz
+        currentStreak: 0,
+        longestStreak: currentStreak > longestStreak ? currentStreak : longestStreak,
         accuracy: Math.round((correct / total) * 100),
-        characterResults: []
+        characterResults: characterResults
       };
       onEndQuiz(results);
     } else if (onComplete) {
@@ -47,14 +49,20 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
 
   const { user } = useAuth();
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [kanaList, setKanaList] = useState<KanaCharacter[]>([]);
   const [currentKanaIndex, setCurrentKanaIndex] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
+  const [userInput, setUserInput] = useState<string>('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [userProgress, setUserProgress] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType | 'all'>(kanaType);
+  const [characterResults, setCharacterResults] = useState<Array<{character: string, correct: boolean}>>([]);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+  const [feedback, setFeedback] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
 
   const getKanaByType = useCallback((type: KanaType | 'all'): KanaCharacter[] => {
     if (type === 'all') {
@@ -68,7 +76,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     return kana.sort(() => Math.random() - 0.5);
   }, [getKanaByType, selectedKanaType]);
 
-  // Define getPrioritizedKana before it's used
   const getPrioritizedKana = useCallback(() => {
     // If character sets are provided, use those instead of prioritized kana
     if (characterSets && characterSets.length > 0) {
@@ -158,8 +165,20 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   useEffect(() => {
     if (kanaList.length > 0) {
       generateOptions();
+      // Auto-focus input field in speed mode
+      if (settings.speedMode && inputRef.current) {
+        inputRef.current.focus();
+      }
     }
-  }, [kanaList, currentKanaIndex]);
+  }, [kanaList, currentKanaIndex, settings.speedMode]);
+
+  // Play sound effect when answer is correct/incorrect
+  useEffect(() => {
+    if (isCorrect !== null && settings.audioFeedback) {
+      const sound = new Audio(isCorrect ? '/sounds/correct.mp3' : '/sounds/incorrect.mp3');
+      sound.play().catch(e => console.error('Error playing sound:', e));
+    }
+  }, [isCorrect, settings.audioFeedback]);
 
   const generateOptions = useCallback(() => {
     if (kanaList.length === 0) return;
@@ -183,26 +202,70 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
 
     newOptions = newOptions.sort(() => Math.random() - 0.5);
     setOptions(newOptions);
+    setUserInput('');
+    setFeedback({ show: false, message: '' });
   }, [kanaList, currentKanaIndex, selectedKanaType, getKanaByType]);
 
-  const handleAnswer = (selectedRomaji: string) => {
+  const checkAnswer = (selectedRomaji: string) => {
     const kanaItem = kanaList[currentKanaIndex];
-    const isCorrectSelection = selectedRomaji === kanaItem.romaji;
+    const isCorrectSelection = selectedRomaji.toLowerCase().trim() === kanaItem.romaji.toLowerCase();
     setIsCorrect(isCorrectSelection);
+
+    setCharacterResults([
+      ...characterResults,
+      { character: kanaItem.character, correct: isCorrectSelection }
+    ]);
 
     if (isCorrectSelection) {
       setCorrectCount(correctCount + 1);
+      setCurrentStreak(currentStreak + 1);
+      if (currentStreak + 1 > longestStreak) {
+        setLongestStreak(currentStreak + 1);
+      }
+      
+      if (settings.speedMode) {
+        setFeedback({ 
+          show: true, 
+          message: "Correct!" 
+        });
+        
+        // In speed mode, we automatically move to the next question after a brief delay
+        setTimeout(() => {
+          handleNext();
+        }, 500);
+      }
+    } else {
+      setCurrentStreak(0);
+      setFeedback({ 
+        show: true, 
+        message: `Incorrect. The correct answer is "${kanaItem.romaji}".` 
+      });
+    }
+  };
+
+  const handleMultipleChoiceAnswer = (selectedRomaji: string) => {
+    checkAnswer(selectedRomaji);
+  };
+
+  const handleTypeAnswer = () => {
+    checkAnswer(userInput);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && userInput.trim()) {
+      handleTypeAnswer();
     }
   };
 
   const handleNext = () => {
     setIsCorrect(null);
+    setFeedback({ show: false, message: '' });
 
     if (currentKanaIndex < kanaList.length - 1) {
       setCurrentKanaIndex(currentKanaIndex + 1);
     } else {
       // Use the appropriate completion handler
-      handleCompletion(correctCount, kanaList.length);
+      handleCompletion(correctCount, kanaList.length, characterResults);
     }
   };
 
@@ -249,34 +312,86 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         <div></div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-        {options.map((option, index) => (
-          <Button
-            key={index}
-            onClick={() => handleAnswer(option)}
-            disabled={isCorrect !== null}
-            className={`transition-all duration-200 border-2 ${
-              isCorrect === true && option === kanaItem.romaji
-                ? 'bg-green-500 hover:bg-green-700 text-white border-green-600'
-                : isCorrect === false && option === kanaItem.romaji
-                  ? 'bg-red-500 hover:bg-red-700 text-white border-red-600'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100 border-indigo-200 dark:border-indigo-700'
-                }`}
-          >
-            {option}
-          </Button>
-        ))}
-      </div>
+      {settings.speedMode ? (
+        <div className="max-w-md mx-auto space-y-4">
+          <div className="flex flex-col items-center">
+            <p className="text-sm text-gray-500 mb-2">Type the romaji for this character:</p>
+            <div className="w-full flex space-x-2">
+              <Input 
+                ref={inputRef}
+                type="text" 
+                value={userInput} 
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                placeholder="Type romaji here..."
+                disabled={isCorrect !== null}
+                className="flex-1"
+                autoComplete="off"
+              />
+              <Button 
+                onClick={handleTypeAnswer} 
+                disabled={!userInput.trim() || isCorrect !== null}
+              >
+                Check
+              </Button>
+            </div>
+          </div>
+          
+          {feedback.show && (
+            <div className={`p-3 rounded-md text-center ${
+              isCorrect ? 'bg-green-50 border border-green-200 text-green-700' : 
+              'bg-red-50 border border-red-200 text-red-700'
+            }`}>
+              <div className="flex items-center justify-center gap-2">
+                {isCorrect ? 
+                  <Check className="h-4 w-4" /> : 
+                  <X className="h-4 w-4" />
+                }
+                <p>{feedback.message}</p>
+              </div>
+            </div>
+          )}
+          
+          {isCorrect === false && (
+            <div className="text-center">
+              <Button onClick={handleNext}>
+                Next Question
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+            {options.map((option, index) => (
+              <Button
+                key={index}
+                onClick={() => handleMultipleChoiceAnswer(option)}
+                disabled={isCorrect !== null}
+                className={`transition-all duration-200 border-2 ${
+                  isCorrect === true && option === kanaItem.romaji
+                    ? 'bg-green-500 hover:bg-green-700 text-white border-green-600'
+                    : isCorrect === false && option === kanaItem.romaji
+                      ? 'bg-red-500 hover:bg-red-700 text-white border-red-600'
+                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700 dark:text-indigo-100 border-indigo-200 dark:border-indigo-700'
+                    }`}
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
 
-      <div className="flex justify-center mt-4">
-        <Button
-          onClick={handleNext}
-          className="bg-indigo hover:bg-indigo/90"
-          disabled={isCorrect === null}
-        >
-          Next Question
-        </Button>
-      </div>
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={handleNext}
+              className="bg-indigo hover:bg-indigo/90"
+              disabled={isCorrect === null}
+            >
+              Next Question
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
