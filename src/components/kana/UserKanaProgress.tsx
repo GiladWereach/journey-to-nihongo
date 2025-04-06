@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
-import { UserKanaProgress, KanaCharacter } from '@/types/kana';
+import { KanaCharacter } from '@/types/kana';
 import { kanaProgressService } from '@/services/kanaProgressService';
 import { kanaService } from '@/services/kanaService';
+
+// Import the type with a different name to avoid naming conflict
+import type { UserKanaProgress as UserKanaProgressType } from '@/types/kana';
 
 interface KanaProgressGridProps {
   kanaType: 'hiragana' | 'katakana';
@@ -19,7 +22,7 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
   className 
 }) => {
   const { user } = useAuth();
-  const [progressData, setProgressData] = useState<Map<string, UserKanaProgress>>(new Map());
+  const [progressData, setProgressData] = useState<Map<string, UserKanaProgressType>>(new Map());
   const [kanaCharacters, setKanaCharacters] = useState<KanaCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupedCharacters, setGroupedCharacters] = useState<{[key: string]: KanaCharacter[]}>({});
@@ -41,7 +44,10 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         // Group characters by consonant group
         const grouped: {[key: string]: KanaCharacter[]} = {};
         characters.forEach(char => {
-          const group = char.consonantGroup || 'special';
+          // Extract the consonant group from the character ID
+          // Example: "hiragana-k-a" -> "k" is the consonant group
+          const parts = char.id.split('-');
+          const group = parts.length > 1 ? parts[1] : 'special';
           if (!grouped[group]) {
             grouped[group] = [];
           }
@@ -169,8 +175,16 @@ const UserKanaProgress: React.FC = () => {
         const katakanaStats = await kanaProgressService.getKanaProficiencyStats(user.id, 'katakana');
         
         setStats({
-          hiragana: hiraganaStats,
-          katakana: katakanaStats
+          hiragana: { 
+            learned: hiraganaStats.learned, 
+            total: hiraganaStats.total, 
+            avgProficiency: hiraganaStats.averageProficiency 
+          },
+          katakana: { 
+            learned: katakanaStats.learned, 
+            total: katakanaStats.total, 
+            avgProficiency: katakanaStats.averageProficiency 
+          }
         });
       } catch (error) {
         console.error("Error fetching kana stats:", error);

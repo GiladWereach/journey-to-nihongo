@@ -70,7 +70,7 @@ export const kanaProgressService = {
   getKanaProficiencyStats: async (userId: string, type: 'hiragana' | 'katakana' | 'all'): Promise<{
     learned: number,
     total: number,
-    averageProficiency: number
+    avgProficiency: number
   }> => {
     try {
       const progressMap = await kanaProgressService.getUserProgressAll(userId);
@@ -92,14 +92,14 @@ export const kanaProgressService = {
       return {
         learned: learnedCount,
         total: allKana.length,
-        averageProficiency: learnedCount > 0 ? totalProficiency / learnedCount : 0
+        avgProficiency: learnedCount > 0 ? totalProficiency / learnedCount : 0
       };
     } catch (error) {
       console.error('Error calculating proficiency stats:', error);
       return {
         learned: 0,
         total: 0,
-        averageProficiency: 0
+        avgProficiency: 0
       };
     }
   }

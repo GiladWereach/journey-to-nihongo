@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -192,7 +191,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     setSessionStats(newStats);
     setFeedback('correct');
     
-    // Speed up the feedback for correct answers
     setTimeout(() => {
       setInput('');
       setFeedback('none');
@@ -203,7 +201,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, 250); // Reduced from original
+    }, 250);
   };
   
   const handleWrongAnswer = async () => {
@@ -242,7 +240,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }
       }
       
-      // Speed up the hint display but still give time to read
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -253,7 +250,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 1500); // Reduced from original
+      }, 1500);
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
       
@@ -283,9 +280,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 1500); // Reduced from original
+      }, 1500);
     } else {
-      // Speed up the feedback for incorrect answers
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -293,7 +289,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 500); // Reduced from original
+      }, 500);
     }
     
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
@@ -433,8 +429,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     <span className="text-indigo">{sessionStats.correctCount} correct</span>
                     <span className="text-muted-foreground">{Math.round((sessionStats.correctCount / Math.max(sessionStats.totalAttempts, 1)) * 100)}% accuracy</span>
                   </div>
-                  <Progress value={(sessionStats.currentStreak / 10) * 100} className="h-1 bg-gray-100" 
-                    indicatorClassName={kanaType === 'hiragana' ? 'bg-matcha' : 'bg-vermilion'} />
+                  <Progress 
+                    value={(sessionStats.currentStreak / 10) * 100} 
+                    className={`h-1 bg-gray-100 ${kanaType === 'hiragana' ? 'bg-matcha' : 'bg-vermilion'}`}
+                  />
                 </div>
                 
                 <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full transition-colors ${
