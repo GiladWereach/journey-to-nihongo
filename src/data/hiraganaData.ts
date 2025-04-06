@@ -1187,39 +1187,3 @@ export const hiraganaCharacters: KanaCharacter[] = [
         word: 'ぼく',
         romaji: 'boku',
         meaning: 'I (male)',
-        reading: 'ぼく'
-      },
-      {
-        word: 'ぼうし',
-        romaji: 'boushi',
-        meaning: 'hat',
-        reading: 'ぼうし'
-      }
-    ]
-  },
-
-  // D-row (Variations of T-row with dakuten)
-  {
-    id: 'hiragana-da',
-    character: 'だ',
-    romaji: 'da',
-    type: 'hiragana',
-    stroke_count: 5,
-    stroke_order: ['1', '2', '3', '4', '5'],
-    mnemonic: 'た (ta) with two dots becomes だ (da)',
-    examples: [
-      {
-        word: 'だれ',
-        romaji: 'dare',
-        meaning: 'who',
-        reading: 'だれ'
-      },
-      {
-        word: 'だいがく',
-        romaji: 'daigaku',
-        meaning: 'university',
-        reading: 'だいがく'
-      }
-    ]
-  }
-];
