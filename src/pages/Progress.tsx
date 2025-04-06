@@ -3,20 +3,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { BarChart2, Menu, Clock, PieChart, Award, Calendar, BookOpen, TrendingUp } from 'lucide-react';
+import { BarChart2, Menu } from 'lucide-react';
 import PrimaryNavigation from '@/components/layout/PrimaryNavigation';
 import UserKanaProgress from '@/components/kana/UserKanaProgress';
-import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import { kanaProgressService } from '@/services/kanaProgressService';
 import { kanaService } from '@/services/kanaService';
-import LearningStreakCard from '@/components/progress/LearningStreakCard';
-import MasteryDistributionCard from '@/components/progress/MasteryDistributionCard';
-import ProgressTimelineCard from '@/components/progress/ProgressTimelineCard';
+import ProgressStats from '@/components/progress/ProgressStats';
+import ProgressOverview from '@/components/progress/ProgressOverview';
+import StudySessionsList from '@/components/progress/StudySessionsList';
 import { KanaType } from '@/types/kana';
 
 interface StudySession {
@@ -151,11 +149,8 @@ const Progress: React.FC = () => {
   // Calculate study statistics
   const totalStudyTime = studySessions.reduce((sum, session) => sum + session.duration_minutes, 0);
   const totalSessions = studySessions.length;
-  const avgSessionDuration = totalSessions > 0 ? totalStudyTime / totalSessions : 0;
-  const sessionsByModule = studySessions.reduce((acc, session) => {
-    acc[session.module] = (acc[session.module] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const learnedCharacters = hiraganaStats.level1 + hiraganaStats.level2 + hiraganaStats.level3Plus + 
+                           katakanaStats.level1 + katakanaStats.level2 + katakanaStats.level3Plus;
 
   return (
     <>
@@ -242,128 +237,22 @@ const Progress: React.FC = () => {
               </TabsList>
               
               <TabsContent value="overview" className="animate-fade-in">
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo"></div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
-                            <Clock className="mr-2 h-4 w-4" />
-                            Total Study Time
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">{totalStudyTime} minutes</div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Across {totalSessions} sessions
-                          </p>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            Characters Learned
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">
-                            {hiraganaStats.level1 + hiraganaStats.level2 + hiraganaStats.level3Plus + 
-                             katakanaStats.level1 + katakanaStats.level2 + katakanaStats.level3Plus}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Characters in progress or mastered
-                          </p>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
-                            <Award className="mr-2 h-4 w-4" />
-                            Learning Streak
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">{streakData.currentStreak} days</div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Longest: {streakData.longestStreak} days
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <LearningStreakCard 
-                      currentStreak={streakData.currentStreak}
-                      longestStreak={streakData.longestStreak}
-                      lastPracticeDate={streakData.lastPracticeDate}
-                      className="mb-8"
-                    />
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                      <MasteryDistributionCard 
-                        hiragana={hiraganaStats}
-                        katakana={katakanaStats}
-                      />
-                      
-                      <ProgressTimelineCard data={timelineData} />
-                    </div>
-                    
-                    <Card className="mb-8">
-                      <CardHeader>
-                        <CardTitle className="flex items-center">
-                          <TrendingUp className="mr-2 h-5 w-5" />
-                          Learning Progress
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm font-medium">Hiragana</span>
-                              <span className="text-sm text-muted-foreground">
-                                {Math.round(overallProgress.hiragana)}%
-                              </span>
-                            </div>
-                            <ProgressIndicator progress={overallProgress.hiragana} color="bg-matcha" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm font-medium">Katakana</span>
-                              <span className="text-sm text-muted-foreground">
-                                {Math.round(overallProgress.katakana)}%
-                              </span>
-                            </div>
-                            <ProgressIndicator progress={overallProgress.katakana} color="bg-vermilion" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm font-medium">Basic Kanji</span>
-                              <span className="text-sm text-muted-foreground">
-                                {overallProgress.basic_kanji}%
-                              </span>
-                            </div>
-                            <ProgressIndicator progress={overallProgress.basic_kanji} color="bg-indigo" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm font-medium">Grammar</span>
-                              <span className="text-sm text-muted-foreground">
-                                {overallProgress.grammar}%
-                              </span>
-                            </div>
-                            <ProgressIndicator progress={overallProgress.grammar} color="bg-amber-500" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                )}
+                <ProgressStats 
+                  totalStudyTime={totalStudyTime}
+                  totalSessions={totalSessions}
+                  learnedCharacters={learnedCharacters}
+                  currentStreak={streakData.currentStreak}
+                  longestStreak={streakData.longestStreak}
+                />
+                
+                <ProgressOverview 
+                  hiraganaStats={hiraganaStats}
+                  katakanaStats={katakanaStats}
+                  streakData={streakData}
+                  timelineData={timelineData}
+                  overallProgress={overallProgress}
+                  loading={loading}
+                />
               </TabsContent>
               
               <TabsContent value="kana" className="animate-fade-in">
@@ -371,41 +260,10 @@ const Progress: React.FC = () => {
               </TabsContent>
               
               <TabsContent value="study-sessions" className="animate-fade-in">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Study History</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <div className="flex justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo"></div>
-                      </div>
-                    ) : studySessions.length > 0 ? (
-                      <div className="space-y-4">
-                        {studySessions.map(session => (
-                          <div key={session.id} className="border-b pb-4">
-                            <div className="flex justify-between mb-1">
-                              <span className="font-medium">{session.module}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {new Date(session.created_at || '').toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                {session.topics.join(', ')}
-                              </span>
-                              <span className="text-sm">{session.duration_minutes} minutes</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No study sessions recorded yet.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <StudySessionsList 
+                  studySessions={studySessions}
+                  loading={loading}
+                />
               </TabsContent>
             </Tabs>
           </div>
