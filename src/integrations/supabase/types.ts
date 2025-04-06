@@ -155,6 +155,7 @@ export type Database = {
           accuracy: number | null
           characters_studied: string[]
           completed: boolean | null
+          completed_at: string | null
           created_at: string | null
           end_time: string | null
           id: string
@@ -168,6 +169,7 @@ export type Database = {
           accuracy?: number | null
           characters_studied?: string[]
           completed?: boolean | null
+          completed_at?: string | null
           created_at?: string | null
           end_time?: string | null
           id?: string
@@ -181,6 +183,7 @@ export type Database = {
           accuracy?: number | null
           characters_studied?: string[]
           completed?: boolean | null
+          completed_at?: string | null
           created_at?: string | null
           end_time?: string | null
           id?: string
@@ -380,6 +383,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_kana_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_learning_streaks: {
+        Row: {
+          activity_count: number
+          created_at: string | null
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_count?: number
+          created_at?: string | null
+          date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_count?: number
+          created_at?: string | null
+          date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_learning_streaks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

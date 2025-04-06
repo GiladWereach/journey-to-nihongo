@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
@@ -9,58 +8,34 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { BarChart2, Menu } from 'lucide-react';
 import PrimaryNavigation from '@/components/layout/PrimaryNavigation';
 import UserKanaProgress from '@/components/kana/UserKanaProgress';
-import { supabase } from '@/integrations/supabase/client';
 import { kanaProgressService } from '@/services/kanaProgressService';
 import { kanaService } from '@/services/kanaService';
 import ProgressStats from '@/components/progress/ProgressStats';
 import ProgressOverview from '@/components/progress/ProgressOverview';
 import StudySessionsList from '@/components/progress/StudySessionsList';
+import { progressTrackingService } from '@/services/progressTrackingService';
 import { KanaType } from '@/types/kana';
-
-interface StudySession {
-  id: string;
-  user_id: string;
-  module: string;
-  topics: string[];
-  duration_minutes: number;
-  session_date: string;
-  completed: boolean;
-  performance_score?: number;
-  created_at?: string;
-}
-
-interface KanaMasteryData {
-  level0: number;
-  level1: number;
-  level2: number;
-  level3Plus: number;
-  total: number;
-}
 
 const Progress: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
+  const [studySessions, setStudySessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
-    lastPracticeDate: null as Date | null
+    lastPracticeDate: null
   });
-  const [timelineData, setTimelineData] = useState<Array<{
-    date: string,
-    charactersStudied: number,
-    averageProficiency: number
-  }>>([]);
-  const [hiraganaStats, setHiraganaStats] = useState<KanaMasteryData>({
+  const [timelineData, setTimelineData] = useState([]);
+  const [hiraganaStats, setHiraganaStats] = useState({
     level0: 0,
     level1: 0,
     level2: 0,
     level3Plus: 0,
     total: 0
   });
-  const [katakanaStats, setKatakanaStats] = useState<KanaMasteryData>({
+  const [katakanaStats, setKatakanaStats] = useState({
     level0: 0,
     level1: 0,
     level2: 0,
@@ -73,37 +48,26 @@ const Progress: React.FC = () => {
     basic_kanji: 10,
     grammar: 5
   });
+  const [totalStudyTime, setTotalStudyTime] = useState(0);
   
   useEffect(() => {
     if (!user) return;
     
-    const fetchStudySessions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('study_sessions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        setStudySessions(data || []);
-      } catch (error: any) {
-        console.error('Error fetching study sessions:', error.message);
-      }
-    };
-
     const fetchProgressData = async () => {
       setLoading(true);
       try {
-        // Fetch streak data
-        const streak = await kanaProgressService.getUserLearningStreak(user.id);
+        const streak = await progressTrackingService.getLearningStreak(user.id);
         setStreakData(streak);
         
-        // Fetch timeline data
-        const timeline = await kanaProgressService.getProgressTimeline(user.id, 14);
+        const sessions = await progressTrackingService.getAllStudySessions(user.id);
+        setStudySessions(sessions);
+        
+        const studyTime = await progressTrackingService.calculateTotalStudyTime(user.id, 7);
+        setTotalStudyTime(studyTime);
+        
+        const timeline = await progressTrackingService.getProgressTimeline(user.id, 14);
         setTimelineData(timeline);
         
-        // Fetch mastery distribution
         const hiraganaDistribution = await kanaProgressService.getMasteryDistribution(user.id, 'hiragana');
         const hiraganaTotal = kanaService.getKanaByType('hiragana').length;
         setHiraganaStats({
@@ -118,19 +82,15 @@ const Progress: React.FC = () => {
           total: katakanaTotal
         });
         
-        // Calculate overall progress
         const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
         const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
         
         setOverallProgress({
           hiragana: hiraganaProgress,
           katakana: katakanaProgress,
-          basic_kanji: 10, // Placeholder values
-          grammar: 5       // Placeholder values
+          basic_kanji: 10,
+          grammar: 5
         });
-        
-        // Fetch study sessions
-        await fetchStudySessions();
       } catch (error) {
         console.error('Error fetching progress data:', error);
       } finally {
@@ -146,9 +106,6 @@ const Progress: React.FC = () => {
     return null;
   }
   
-  // Calculate study statistics
-  const totalStudyTime = studySessions.reduce((sum, session) => sum + session.duration_minutes, 0);
-  const totalSessions = studySessions.length;
   const learnedCharacters = hiraganaStats.level1 + hiraganaStats.level2 + hiraganaStats.level3Plus + 
                            katakanaStats.level1 + katakanaStats.level2 + katakanaStats.level3Plus;
 
@@ -157,7 +114,6 @@ const Progress: React.FC = () => {
       <Navbar />
       <div className="min-h-screen pt-24 px-4 bg-softgray/30">
         <div className="max-w-7xl mx-auto flex">
-          {/* Sidebar Navigation for Desktop */}
           <div className="hidden md:block w-64 mr-8">
             <div className="sticky top-24">
               <PrimaryNavigation />
@@ -200,7 +156,6 @@ const Progress: React.FC = () => {
             </div>
           </div>
           
-          {/* Mobile Menu Button */}
           <div className="md:hidden fixed bottom-4 right-4 z-40">
             <Sheet>
               <SheetTrigger asChild>
@@ -220,7 +175,6 @@ const Progress: React.FC = () => {
             </Sheet>
           </div>
           
-          {/* Main Content */}
           <div className="flex-1">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-indigo mb-2">Your Progress</h1>
@@ -239,7 +193,7 @@ const Progress: React.FC = () => {
               <TabsContent value="overview" className="animate-fade-in">
                 <ProgressStats 
                   totalStudyTime={totalStudyTime}
-                  totalSessions={totalSessions}
+                  totalSessions={studySessions.length}
                   learnedCharacters={learnedCharacters}
                   currentStreak={streakData.currentStreak}
                   longestStreak={streakData.longestStreak}
