@@ -3,8 +3,8 @@ import React from 'react';
 import { User } from '@supabase/supabase-js';
 import { NavigateFunction } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import NavLinks from './NavLinks';
 import AuthButtons from './AuthButtons';
+import PrimaryNavigation from '../PrimaryNavigation';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -29,10 +29,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
       )}
     >
       <div className="max-w-7xl mx-auto px-4 space-y-4">
-        <NavLinks 
-          user={user} 
-          className="flex flex-col space-y-4 space-x-0" 
-          onClick={closeMenu} 
+        <PrimaryNavigation 
+          className="flex flex-col space-y-2" 
+          onItemClick={closeMenu} 
         />
         
         <div className="pt-4 pb-2 flex flex-col space-y-3">

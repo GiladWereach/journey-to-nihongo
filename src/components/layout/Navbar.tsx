@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import NavLinks from './navbar/NavLinks';
 import AuthButtons from './navbar/AuthButtons';
 import MobileMenu from './navbar/MobileMenu';
 import DarkModeToggle from './navbar/DarkModeToggle';
@@ -71,8 +70,41 @@ const Navbar: React.FC = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <NavLinks user={user} className="hidden md:flex" />
+        {/* Desktop Navigation - We'll now use buttons for main sections rather than the dropdown pattern */}
+        <div className="hidden md:flex items-center space-x-6">
+          {user && (
+            <div className="flex items-center space-x-6">
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo hover:bg-indigo/10"
+                onClick={() => navigate('/dashboard')}
+              >
+                Dashboard
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo hover:bg-indigo/10"
+                onClick={() => navigate('/learn')}
+              >
+                Learn
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo hover:bg-indigo/10"
+                onClick={() => navigate('/practice')}
+              >
+                Practice
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo hover:bg-indigo/10"
+                onClick={() => navigate('/progress')}
+              >
+                Progress
+              </Button>
+            </div>
+          )}
+        </div>
 
         <div className="hidden md:flex items-center gap-4">
           {/* Dark Mode Toggle */}
@@ -110,7 +142,7 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile menu - Fixed positioning and z-index */}
+      {/* Mobile menu */}
       <MobileMenu 
         isOpen={isMobileMenuOpen} 
         setIsOpen={setIsMobileMenuOpen} 

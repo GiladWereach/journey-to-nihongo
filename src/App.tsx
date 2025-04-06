@@ -9,6 +9,9 @@ import RequireAuth from './components/auth/RequireAuth';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import Learn from './pages/Learn';
+import Practice from './pages/Practice';
+import Progress from './pages/Progress';
 import EditProfile from './pages/EditProfile';
 import Assessment from './pages/Assessment';
 import ResetPassword from './pages/ResetPassword';
@@ -27,12 +30,17 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Learning routes (protected, but accessible for demo) */}
             <Route path="/kana-learning" element={<KanaLearning />} />
             <Route path="/quick-quiz" element={<QuickQuiz />} />
             
             {/* Protected routes */}
             <Route path="/" element={<RequireAuth />}>
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="learn" element={<Learn />} />
+              <Route path="practice" element={<Practice />} />
+              <Route path="progress" element={<Progress />} />
               <Route path="edit-profile" element={<EditProfile />} />
               <Route path="assessment" element={<Assessment />} />
               <Route path="achievements" element={<Achievements />} />
