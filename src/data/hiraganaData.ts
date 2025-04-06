@@ -1187,3 +1187,482 @@ export const hiraganaCharacters: KanaCharacter[] = [
         word: 'ぼく',
         romaji: 'boku',
         meaning: 'I (male)',
+        reading: 'ぼく'
+      },
+      {
+        word: 'ぼうし',
+        romaji: 'boushi',
+        meaning: 'hat',
+        reading: 'ぼうし'
+      }
+    ]
+  },
+
+  // D-row (Variations of T-row with dakuten)
+  {
+    id: 'hiragana-da',
+    character: 'だ',
+    romaji: 'da',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'た (ta) with two dots becomes だ (da)',
+    examples: [
+      {
+        word: 'だれ',
+        romaji: 'dare',
+        meaning: 'who',
+        reading: 'だれ'
+      },
+      {
+        word: 'だいがく',
+        romaji: 'daigaku',
+        meaning: 'university',
+        reading: 'だいがく'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-di',
+    character: 'ぢ',
+    romaji: 'ji',
+    type: 'hiragana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'ち (chi) with two dots becomes ぢ (ji)',
+    examples: [
+      {
+        word: 'はなぢ',
+        romaji: 'hanaji',
+        meaning: 'nosebleed',
+        reading: 'はなぢ'
+      },
+      {
+        word: 'ちぢむ',
+        romaji: 'chijimu',
+        meaning: 'to shrink',
+        reading: 'ちぢむ'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-du',
+    character: 'づ',
+    romaji: 'zu',
+    type: 'hiragana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'つ (tsu) with two dots becomes づ (zu)',
+    examples: [
+      {
+        word: 'つづく',
+        romaji: 'tsuzuku',
+        meaning: 'to continue',
+        reading: 'つづく'
+      },
+      {
+        word: 'みかづき',
+        romaji: 'mikazuki',
+        meaning: 'crescent moon',
+        reading: 'みかづき'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-de',
+    character: 'で',
+    romaji: 'de',
+    type: 'hiragana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'て (te) with two dots becomes で (de)',
+    examples: [
+      {
+        word: 'でんわ',
+        romaji: 'denwa',
+        meaning: 'telephone',
+        reading: 'でんわ'
+      },
+      {
+        word: 'でんしゃ',
+        romaji: 'densha',
+        meaning: 'train',
+        reading: 'でんしゃ'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-do',
+    character: 'ど',
+    romaji: 'do',
+    type: 'hiragana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'と (to) with two dots becomes ど (do)',
+    examples: [
+      {
+        word: 'どこ',
+        romaji: 'doko',
+        meaning: 'where',
+        reading: 'どこ'
+      },
+      {
+        word: 'どうぶつ',
+        romaji: 'doubutsu',
+        meaning: 'animal',
+        reading: 'どうぶつ'
+      }
+    ]
+  },
+
+  // G-row (Variations of K-row with dakuten)
+  {
+    id: 'hiragana-ga',
+    character: 'が',
+    romaji: 'ga',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'か (ka) with two dots becomes が (ga)',
+    examples: [
+      {
+        word: 'がっこう',
+        romaji: 'gakkou',
+        meaning: 'school',
+        reading: 'がっこう'
+      },
+      {
+        word: 'がんばる',
+        romaji: 'ganbaru',
+        meaning: 'to do one\'s best',
+        reading: 'がんばる'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-gi',
+    character: 'ぎ',
+    romaji: 'gi',
+    type: 'hiragana',
+    stroke_count: 6,
+    stroke_order: ['1', '2', '3', '4', '5', '6'],
+    mnemonic: 'き (ki) with two dots becomes ぎ (gi)',
+    examples: [
+      {
+        word: 'ぎんこう',
+        romaji: 'ginkou',
+        meaning: 'bank',
+        reading: 'ぎんこう'
+      },
+      {
+        word: 'かぎ',
+        romaji: 'kagi',
+        meaning: 'key',
+        reading: 'かぎ'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-gu',
+    character: 'ぐ',
+    romaji: 'gu',
+    type: 'hiragana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'く (ku) with two dots becomes ぐ (gu)',
+    examples: [
+      {
+        word: 'ぐんたい',
+        romaji: 'guntai',
+        meaning: 'army',
+        reading: 'ぐんたい'
+      },
+      {
+        word: 'どぐう',
+        romaji: 'doguu',
+        meaning: 'clay figure',
+        reading: 'どぐう'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-ge',
+    character: 'げ',
+    romaji: 'ge',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'け (ke) with two dots becomes げ (ge)',
+    examples: [
+      {
+        word: 'げんき',
+        romaji: 'genki',
+        meaning: 'healthy/energetic',
+        reading: 'げんき'
+      },
+      {
+        word: 'ひげ',
+        romaji: 'hige',
+        meaning: 'beard',
+        reading: 'ひげ'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-go',
+    character: 'ご',
+    romaji: 'go',
+    type: 'hiragana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'こ (ko) with two dots becomes ご (go)',
+    examples: [
+      {
+        word: 'ごはん',
+        romaji: 'gohan',
+        meaning: 'rice/meal',
+        reading: 'ごはん'
+      },
+      {
+        word: 'ごご',
+        romaji: 'gogo',
+        meaning: 'afternoon',
+        reading: 'ごご'
+      }
+    ]
+  },
+
+  // Z-row (Variations of S-row with dakuten)
+  {
+    id: 'hiragana-za',
+    character: 'ざ',
+    romaji: 'za',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'さ (sa) with two dots becomes ざ (za)',
+    examples: [
+      {
+        word: 'ざっし',
+        romaji: 'zasshi',
+        meaning: 'magazine',
+        reading: 'ざっし'
+      },
+      {
+        word: 'かざる',
+        romaji: 'kazaru',
+        meaning: 'to decorate',
+        reading: 'かざる'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-ji',
+    character: 'じ',
+    romaji: 'ji',
+    type: 'hiragana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'し (shi) with two dots becomes じ (ji)',
+    examples: [
+      {
+        word: 'じしょ',
+        romaji: 'jisho',
+        meaning: 'dictionary',
+        reading: 'じしょ'
+      },
+      {
+        word: 'じかん',
+        romaji: 'jikan',
+        meaning: 'time',
+        reading: 'じかん'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-zu',
+    character: 'ず',
+    romaji: 'zu',
+    type: 'hiragana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'す (su) with two dots becomes ず (zu)',
+    examples: [
+      {
+        word: 'みず',
+        romaji: 'mizu',
+        meaning: 'water',
+        reading: 'みず'
+      },
+      {
+        word: 'ちず',
+        romaji: 'chizu',
+        meaning: 'map',
+        reading: 'ちず'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-ze',
+    character: 'ぜ',
+    romaji: 'ze',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'せ (se) with two dots becomes ぜ (ze)',
+    examples: [
+      {
+        word: 'ぜんぶ',
+        romaji: 'zenbu',
+        meaning: 'all/entire',
+        reading: 'ぜんぶ'
+      },
+      {
+        word: 'かぜ',
+        romaji: 'kaze',
+        meaning: 'wind/cold',
+        reading: 'かぜ'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-zo',
+    character: 'ぞ',
+    romaji: 'zo',
+    type: 'hiragana',
+    stroke_count: 3,
+    stroke_order: ['1', '2', '3'],
+    mnemonic: 'そ (so) with two dots becomes ぞ (zo)',
+    examples: [
+      {
+        word: 'ぞう',
+        romaji: 'zou',
+        meaning: 'elephant',
+        reading: 'ぞう'
+      },
+      {
+        word: 'はなぞの',
+        romaji: 'hanazono',
+        meaning: 'flower garden',
+        reading: 'はなぞの'
+      }
+    ]
+  },
+
+  // P-row (Variations of H-row with handakuten)
+  {
+    id: 'hiragana-pa',
+    character: 'ぱ',
+    romaji: 'pa',
+    type: 'hiragana',
+    stroke_count: 4,
+    stroke_order: ['1', '2', '3', '4'],
+    mnemonic: 'は (ha) with a circle becomes ぱ (pa)',
+    examples: [
+      {
+        word: 'ぱん',
+        romaji: 'pan',
+        meaning: 'bread',
+        reading: 'ぱん'
+      },
+      {
+        word: 'ぱーてぃー',
+        romaji: 'paati',
+        meaning: 'party',
+        reading: 'ぱーてぃー'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-pi',
+    character: 'ぴ',
+    romaji: 'pi',
+    type: 'hiragana',
+    stroke_count: 2,
+    stroke_order: ['1', '2'],
+    mnemonic: 'ひ (hi) with a circle becomes ぴ (pi)',
+    examples: [
+      {
+        word: 'ぴあの',
+        romaji: 'piano',
+        meaning: 'piano',
+        reading: 'ぴあの'
+      },
+      {
+        word: 'ぴかぴか',
+        romaji: 'pikapika',
+        meaning: 'sparkly',
+        reading: 'ぴかぴか'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-pu',
+    character: 'ぷ',
+    romaji: 'pu',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'ふ (fu) with a circle becomes ぷ (pu)',
+    examples: [
+      {
+        word: 'ぷーる',
+        romaji: 'puuru',
+        meaning: 'swimming pool',
+        reading: 'ぷーる'
+      },
+      {
+        word: 'ぷりん',
+        romaji: 'purin',
+        meaning: 'pudding',
+        reading: 'ぷりん'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-pe',
+    character: 'ぺ',
+    romaji: 'pe',
+    type: 'hiragana',
+    stroke_count: 2,
+    stroke_order: ['1', '2'],
+    mnemonic: 'へ (he) with a circle becomes ぺ (pe)',
+    examples: [
+      {
+        word: 'ぺん',
+        romaji: 'pen',
+        meaning: 'pen',
+        reading: 'ぺん'
+      },
+      {
+        word: 'ぺらぺら',
+        romaji: 'perapera',
+        meaning: 'fluent',
+        reading: 'ぺらぺら'
+      }
+    ]
+  },
+  {
+    id: 'hiragana-po',
+    character: 'ぽ',
+    romaji: 'po',
+    type: 'hiragana',
+    stroke_count: 5,
+    stroke_order: ['1', '2', '3', '4', '5'],
+    mnemonic: 'ほ (ho) with a circle becomes ぽ (po)',
+    examples: [
+      {
+        word: 'ぽけっと',
+        romaji: 'poketto',
+        meaning: 'pocket',
+        reading: 'ぽけっと'
+      },
+      {
+        word: 'ぽすと',
+        romaji: 'posuto',
+        meaning: 'post box',
+        reading: 'ぽすと'
+      }
+    ]
+  }
+];
