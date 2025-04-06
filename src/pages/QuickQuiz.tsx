@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +27,7 @@ const QuickQuiz: React.FC = () => {
     showTroubleCharacters: false,
     characterSize: 'large',
     audioFeedback: true,
-    speedMode: false,
+    speedMode: true,
   });
   const [quizResults, setQuizResults] = useState<QuizSessionStats | null>(null);
   const [userStats, setUserStats] = useState<{
@@ -41,39 +40,29 @@ const QuickQuiz: React.FC = () => {
     totalQuizzes: 0
   });
 
-  // Handle navigation from kana learning page
   useEffect(() => {
     if (location.state?.fromKanaLearning) {
       setSelectedKanaType(location.state.kanaType || 'hiragana');
     }
   }, [location]);
 
-  // Load user's quiz stats when component mounts
   useEffect(() => {
     const loadUserStats = async () => {
       if (user) {
         try {
-          // Get recent quiz sessions
           const recentSessions = await quizService.getRecentQuizSessions(user.id, 20);
-          
-          // Calculate stats from sessions
           if (recentSessions.length > 0) {
             let longestStreak = 0;
             let totalCorrect = 0;
-            
             recentSessions.forEach(session => {
-              // Each session might have streak data we can track
               if (session.streak && session.streak > longestStreak) {
                 longestStreak = session.streak;
               }
-              
-              // Sum up correct answers
               if (session.accuracy) {
                 const correctCount = Math.round((session.accuracy / 100) * session.characters_studied.length);
                 totalCorrect += correctCount;
               }
             });
-            
             setUserStats({
               longestStreak,
               totalCorrect,
@@ -85,11 +74,11 @@ const QuickQuiz: React.FC = () => {
         }
       }
     };
-    
     loadUserStats();
   }, [user]);
 
   const handleStartQuiz = (kanaType: KanaType, characterSets: QuizCharacterSet[], settings: QuizSettings) => {
+    settings.speedMode = true;
     setSelectedKanaType(kanaType);
     setSelectedSets(characterSets);
     setQuizSettings(settings);
@@ -102,13 +91,11 @@ const QuickQuiz: React.FC = () => {
     setQuizState('results');
     setActiveTab('results');
     
-    // Show toast notification
     toast({
       title: "Quiz Complete!",
       description: `You scored ${results.accuracy}% accuracy with ${results.correctCount} correct answers.`,
     });
     
-    // Update user stats with new results
     if (user) {
       setUserStats(prev => ({
         longestStreak: Math.max(prev.longestStreak, results.longestStreak),
@@ -121,13 +108,6 @@ const QuickQuiz: React.FC = () => {
   const handleReturnToSetup = () => {
     setQuizState('setup');
     setActiveTab('setup');
-  };
-
-  const toggleSpeedMode = () => {
-    setQuizSettings({
-      ...quizSettings,
-      speedMode: !quizSettings.speedMode
-    });
   };
 
   return (
@@ -249,24 +229,15 @@ const QuickQuiz: React.FC = () => {
               )}
               
               <div className="mb-6 p-4 bg-indigo/5 rounded-lg">
-                <h3 className="text-sm font-medium mb-2">Quiz Mode</h3>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="speed-mode"
-                      checked={quizSettings.speedMode}
-                      onCheckedChange={toggleSpeedMode}
-                    />
-                    <Label htmlFor="speed-mode" className="flex items-center gap-1">
-                      <Zap size={14} className={quizSettings.speedMode ? "text-indigo" : "text-muted-foreground"} />
-                      Speed Mode
-                    </Label>
+                <h3 className="text-sm font-medium mb-2">Quick Quiz Mode</h3>
+                <div className="flex items-center space-x-4 mb-2">
+                  <Zap size={18} className="text-indigo" />
+                  <div>
+                    <p className="text-sm font-medium">Speed Typing Mode</p>
+                    <p className="text-xs text-muted-foreground">
+                      Type the romaji for each character. Correct answers will automatically advance to the next question.
+                    </p>
                   </div>
-                  <span className="text-xs text-muted-foreground max-w-[60%]">
-                    {quizSettings.speedMode ? 
-                      "Type the correct romaji to automatically advance. Instant feedback." : 
-                      "Click Check button to validate your answer. More time to think."}
-                  </span>
                 </div>
               </div>
               
@@ -278,12 +249,10 @@ const QuickQuiz: React.FC = () => {
             {quizState === 'active' && (
               <QuizInterface 
                 kanaType={selectedKanaType}
-                characterSets={selectedSets.map(set => ({
-                  ...set,
-                  name: set.name.replace(' Group', '') // Remove "Group" from displayed names
-                }))}
+                characterSets={selectedSets}
                 settings={quizSettings}
                 onEndQuiz={handleEndQuiz}
+                onCancel={handleReturnToSetup}
               />
             )}
           </TabsContent>

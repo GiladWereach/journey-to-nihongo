@@ -54,7 +54,13 @@ const TypingPractice: React.FC<TypingPracticeProps> = ({
   }, [isCorrect]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInput(e.target.value);
+    const value = e.target.value;
+    setUserInput(value);
+    
+    // Auto-check if the input matches the romaji
+    if (characters.length && value.toLowerCase().trim() === characters[currentIndex].romaji.toLowerCase()) {
+      checkAnswer();
+    }
   };
 
   const checkAnswer = () => {
@@ -91,6 +97,13 @@ const TypingPractice: React.FC<TypingPracticeProps> = ({
       setUserInput('');
       setIsCorrect(null);
       setFeedback('');
+      
+      // Ensure input is focused
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 50);
     } else {
       // Practice completed
       const practiceResult: PracticeResult = {
@@ -98,12 +111,12 @@ const TypingPractice: React.FC<TypingPracticeProps> = ({
         totalQuestions: characters.length,
         correctAnswers: correctCount,
         characterResults: results,
-        // Add the missing properties required by PracticeResult type
+        // Add the required properties for PracticeResult type
         correct: correctCount,
         incorrect: characters.length - correctCount,
         total: characters.length,
         kanaType: kanaType,
-        practiceType: 'recognition'
+        practiceType: 'typing'
       };
       onComplete(practiceResult);
     }
@@ -161,6 +174,7 @@ const TypingPractice: React.FC<TypingPracticeProps> = ({
                   className="flex-1"
                   disabled={isCorrect !== null}
                   autoComplete="off"
+                  autoFocus
                 />
                 
                 <Button 

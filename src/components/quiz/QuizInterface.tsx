@@ -245,6 +245,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     checkAnswer(userInput);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUserInput(value);
+    
+    if (settings.speedMode && kanaList.length && 
+        value.toLowerCase().trim() === kanaList[currentKanaIndex].romaji.toLowerCase()) {
+      checkAnswer(value);
+    }
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && userInput.trim()) {
       handleTypeAnswer();
@@ -254,9 +264,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const handleNext = () => {
     setIsCorrect(null);
     setFeedback({ show: false, message: '' });
+    setUserInput('');
 
     if (currentKanaIndex < kanaList.length - 1) {
       setCurrentKanaIndex(currentKanaIndex + 1);
+      
+      setTimeout(() => {
+        if (settings.speedMode && inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 50);
     } else {
       handleCompletion(correctCount, kanaList.length, characterResults);
     }
@@ -314,12 +331,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                 ref={inputRef}
                 type="text" 
                 value={userInput} 
-                onChange={(e) => setUserInput(e.target.value)}
+                onChange={handleInputChange}
                 onKeyDown={handleInputKeyDown}
                 placeholder="Type romaji here..."
                 disabled={isCorrect !== null}
                 className="flex-1"
                 autoComplete="off"
+                autoFocus
               />
               <Button 
                 onClick={handleTypeAnswer} 

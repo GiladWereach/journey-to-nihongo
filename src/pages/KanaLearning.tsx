@@ -107,63 +107,79 @@ const KanaLearning: React.FC = () => {
     
     return (
       <div className={`mb-6 p-4 ${bgColorClass} rounded-lg`}>
-        <h3 className="text-sm font-medium mb-2">Practice {kanaType === 'hiragana' ? 'Hiragana' : 'Katakana'}</h3>
-        <p className="text-xs text-muted-foreground mb-4">
-          Choose your practice method and customize your settings.
-        </p>
+        <h3 className="text-lg font-medium mb-2">Practice {kanaType === 'hiragana' ? 'Hiragana' : 'Katakana'}</h3>
         
-        <div className="mb-4">
-          <Label className="text-xs mb-2 block">Practice Mode</Label>
-          <div className="flex gap-2">
+        <div className="grid md:grid-cols-2 gap-6 mt-4">
+          <div className="border rounded-lg p-4 bg-white shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <MousePointer2 size={18} className="text-indigo" />
+              <h4 className="font-medium">Multiple Choice Practice</h4>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Choose the correct romaji from 4 options.
+            </p>
             <Button 
-              variant={practiceType === 'recognition' ? 'default' : 'outline'} 
+              onClick={() => {
+                setPracticeType('recognition');
+                handlePracticeStart();
+              }}
+              variant="default"
               size="sm"
-              onClick={() => setPracticeType('recognition')}
-              className="flex items-center gap-1"
+              className="w-full"
             >
-              <MousePointer2 size={14} />
-              Multiple Choice
+              Start Multiple Choice Practice
             </Button>
-            <Button 
-              variant={practiceType === 'typing' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setPracticeType('typing')}
-              className="flex items-center gap-1"
-            >
-              <Keyboard size={14} />
-              Typing Practice
-            </Button>
-          </div>
-        </div>
-        
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="character-size" className="text-xs">Character Size</Label>
-            <Slider
-              id="character-size"
-              defaultValue={[50]}
-              max={100}
-              step={10}
-              onValueChange={(value) => setPracticeCharSize(value[0])}
-            />
           </div>
           
-          <div>
-            <Label htmlFor="character-count" className="text-xs">Character Count</Label>
-            <Slider
-              id="character-count"
-              defaultValue={[10]}
-              max={50}
-              step={5}
-              onValueChange={(value) => setPracticeCharCount(value[0])}
-            />
+          <div className="border rounded-lg p-4 bg-white shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <Keyboard size={18} className="text-indigo" />
+              <h4 className="font-medium">Typing Practice</h4>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Type the romaji for each character. Correct answers automatically advance.
+            </p>
+            <Button 
+              onClick={() => {
+                setPracticeType('typing');
+                handlePracticeStart();
+              }}
+              variant="default"
+              size="sm"
+              className="w-full"
+            >
+              Start Typing Practice
+            </Button>
           </div>
         </div>
         
-        <div className="mt-4 flex justify-between">
-          <Button onClick={handlePracticeStart}>
-            Start {practiceType === 'recognition' ? 'Multiple Choice' : 'Typing'} Practice
-          </Button>
+        <div className="mt-6">
+          <h4 className="text-sm font-medium mb-2">Practice Settings</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="character-count" className="text-xs">Number of Characters</Label>
+              <Slider
+                id="character-count"
+                defaultValue={[10]}
+                max={50}
+                step={5}
+                onValueChange={(value) => setPracticeCharCount(value[0])}
+              />
+              <p className="text-xs text-gray-500 mt-1">{practiceCharCount} characters</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="character-size" className="text-xs">Character Size</Label>
+              <Slider
+                id="character-size"
+                defaultValue={[50]}
+                max={100}
+                step={10}
+                onValueChange={(value) => setPracticeCharSize(value[0])}
+              />
+              <p className="text-xs text-gray-500 mt-1">{practiceCharSize}% size</p>
+            </div>
+          </div>
         </div>
       </div>
     );
