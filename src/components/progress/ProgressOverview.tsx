@@ -7,6 +7,7 @@ import LearningStreakCard from '@/components/progress/LearningStreakCard';
 import MasteryDistributionCard from '@/components/progress/MasteryDistributionCard';
 import ProgressTimelineCard from '@/components/progress/ProgressTimelineCard';
 import LearningPathProgress from '@/components/progress/LearningPathProgress';
+import { Separator } from '@/components/ui/separator';
 
 interface ProgressOverviewProps {
   hiraganaStats: {
@@ -59,12 +60,11 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
   }
 
   return (
-    <>
+    <div className="space-y-8">
       <LearningStreakCard 
         currentStreak={streakData.currentStreak}
         longestStreak={streakData.longestStreak}
         lastPracticeDate={streakData.lastPracticeDate}
-        className="mb-8"
       />
       
       <LearningPathProgress
@@ -72,10 +72,9 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
         katakanaProgress={overallProgress.katakana}
         basicKanjiProgress={overallProgress.basic_kanji}
         grammarProgress={overallProgress.grammar}
-        className="mb-8"
       />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MasteryDistributionCard 
           hiragana={hiraganaStats}
           katakana={katakanaStats}
@@ -84,15 +83,15 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
         <ProgressTimelineCard data={timelineData} />
       </div>
       
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center text-2xl font-semibold">
             <TrendingUp className="mr-2 h-5 w-5" />
             Learning Progress
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">Hiragana</span>
@@ -100,7 +99,11 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
                   {Math.round(overallProgress.hiragana)}%
                 </span>
               </div>
-              <ProgressIndicator progress={overallProgress.hiragana} color="bg-matcha" />
+              <ProgressIndicator 
+                progress={overallProgress.hiragana} 
+                color="bg-matcha" 
+                size="md"
+              />
             </div>
             <div>
               <div className="flex justify-between mb-1">
@@ -109,30 +112,42 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
                   {Math.round(overallProgress.katakana)}%
                 </span>
               </div>
-              <ProgressIndicator progress={overallProgress.katakana} color="bg-vermilion" />
+              <ProgressIndicator 
+                progress={overallProgress.katakana} 
+                color="bg-vermilion" 
+                size="md"
+              />
             </div>
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">Basic Kanji</span>
                 <span className="text-sm text-muted-foreground">
-                  {overallProgress.basic_kanji}%
+                  {Math.round(overallProgress.basic_kanji)}%
                 </span>
               </div>
-              <ProgressIndicator progress={overallProgress.basic_kanji} color="bg-indigo" />
+              <ProgressIndicator 
+                progress={overallProgress.basic_kanji} 
+                color="bg-indigo" 
+                size="md"
+              />
             </div>
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">Grammar</span>
                 <span className="text-sm text-muted-foreground">
-                  {overallProgress.grammar}%
+                  {Math.round(overallProgress.grammar)}%
                 </span>
               </div>
-              <ProgressIndicator progress={overallProgress.grammar} color="bg-amber-500" />
+              <ProgressIndicator 
+                progress={overallProgress.grammar} 
+                color="bg-amber-500" 
+                size="md"
+              />
             </div>
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 };
 
