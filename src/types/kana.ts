@@ -60,7 +60,7 @@ export interface PracticeResult {
   incorrect: number;
   total: number;
   kanaType: KanaType | 'all';
-  practiceType: 'recognition' | 'matching';
+  practiceType: 'recognition' | 'matching' | 'typing'; // Added 'typing' as a valid practice type
   accuracy: number;
   totalQuestions: number;
   correctAnswers: number;
