@@ -65,7 +65,6 @@ const KanaLearning: React.FC = () => {
   const handlePracticeComplete = (results: PracticeResult) => {
     if (!user) return;
     
-    // Convert practice results to the format expected by the service
     const practiceResults: KanaPracticeResult[] = results.characterResults.map(result => ({
       user_id: user.id,
       characterId: result.character,
@@ -76,10 +75,9 @@ const KanaLearning: React.FC = () => {
       incorrect_count: results.incorrect,
       total_questions: results.total,
       accuracy: results.accuracy,
-      duration_seconds: 0 // This would be calculated in a real app
+      duration_seconds: 0
     }));
     
-    // Send results to the server
     kanaService.updateProgressFromResults(user.id, practiceResults);
     
     setShowResults(true);
