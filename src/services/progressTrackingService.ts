@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseClient } from '@/lib/supabase';
 import { Profile, StudySession, KanaLearningSession } from '@/types/kana';
 
 // Define the shape of the user learning streak record from our new table
@@ -44,14 +44,19 @@ export const progressTrackingService = {
     performanceScore?: number
   ): Promise<StudySession | null> => {
     try {
-      const { data, error } = await supabase
+      console.log("Recording study session:", { userId, module, topics, durationMinutes, performanceScore });
+      
+      // Ensure we have a valid timestamp for the session date
+      const sessionDate = new Date().toISOString();
+      
+      const { data, error } = await supabaseClient
         .from('study_sessions')
         .insert({
           user_id: userId,
           module,
           topics,
           duration_minutes: durationMinutes,
-          session_date: new Date().toISOString(),
+          session_date: sessionDate,
           completed: true,
           performance_score: performanceScore
         })
@@ -84,8 +89,10 @@ export const progressTrackingService = {
       today.setHours(0, 0, 0, 0);
       const todayStr = today.toISOString().split('T')[0];
       
+      console.log("Updating learning streak for user:", userId, "date:", todayStr);
+      
       // Check if there's already an entry for today
-      const { data: existingEntry, error: checkError } = await supabase
+      const { data: existingEntry, error: checkError } = await supabaseClient
         .from('user_learning_streaks')
         .select('*')
         .eq('user_id', userId)
@@ -99,7 +106,7 @@ export const progressTrackingService = {
       
       if (existingEntry) {
         // Update existing entry
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseClient
           .from('user_learning_streaks')
           .update({ 
             activity_count: (existingEntry as UserLearningStreak).activity_count + 1
@@ -110,9 +117,11 @@ export const progressTrackingService = {
           console.error('Error updating streak entry:', updateError);
           return false;
         }
+        
+        console.log("Updated existing streak entry for today");
       } else {
         // Create new entry
-        const { error: insertError } = await supabase
+        const { error: insertError } = await supabaseClient
           .from('user_learning_streaks')
           .insert({
             user_id: userId,
@@ -124,6 +133,55 @@ export const progressTrackingService = {
           console.error('Error creating streak entry:', insertError);
           return false;
         }
+        
+        console.log("Created new streak entry for today");
+      }
+      
+      // Now, update streak counter on the most recent kana learning session
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      // Check if there was activity yesterday to maintain streak
+      const { data: yesterdayData, error: yesterdayError } = await supabaseClient
+        .from('user_learning_streaks')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', yesterdayStr)
+        .single();
+      
+      // Get the current streak value
+      const { data: streaks, error: streaksError } = await supabaseClient
+        .from('kana_learning_sessions')
+        .select('streak')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      let currentStreak = 1; // Default to 1 for a new streak
+      
+      if (!streaksError && streaks && streaks.length > 0) {
+        // If there was activity yesterday, increment the streak
+        if (!yesterdayError && yesterdayData) {
+          currentStreak = (streaks[0].streak || 0) + 1;
+        } else {
+          // Otherwise reset to 1 (today only)
+          currentStreak = 1;
+        }
+      }
+      
+      // Update all sessions created today with the current streak value
+      const { error: sessionUpdateError } = await supabaseClient
+        .from('kana_learning_sessions')
+        .update({ streak: currentStreak })
+        .eq('user_id', userId)
+        .gte('created_at', new Date(today).toISOString())
+        .lt('created_at', new Date(today.setHours(23, 59, 59, 999)).toISOString());
+      
+      if (sessionUpdateError) {
+        console.error('Error updating session streak:', sessionUpdateError);
+      } else {
+        console.log("Updated kana learning sessions with streak value:", currentStreak);
       }
       
       return true;
@@ -134,7 +192,7 @@ export const progressTrackingService = {
   },
 
   /**
-   * Get a user's learning streak information using the new streak tracking table
+   * Get a user's learning streak information using the streak tracking table
    * @param userId User ID
    * @returns Object containing current streak, longest streak, and last practice date
    */
@@ -144,9 +202,10 @@ export const progressTrackingService = {
     lastPracticeDate: Date | null
   }> => {
     try {
+      console.log("Getting learning streak info for user:", userId);
+      
       // Get all user streak entries sorted by date
-      // Use a raw query to avoid TypeScript errors with the new table
-      const { data: streakData, error: streakError } = await supabase
+      const { data: streakData, error: streakError } = await supabaseClient
         .from('user_learning_streaks')
         .select('*')
         .eq('user_id', userId)
@@ -157,6 +216,7 @@ export const progressTrackingService = {
       }
       
       if (!streakData || streakData.length === 0) {
+        console.log("No streak data found for user");
         return {
           currentStreak: 0,
           longestStreak: 0,
@@ -166,12 +226,13 @@ export const progressTrackingService = {
       
       // Cast the data to our interface to ensure type safety
       const typedStreakData = streakData as unknown as UserLearningStreak[];
+      console.log("User streak entries found:", typedStreakData.length);
       
       // Get the latest streak date
       const lastPracticeDate = new Date(typedStreakData[0].date);
+      console.log("Last practice date:", lastPracticeDate);
       
       // Calculate current streak by checking consecutive days
-      let currentStreak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -187,7 +248,13 @@ export const progressTrackingService = {
         checkDate.getTime() === today.getTime() || 
         checkDate.getTime() === yesterday.getTime();
       
+      console.log("Is streak active:", isStreakActive, 
+                  "Today:", today.toISOString(), 
+                  "Yesterday:", yesterday.toISOString(), 
+                  "Last practice:", checkDate.toISOString());
+      
       if (!isStreakActive) {
+        console.log("Streak broken - last practice was not today or yesterday");
         return {
           currentStreak: 0,
           longestStreak: calculateLongestStreak(typedStreakData),
@@ -196,7 +263,7 @@ export const progressTrackingService = {
       }
       
       // Calculate current streak by checking consecutive days from today/yesterday
-      currentStreak = 1; // Start with 1 for the most recent day
+      let currentStreak = 1; // Start with 1 for the most recent day
       
       // Convert all dates to string format for easier comparison
       const dateStrings = typedStreakData.map(entry => 
@@ -205,6 +272,7 @@ export const progressTrackingService = {
       
       // Sort dates in descending order
       dateStrings.sort().reverse();
+      console.log("Date strings for streak calculation:", dateStrings);
       
       // Start from most recent date
       let currentDate = checkDate;
@@ -224,9 +292,13 @@ export const progressTrackingService = {
         }
       }
       
+      console.log("Calculated current streak:", currentStreak);
+      const longestStreak = calculateLongestStreak(typedStreakData);
+      console.log("Calculated longest streak:", longestStreak);
+      
       return {
         currentStreak,
-        longestStreak: calculateLongestStreak(typedStreakData),
+        longestStreak,
         lastPracticeDate
       };
     } catch (error) {
@@ -246,7 +318,7 @@ export const progressTrackingService = {
    */
   getAllStudySessions: async (userId: string): Promise<StudySession[]> => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('study_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -270,7 +342,7 @@ export const progressTrackingService = {
    */
   getKanaLearningSessions: async (userId: string): Promise<KanaLearningSession[]> => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -300,7 +372,7 @@ export const progressTrackingService = {
       startDate.setDate(startDate.getDate() - days);
       
       // Get study sessions
-      const { data: studySessions, error: studyError } = await supabase
+      const { data: studySessions, error: studyError } = await supabaseClient
         .from('study_sessions')
         .select('duration_minutes')
         .eq('user_id', userId)
@@ -311,7 +383,7 @@ export const progressTrackingService = {
       }
       
       // Get kana learning sessions
-      const { data: kanaSessions, error: kanaError } = await supabase
+      const { data: kanaSessions, error: kanaError } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -360,7 +432,7 @@ export const progressTrackingService = {
     try {
       // Get streak data which is now more reliable
       // Use a raw query to avoid TypeScript errors with the new table
-      const { data: streakData, error: streakError } = await supabase
+      const { data: streakData, error: streakError } = await supabaseClient
         .from('user_learning_streaks')
         .select('*')
         .eq('user_id', userId)
@@ -374,7 +446,7 @@ export const progressTrackingService = {
       const typedStreakData = streakData as unknown as UserLearningStreak[];
       
       // Get all kana learning sessions
-      const { data: sessions, error: sessionsError } = await supabase
+      const { data: sessions, error: sessionsError } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -458,7 +530,7 @@ export const progressTrackingService = {
   analyzeStudyHabits: async (userId: string): Promise<StudyHabitsAnalysis> => {
     try {
       // Get all study sessions for the user
-      const { data: studySessions, error: studySessionsError } = await supabase
+      const { data: studySessions, error: studySessionsError } = await supabaseClient
         .from('study_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -469,7 +541,7 @@ export const progressTrackingService = {
       }
       
       // Get kana learning sessions for the user
-      const { data: kanaSessions, error: kanaSessionsError } = await supabase
+      const { data: kanaSessions, error: kanaSessionsError } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -577,7 +649,7 @@ export const progressTrackingService = {
       let frequencyPerWeek = 3.5; // Default
       
       // Get streak data to calculate weekly frequency
-      const { data: streakData, error: streakError } = await supabase
+      const { data: streakData, error: streakError } = await supabaseClient
         .from('user_learning_streaks')
         .select('*')
         .eq('user_id', userId)
@@ -612,6 +684,89 @@ export const progressTrackingService = {
         averageSessionDuration: 15,
         frequencyPerWeek: 3.5
       };
+    }
+  },
+  
+  /**
+   * Manually update user streak data to fix any inconsistencies
+   * @param userId User ID 
+   */
+  repairUserStreakData: async (userId: string): Promise<boolean> => {
+    try {
+      console.log("Repairing user streak data for:", userId);
+      
+      // Get all study sessions sorted by date
+      const { data: studySessions, error: sessionsError } = await supabaseClient
+        .from('study_sessions')
+        .select('session_date')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('session_date', { ascending: true });
+        
+      if (sessionsError) {
+        console.error('Error fetching study sessions:', sessionsError);
+        return false;
+      }
+      
+      // Get all kana learning sessions
+      const { data: kanaSessions, error: kanaError } = await supabaseClient
+        .from('kana_learning_sessions')
+        .select('start_time')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('start_time', { ascending: true });
+        
+      if (kanaError) {
+        console.error('Error fetching kana sessions:', kanaError);
+        return false;
+      }
+      
+      // Combine all session dates and deduplicate
+      const allDates = [
+        ...(studySessions || []).map(s => new Date(s.session_date).toISOString().split('T')[0]),
+        ...(kanaSessions || []).map(s => new Date(s.start_time).toISOString().split('T')[0])
+      ];
+      
+      // Remove duplicates
+      const uniqueDates = [...new Set(allDates)];
+      console.log("Unique practice dates found:", uniqueDates);
+      
+      if (uniqueDates.length === 0) {
+        console.log("No practice data found, nothing to repair");
+        return true;
+      }
+      
+      // Delete existing streak entries
+      const { error: deleteError } = await supabaseClient
+        .from('user_learning_streaks')
+        .delete()
+        .eq('user_id', userId);
+        
+      if (deleteError) {
+        console.error('Error deleting existing streak entries:', deleteError);
+        return false;
+      }
+      
+      // Insert streak entries for each unique date
+      for (const dateStr of uniqueDates) {
+        const { error: insertError } = await supabaseClient
+          .from('user_learning_streaks')
+          .insert({
+            user_id: userId,
+            date: dateStr,
+            activity_count: 1
+          });
+          
+        if (insertError) {
+          console.error(`Error inserting streak entry for date ${dateStr}:`, insertError);
+        }
+      }
+      
+      console.log("Successfully repaired user streak data");
+      return true;
+    } catch (error) {
+      console.error('Error in repairUserStreakData:', error);
+      return false;
     }
   }
 };

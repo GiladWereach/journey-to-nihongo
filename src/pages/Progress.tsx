@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { BarChart2, Menu, RefreshCw } from 'lucide-react';
+import { BarChart2, Menu, RefreshCw, AlertTriangle } from 'lucide-react';
 import PrimaryNavigation from '@/components/layout/PrimaryNavigation';
 import UserKanaProgress from '@/components/kana/UserKanaProgress';
 import { kanaProgressService } from '@/services/kanaProgressService';
@@ -19,6 +19,7 @@ import { progressTrackingService } from '@/services/progressTrackingService';
 import { KanaType } from '@/types/kana';
 import { supabaseClient } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
+import ProgressRepairTools from '@/components/progress/ProgressRepairTools';
 
 const Progress: React.FC = () => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ const Progress: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [showRepairTools, setShowRepairTools] = useState(false);
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
@@ -166,6 +168,9 @@ const Progress: React.FC = () => {
         description: "Please try refreshing the page",
         variant: "destructive"
       });
+      
+      // If there's an error, we may want to show the repair tools
+      setShowRepairTools(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -211,6 +216,9 @@ const Progress: React.FC = () => {
     if (diffMin === 1) return "1 minute ago";
     return `${diffMin} minutes ago`;
   };
+
+  // Check if there's no activity yet
+  const hasNoActivity = studySessions.length === 0 && learnedCharacters === 0;
 
   return (
     <>
@@ -319,6 +327,13 @@ const Progress: React.FC = () => {
                 {refreshing ? 'Refreshing...' : 'Refresh Data'}
               </Button>
             </div>
+            
+            {/* Show diagnostic panel with repair tools */}
+            {(showRepairTools || hasNoActivity) && (
+              <div className="mb-6">
+                <ProgressRepairTools onRepairComplete={fetchProgressData} />
+              </div>
+            )}
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="mb-6">

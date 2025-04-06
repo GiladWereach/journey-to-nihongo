@@ -197,7 +197,7 @@ export const updateKanaCharacterProgress = async (
       });
     } else {
       // Create new progress
-      newProficiency = isCorrect ? 50 : 20;
+      newProficiency = isCorrect ? 20 : 10; // Less aggressive initial value
       
       const { error: insertError } = await supabaseClient
         .from('user_kana_progress')
@@ -205,12 +205,12 @@ export const updateKanaCharacterProgress = async (
           user_id: userId,
           character_id: characterId,
           proficiency: newProficiency,
-          mistake_count: newMistakeCount,
-          total_practice_count: newTotalPracticeCount,
-          consecutive_correct: newConsecutiveCorrect,
+          mistake_count: isCorrect ? 0 : 1,
+          total_practice_count: 1,
+          consecutive_correct: isCorrect ? 1 : 0,
           last_practiced: new Date().toISOString(),
-          review_due: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString(), // Review in 7 days
-          mastery_level: newMasteryLevel
+          review_due: new Date(Date.now() + (3 * 24 * 60 * 60 * 1000)).toISOString(), // Review in 3 days
+          mastery_level: 0
         });
         
       if (insertError) {
@@ -265,8 +265,12 @@ export const completeKanaLearningSession = async (
       await updateKanaCharacterProgress(userId, update.characterId, update.isCorrect);
     }
     
-    // Update the learning streak
-    await progressTrackingService.updateLearningStreak(userId);
+    // Update the learning streak - CRITICAL: Ensure streak is updated!
+    const streakUpdated = await progressTrackingService.updateLearningStreak(userId);
+    if (!streakUpdated) {
+      console.warn("Failed to update learning streak, attempting again...");
+      await progressTrackingService.updateLearningStreak(userId);
+    }
     
     // Record this as a study session for broader progress tracking
     const sessionDuration = 10; // Estimate 10 minutes for a kana session
