@@ -7,13 +7,24 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define a type for the user settings to avoid TypeScript errors
+interface UserSettingsWithLearningGoals {
+  id: string;
+  daily_goal_minutes?: number;
+  weekly_goal_days?: number;
+  // Add other properties that might be part of user_settings
+  created_at?: string;
+  updated_at?: string;
+  // Add any other fields that might be needed
+}
+
 const LearningGoalsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(15);
   const [weeklyGoalDays, setWeeklyGoalDays] = useState(5);
   const [loading, setLoading] = useState(false);
-  const [userSettings, setUserSettings] = useState<any>(null);
+  const [userSettings, setUserSettings] = useState<UserSettingsWithLearningGoals | null>(null);
   
   useEffect(() => {
     const fetchUserSettings = async () => {
@@ -32,12 +43,14 @@ const LearningGoalsSettings: React.FC = () => {
         }
         
         if (data) {
-          setUserSettings(data);
-          if (data.daily_goal_minutes) {
-            setDailyGoalMinutes(data.daily_goal_minutes);
+          setUserSettings(data as UserSettingsWithLearningGoals);
+          // Type assertion to help TypeScript understand the structure
+          const typedData = data as UserSettingsWithLearningGoals;
+          if (typedData.daily_goal_minutes) {
+            setDailyGoalMinutes(typedData.daily_goal_minutes);
           }
-          if (data.weekly_goal_days) {
-            setWeeklyGoalDays(data.weekly_goal_days);
+          if (typedData.weekly_goal_days) {
+            setWeeklyGoalDays(typedData.weekly_goal_days);
           }
         }
       } catch (error) {
@@ -60,7 +73,7 @@ const LearningGoalsSettings: React.FC = () => {
           .update({
             daily_goal_minutes: dailyGoalMinutes,
             weekly_goal_days: weeklyGoalDays
-          })
+          } as UserSettingsWithLearningGoals) // Type assertion to help TypeScript
           .eq('id', user.id);
           
         if (error) {
@@ -74,7 +87,7 @@ const LearningGoalsSettings: React.FC = () => {
             id: user.id,
             daily_goal_minutes: dailyGoalMinutes,
             weekly_goal_days: weeklyGoalDays
-          });
+          } as UserSettingsWithLearningGoals); // Type assertion to help TypeScript
           
         if (error) {
           throw error;

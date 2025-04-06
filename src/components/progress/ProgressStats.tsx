@@ -35,13 +35,13 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
           .eq('id', user.id)
           .single();
           
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        if (error) {
           console.error('Error fetching user settings:', error);
           return;
         }
         
         if (data) {
-          // Calculate weekly goal based on daily goal and days per week
+          // The data object now has the correct properties
           const dailyGoal = data.daily_goal_minutes || 15;
           const daysPerWeek = data.weekly_goal_days || 7;
           setWeeklyGoalMinutes(dailyGoal * daysPerWeek);
