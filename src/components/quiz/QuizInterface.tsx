@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { KanaType, KanaCharacter } from '@/types/kana';
 import { Button } from '@/components/ui/button';
@@ -5,14 +6,45 @@ import { kanaService } from '@/services/kanaService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
 
 interface QuizInterfaceProps {
   kanaType: KanaType | 'all';
-  onComplete: (correct: number, total: number) => void;
-  onCancel: () => void;
+  characterSets?: QuizCharacterSet[];
+  settings?: QuizSettings;
+  onComplete?: (correct: number, total: number) => void;
+  onCancel?: () => void;
+  onEndQuiz?: (results: QuizSessionStats) => void;
 }
 
-const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onCancel }) => {
+const QuizInterface: React.FC<QuizInterfaceProps> = ({ 
+  kanaType, 
+  characterSets,
+  settings,
+  onComplete, 
+  onCancel,
+  onEndQuiz
+}) => {
+  // If onEndQuiz is provided, use that, otherwise use onComplete
+  const handleCompletion = useCallback((correct: number, total: number) => {
+    if (onEndQuiz) {
+      const results: QuizSessionStats = {
+        startTime: new Date(),
+        endTime: new Date(),
+        totalAttempts: total,
+        correctCount: correct,
+        incorrectCount: total - correct,
+        currentStreak: 0, // This would be tracked during the quiz
+        longestStreak: 0, // This would be tracked during the quiz
+        accuracy: Math.round((correct / total) * 100),
+        characterResults: []
+      };
+      onEndQuiz(results);
+    } else if (onComplete) {
+      onComplete(correct, total);
+    }
+  }, [onComplete, onEndQuiz]);
+
   const { user } = useAuth();
   const { toast } = useToast();
   const [kanaList, setKanaList] = useState<KanaCharacter[]>([]);
@@ -35,6 +67,66 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onC
     const kana = getKanaByType(selectedKanaType);
     return kana.sort(() => Math.random() - 0.5);
   }, [getKanaByType, selectedKanaType]);
+
+  // Define getPrioritizedKana before it's used
+  const getPrioritizedKana = useCallback(() => {
+    // If character sets are provided, use those instead of prioritized kana
+    if (characterSets && characterSets.length > 0) {
+      // Flatten all characters from all sets
+      const allCharacters = characterSets.flatMap(set => set.characters);
+      // Convert QuizCharacter to KanaCharacter
+      const kanaCharacters = allCharacters.map(char => {
+        return {
+          id: char.id,
+          character: char.character,
+          romaji: char.romaji,
+          type: char.type as KanaType,
+          stroke_count: 0, // We don't have this info from QuizCharacter
+          stroke_order: [], // We don't have this info from QuizCharacter
+          group: char.group || ''
+        } as KanaCharacter;
+      });
+      return kanaCharacters.sort(() => Math.random() - 0.5);
+    }
+
+    if (userProgress.length === 0) return getRandomKana();
+    
+    // First, get characters with low proficiency or that need review
+    const allKana = getKanaByType(selectedKanaType);
+    const lowProficiencyKana = allKana
+      .filter(kana => {
+        const progress = userProgress.find(p => p.character_id === kana.id);
+        
+        // Filter based on selected kana type
+        if (selectedKanaType !== 'all' && kana.type !== selectedKanaType) return false;
+        
+        // Prioritize characters with low proficiency
+        return !progress || progress.proficiency < 70;
+      })
+      .sort((a, b) => {
+        const progressA = userProgress.find(p => p.character_id === a.id);
+        const progressB = userProgress.find(p => p.character_id === b.id);
+        
+        const practiceA = progressA ? progressA.total_practice_count : 0;
+        const practiceB = progressB ? progressB.total_practice_count : 0;
+        
+        // Sort by practice count (less practiced first)
+        return practiceA - practiceB;
+      });
+    
+    // If we have enough low proficiency kana, use them
+    if (lowProficiencyKana.length >= 5) {
+      return lowProficiencyKana.slice(0, 10);
+    }
+    
+    // Otherwise, supplement with random kana
+    const randomKana = getRandomKana();
+    const combinedKana = [...lowProficiencyKana, ...randomKana]
+      .slice(0, 10)
+      .sort(() => Math.random() - 0.5);
+    
+    return combinedKana;
+  }, [userProgress, selectedKanaType, getRandomKana, getKanaByType, characterSets]);
 
   useEffect(() => {
     const fetchUserProgress = async () => {
@@ -93,47 +185,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onC
     setOptions(newOptions);
   }, [kanaList, currentKanaIndex, selectedKanaType, getKanaByType]);
 
-  // Update reference from total_practice_count to match our interface
-  const getPrioritizedKana = useCallback(() => {
-    if (userProgress.length === 0) return getRandomKana();
-    
-    // First, get characters with low proficiency or that need review
-    const allKana = getKanaByType(selectedKanaType);
-    const lowProficiencyKana = allKana
-      .filter(kana => {
-        const progress = userProgress.find(p => p.character_id === kana.id);
-        
-        // Filter based on selected kana type
-        if (selectedKanaType !== 'all' && kana.type !== selectedKanaType) return false;
-        
-        // Prioritize characters with low proficiency
-        return !progress || progress.proficiency < 70;
-      })
-      .sort((a, b) => {
-        const progressA = userProgress.find(p => p.character_id === a.id);
-        const progressB = userProgress.find(p => p.character_id === b.id);
-        
-        const practiceA = progressA ? progressA.total_practice_count : 0;
-        const practiceB = progressB ? progressB.total_practice_count : 0;
-        
-        // Sort by practice count (less practiced first)
-        return practiceA - practiceB;
-      });
-    
-    // If we have enough low proficiency kana, use them
-    if (lowProficiencyKana.length >= 5) {
-      return lowProficiencyKana.slice(0, 10);
-    }
-    
-    // Otherwise, supplement with random kana
-    const randomKana = getRandomKana();
-    const combinedKana = [...lowProficiencyKana, ...randomKana]
-      .slice(0, 10)
-      .sort(() => Math.random() - 0.5);
-    
-    return combinedKana;
-  }, [userProgress, selectedKanaType, getRandomKana, getKanaByType]);
-
   const handleAnswer = (selectedRomaji: string) => {
     const kanaItem = kanaList[currentKanaIndex];
     const isCorrectSelection = selectedRomaji === kanaItem.romaji;
@@ -150,7 +201,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onC
     if (currentKanaIndex < kanaList.length - 1) {
       setCurrentKanaIndex(currentKanaIndex + 1);
     } else {
-      onComplete(correctCount, kanaList.length);
+      // Use the appropriate completion handler
+      handleCompletion(correctCount, kanaList.length);
     }
   };
 
