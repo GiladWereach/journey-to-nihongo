@@ -153,10 +153,51 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   }, [kanaType, characterSets, settings, user]);
   
   useEffect(() => {
-    if (!isPaused && inputRef.current) {
+    if (inputRef.current && !isPaused) {
       inputRef.current.focus();
     }
-  }, [isPaused, currentCharacterIndex, feedback]);
+    
+    const handleClick = () => {
+      if (inputRef.current && !isPaused && !isTransitioning) {
+        inputRef.current.focus();
+      }
+    };
+    
+    document.addEventListener('click', handleClick);
+    
+    const handleFocus = () => {
+      if (inputRef.current && !isPaused && !isTransitioning) {
+        inputRef.current.focus();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('click', handleClick);
+      window.addEventListener('focus', handleFocus);
+      
+      if (updateTimerRef.current) {
+        clearInterval(updateTimerRef.current);
+      }
+      
+      if (user && pendingProgressUpdates.length > 0) {
+        Promise.all(pendingProgressUpdates.map(update => 
+          quizService.updateKanaProgress(user.id, update.characterId, update.isCorrect)
+        )).catch(error => {
+          console.error('Error batch updating progress:', error);
+        });
+      }
+    };
+  }, [isPaused, isTransitioning, user, pendingProgressUpdates]);
+  
+  useEffect(() => {
+    if (!isPaused && !isTransitioning && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 10);
+    }
+  }, [currentCharacterIndex, feedback, isPaused, isTransitioning]);
   
   const currentCharacter = quizCharacters[currentCharacterIndex];
   
@@ -470,6 +511,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       .slice(0, 3);
   };
   
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!isPaused && !isTransitioning && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }
+  };
+  
   if (!currentCharacter || quizCharacters.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -605,12 +654,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     placeholder="Enter romaji..."
                     value={input}
                     onChange={handleInputChange}
+                    onBlur={handleInputBlur}
                     className={`text-center text-base sm:text-lg ${isPaused || isTransitioning ? 'bg-gray-100' : ''} 
                       border-2 ${kanaType === 'hiragana' ? 'focus:border-matcha' : 'focus:border-vermilion'}`}
                     disabled={isPaused || showHint || isTransitioning}
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck="false"
+                    autoFocus={true}
                   />
                   
                   {!settings.speedMode && (
