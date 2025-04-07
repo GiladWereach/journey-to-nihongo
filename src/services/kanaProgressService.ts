@@ -73,7 +73,22 @@ export const kanaProgressService = {
     avgProficiency: number
   }> => {
     try {
-      const progressMap = await kanaProgressService.getUserProgressAll(userId);
+      // Force a refresh of the progress data from the database
+      const { data, error } = await supabaseClient
+        .from('user_kana_progress')
+        .select('*')
+        .eq('user_id', userId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Create a map for easy lookup
+      const progressMap = new Map<string, any>();
+      data.forEach((progress: any) => {
+        progressMap.set(progress.character_id, progress);
+      });
+      
       const allKana = type === 'all' 
         ? kanaService.getAllKana()
         : kanaService.getKanaByType(type as 'hiragana' | 'katakana');
@@ -104,15 +119,16 @@ export const kanaProgressService = {
     }
   },
   
-  // Get learning streak data
+  // Get learning streak data with a direct database query to ensure it's up-to-date
   getUserLearningStreak: async (userId: string): Promise<{
     currentStreak: number,
     longestStreak: number,
     lastPracticeDate: Date | null
   }> => {
     try {
-      // Get the last 30 days of study sessions
-      const { data: sessions, error } = await supabaseClient
+      // First, make sure any pending study sessions are properly recorded
+      // Get the last 30 days of quiz sessions
+      const { data: quizSessions, error: quizError } = await supabaseClient
         .from('kana_learning_sessions')
         .select('*')
         .eq('user_id', userId)
@@ -120,11 +136,30 @@ export const kanaProgressService = {
         .order('start_time', { ascending: false })
         .limit(30);
         
-      if (error) {
-        throw error;
+      if (quizError) {
+        throw quizError;
       }
       
-      if (!sessions || sessions.length === 0) {
+      // Get the last 30 days of study sessions
+      const { data: studySessions, error: studyError } = await supabaseClient
+        .from('study_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('session_date', { ascending: false })
+        .limit(30);
+        
+      if (studyError) {
+        throw studyError;
+      }
+      
+      // Combine and sort all sessions by date
+      const allSessions = [
+        ...quizSessions.map((s: any) => ({ date: new Date(s.start_time), streak: s.streak || 0 })),
+        ...studySessions.map((s: any) => ({ date: new Date(s.session_date), streak: 0 }))
+      ].sort((a, b) => b.date.getTime() - a.date.getTime());
+      
+      if (allSessions.length === 0) {
         return {
           currentStreak: 0,
           longestStreak: 0,
@@ -133,8 +168,8 @@ export const kanaProgressService = {
       }
       
       // Calculate current streak
-      const lastSession = sessions[0];
-      const lastPracticeDate = new Date(lastSession.start_time);
+      const lastSession = allSessions[0];
+      const lastPracticeDate = lastSession.date;
       const today = new Date();
       
       // Check if the last session was today or yesterday to maintain streak
@@ -143,19 +178,25 @@ export const kanaProgressService = {
         (today.getTime() - lastPracticeDate.getTime()) <= 24 * 60 * 60 * 1000
       );
       
+      // Calculate longest streak
+      const longestStreak = Math.max(
+        ...quizSessions.map((s: any) => s.streak || 0),
+        quizSessions.length > 0 ? 1 : 0
+      );
+      
       // If the streak is broken, return 0 as current streak
       if (!isStreakActive) {
         return {
           currentStreak: 0,
-          longestStreak: lastSession.streak || 0,
-          lastPracticeDate: lastPracticeDate
+          longestStreak,
+          lastPracticeDate
         };
       }
       
       return {
-        currentStreak: lastSession.streak || 1,
-        longestStreak: Math.max(...sessions.map(s => s.streak || 0)),
-        lastPracticeDate: lastPracticeDate
+        currentStreak: Math.max(lastSession.streak || 1, 1),
+        longestStreak,
+        lastPracticeDate
       };
     } catch (error) {
       console.error('Error fetching learning streak:', error);

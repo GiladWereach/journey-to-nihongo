@@ -13,6 +13,7 @@ import UserKanaProgress from '@/components/kana/UserKanaProgress';
 import { KanaType, QuizCharacterSet, QuizSettings, QuizSessionStats } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { kanaProgressService } from '@/services/kanaProgressService';
 
 const QuickQuiz: React.FC = () => {
   const { user } = useAuth();
@@ -71,6 +72,8 @@ const QuickQuiz: React.FC = () => {
               if (session.accuracy) {
                 const correctCount = Math.round((session.accuracy / 100) * session.characters_studied.length);
                 totalCorrect += correctCount;
+              } else if (session.correct_count) {
+                totalCorrect += session.correct_count;
               }
             });
             
@@ -111,6 +114,19 @@ const QuickQuiz: React.FC = () => {
     setQuizResults(results);
     setQuizState('results');
     setActiveTab('results');
+    
+    // Update progress tracking - ensure this is called before showing results
+    if (user) {
+      try {
+        // Record study activity for progress tracking
+        await kanaProgressService.getUserLearningStreak(user.id);
+        
+        // Trigger a reload of the kana progress data
+        await kanaProgressService.getKanaProficiencyStats(user.id, selectedKanaType);
+      } catch (error) {
+        console.error('Error updating progress:', error);
+      }
+    }
     
     // Show toast notification
     toast({

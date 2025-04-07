@@ -162,6 +162,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const currentCharacter = quizCharacters[currentCharacterIndex];
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isTransitioning) return;
+    
     const newInput = e.target.value;
     setInput(newInput);
     
@@ -193,6 +195,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   
   const handleCorrectAnswer = () => {
     if (!currentCharacter || isPaused || isTransitioning) return;
+    
+    // Lock the interface during transition
+    setIsTransitioning(true);
     
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
@@ -229,27 +234,39 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       }]);
     }
     
-    newStats.accuracy = Math.round((newStats.correctCount / (newStats.correctCount + newStats.incorrectCount)) * 100);
+    newStats.accuracy = Math.round((newStats.correctCount / Math.max(newStats.correctCount + newStats.incorrectCount, 1)) * 100);
     setSessionStats(newStats);
     setFeedback('correct');
-    setIsTransitioning(true);
     
+    // Use a longer timeout to ensure the transition is complete before showing next character
     setTimeout(() => {
       setInput('');
       setFeedback('none');
       setShowHint(false);
       setAttemptCount(0);
-      moveToNextCharacter();
-      setIsTransitioning(false);
       
-      if (inputRef.current) {
-        inputRef.current.focus();
+      // Check if this was the last character
+      if (currentCharacterIndex >= quizCharacters.length - 1) {
+        handleEndQuiz();
+      } else {
+        setCurrentCharacterIndex(prevIndex => prevIndex + 1);
       }
-    }, 250);
+      
+      // Delay releasing the transition lock to prevent rushing to next character
+      setTimeout(() => {
+        setIsTransitioning(false);
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+    }, 350); // Slightly longer feedback time to ensure visibility
   };
   
   const handleWrongAnswer = () => {
     if (!currentCharacter || isPaused || isTransitioning) return;
+    
+    // Lock the interface during feedback
+    setIsTransitioning(true);
     
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
@@ -267,7 +284,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     
     if (settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
-      setIsTransitioning(true);
       
       // Create a new character result for this answer
       const newResult: CharacterResult = {
@@ -288,21 +304,30 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }]);
       }
       
+      // Give more time to see the hint before moving on
       setTimeout(() => {
         setInput('');
         setFeedback('none');
         setShowHint(false);
         setAttemptCount(0);
-        moveToNextCharacter();
-        setIsTransitioning(false);
         
-        if (inputRef.current) {
-          inputRef.current.focus();
+        // Check if this was the last character
+        if (currentCharacterIndex >= quizCharacters.length - 1) {
+          handleEndQuiz();
+        } else {
+          setCurrentCharacterIndex(prevIndex => prevIndex + 1);
         }
+        
+        // Delay releasing the transition lock
+        setTimeout(() => {
+          setIsTransitioning(false);
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, 100);
       }, 1500);
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
-      setIsTransitioning(true);
       
       // Create a new character result for this answer
       const newResult: CharacterResult = {
@@ -323,22 +348,34 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }]);
       }
       
+      // Give more time to see the hint before moving on
       setTimeout(() => {
         setInput('');
         setFeedback('none');
         setShowHint(false);
         setAttemptCount(0);
-        moveToNextCharacter();
-        setIsTransitioning(false);
         
-        if (inputRef.current) {
-          inputRef.current.focus();
+        // Check if this was the last character
+        if (currentCharacterIndex >= quizCharacters.length - 1) {
+          handleEndQuiz();
+        } else {
+          setCurrentCharacterIndex(prevIndex => prevIndex + 1);
         }
+        
+        // Delay releasing the transition lock
+        setTimeout(() => {
+          setIsTransitioning(false);
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, 100);
       }, 1500);
     } else {
+      // For early wrong attempts, just clear input and show feedback briefly
       setTimeout(() => {
         setInput('');
         setFeedback('none');
+        setIsTransitioning(false);
         
         if (inputRef.current) {
           inputRef.current.focus();
@@ -346,7 +383,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       }, 500);
     }
     
-    newStats.accuracy = Math.round((newStats.correctCount / (newStats.correctCount + newStats.incorrectCount)) * 100);
+    newStats.accuracy = Math.round((newStats.correctCount / Math.max(newStats.correctCount + newStats.incorrectCount, 1)) * 100);
     setSessionStats(newStats);
   };
   
@@ -368,18 +405,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }
   };
   
-  const moveToNextCharacter = () => {
-    if (currentCharacterIndex >= quizCharacters.length - 1) {
-      // We've gone through all the characters, end the quiz
-      handleEndQuiz();
-      return;
-    }
-    
-    const nextIndex = currentCharacterIndex + 1;
-    setCurrentCharacterIndex(nextIndex);
-  };
-  
   const handleEndQuiz = async () => {
+    // Lock the interface to prevent further input during cleanup
+    setIsTransitioning(true);
+    
     const endTime = new Date();
     const finalStats = {
       ...sessionStats,
@@ -390,6 +419,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     // Make sure accuracy is calculated correctly
     finalStats.accuracy = Math.round((finalStats.correctCount / Math.max(finalStats.correctCount + finalStats.incorrectCount, 1)) * 100);
     
+    // Ensure all pending progress updates are processed
     if (user && pendingProgressUpdates.length > 0) {
       try {
         await Promise.all(pendingProgressUpdates.map(update => 
@@ -406,6 +436,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       clearInterval(updateTimerRef.current);
     }
     
+    // Record the session in the database for progress tracking
     if (user) {
       try {
         await quizService.recordQuizSession(user.id, {
@@ -415,7 +446,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           endTime,
           correctCount: finalStats.correctCount,
           totalAttempts: finalStats.totalAttempts,
-          streak: finalStats.currentStreak
+          streak: finalStats.longestStreak
         });
       } catch (error) {
         console.error('Error recording quiz session:', error);
