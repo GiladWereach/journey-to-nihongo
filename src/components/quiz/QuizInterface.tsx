@@ -42,9 +42,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     characterResults: [],
   });
   
+  const [pendingProgressUpdates, setPendingProgressUpdates] = useState<Array<{
+    characterId: string;
+    isCorrect: boolean;
+  }>>([]);
+  
   const inputRef = useRef<HTMLInputElement>(null);
   const correctAudioRef = useRef<HTMLAudioElement>(null);
   const incorrectAudioRef = useRef<HTMLAudioElement>(null);
+  
+  const updateTimerRef = useRef<number | null>(null);
   
   useEffect(() => {
     const initializeQuiz = async () => {
@@ -112,7 +119,37 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     };
     
     initializeQuiz();
-  }, [kanaType, characterSets, settings, user]);
+    
+    if (user) {
+      const batchUpdateProgress = async () => {
+        if (pendingProgressUpdates.length > 0) {
+          console.log(`Batch updating ${pendingProgressUpdates.length} progress items`);
+          
+          const updates = [...pendingProgressUpdates];
+          setPendingProgressUpdates([]);
+          
+          try {
+            await Promise.all(updates.map(update => 
+              quizService.updateKanaProgress(user.id, update.characterId, update.isCorrect)
+            ));
+          } catch (error) {
+            console.error('Error batch updating progress:', error);
+            setPendingProgressUpdates(prev => [...prev, ...updates]);
+          }
+        }
+      };
+      
+      updateTimerRef.current = window.setInterval(batchUpdateProgress, 5000);
+      
+      return () => {
+        if (updateTimerRef.current) {
+          clearInterval(updateTimerRef.current);
+        }
+        
+        batchUpdateProgress();
+      };
+    }
+  }, [kanaType, characterSets, settings, user, pendingProgressUpdates]);
   
   useEffect(() => {
     if (!isPaused && inputRef.current) {
@@ -152,7 +189,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }
   };
   
-  const handleCorrectAnswer = async () => {
+  const handleCorrectAnswer = () => {
     if (!currentCharacter || isPaused) return;
     
     const newAttemptCount = attemptCount + 1;
@@ -180,11 +217,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     });
     
     if (user) {
-      try {
-        await quizService.updateKanaProgress(user.id, currentCharacter.id, true);
-      } catch (error) {
-        console.error('Error updating progress:', error);
-      }
+      setPendingProgressUpdates(prev => [...prev, {
+        characterId: currentCharacter.id,
+        isCorrect: true
+      }]);
     }
     
     newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
@@ -204,7 +240,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }, 250);
   };
   
-  const handleWrongAnswer = async () => {
+  const handleWrongAnswer = () => {
     if (!currentCharacter || isPaused) return;
     
     const newAttemptCount = attemptCount + 1;
@@ -233,11 +269,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       });
       
       if (user) {
-        try {
-          await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
-        } catch (error) {
-          console.error('Error updating progress:', error);
-        }
+        setPendingProgressUpdates(prev => [...prev, {
+          characterId: currentCharacter.id,
+          isCorrect: false
+        }]);
       }
       
       setTimeout(() => {
@@ -263,11 +298,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       });
       
       if (user) {
-        try {
-          await quizService.updateKanaProgress(user.id, currentCharacter.id, false);
-        } catch (error) {
-          console.error('Error updating progress:', error);
-        }
+        setPendingProgressUpdates(prev => [...prev, {
+          characterId: currentCharacter.id,
+          isCorrect: false
+        }]);
       }
       
       setTimeout(() => {
@@ -326,6 +360,22 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       endTime,
       durationSeconds: Math.round((endTime.getTime() - sessionStats.startTime.getTime()) / 1000),
     };
+    
+    if (user && pendingProgressUpdates.length > 0) {
+      try {
+        await Promise.all(pendingProgressUpdates.map(update => 
+          quizService.updateKanaProgress(user.id, update.characterId, update.isCorrect)
+        ));
+        
+        setPendingProgressUpdates([]);
+      } catch (error) {
+        console.error('Error updating progress before ending quiz:', error);
+      }
+    }
+    
+    if (updateTimerRef.current) {
+      clearInterval(updateTimerRef.current);
+    }
     
     if (user) {
       try {
