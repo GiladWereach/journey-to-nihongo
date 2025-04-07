@@ -1,16 +1,5 @@
 
-// Export all kana-related services for easy import
-export * from './kanaService';
-export * from './kanaLearningService';
-export * from './kanaProgressService';
+import { kanaService } from '@/services/kanaService';
 
-// Re-export specific functions for direct import 
-import { kanaLearningService, updateKanaCharacterProgress, completeKanaLearningSession } from './kanaLearningService';
-import { kanaService } from './kanaService';
-
-export { 
-  kanaLearningService, 
-  updateKanaCharacterProgress, 
-  completeKanaLearningSession,
-  kanaService
-};
+// Re-export the kanaService for use in the app
+export { kanaService };

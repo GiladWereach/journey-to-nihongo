@@ -146,7 +146,9 @@ const Progress = () => {
         };
       }).filter(Boolean) as Array<{ characterId: string; correct: boolean; timestamp: Date }>;
       
-      await kanaService.updateProgressFromResults(user.id, practiceResults);
+      for (const result of practiceResults) {
+        await kanaService.updateProgressFromResults(user.id, result.characterId, result.correct);
+      }
       
       const updatedProgress = await kanaService.getUserKanaProgress(user.id);
       setUserProgress(updatedProgress);
