@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Tool, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Wrench, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseClient } from '@/lib/supabase';
@@ -87,12 +87,46 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
       
       // 3. Recalculate proficiency values
       addRepairDetail('Recalculating proficiency values...');
-      const recalculateResult = await kanaService.recalculateAllProgress(user.id);
       
-      if (recalculateResult) {
+      // Since kanaService.recalculateAllProgress doesn't exist yet, we'll implement a basic version
+      const allCharacters = kanaService.getAllKana();
+      let recalculateSuccess = true;
+      
+      for (const character of allCharacters) {
+        try {
+          // Get the latest progress for this character
+          const { data: progress, error: progressError } = await supabaseClient
+            .from('user_kana_progress')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('character_id', character.id)
+            .single();
+            
+          if (progressError && progressError.code !== 'PGRST116') {
+            console.error(`Error fetching progress for ${character.id}:`, progressError);
+            recalculateSuccess = false;
+            continue;
+          }
+          
+          if (progress) {
+            // Update the proficiency value based on correct/incorrect counts
+            const newProficiency = kanaService.calculateProficiency(progress);
+            
+            await supabaseClient
+              .from('user_kana_progress')
+              .update({ proficiency: newProficiency })
+              .eq('id', progress.id);
+          }
+        } catch (err) {
+          console.error(`Error recalculating proficiency for ${character.id}:`, err);
+          recalculateSuccess = false;
+        }
+      }
+      
+      if (recalculateSuccess) {
         addRepairDetail('✅ Proficiency values recalculated successfully');
       } else {
-        addRepairDetail('⚠️ Error recalculating proficiency values');
+        addRepairDetail('⚠️ Error recalculating some proficiency values');
       }
       
       // 4. Update learning streak if needed
@@ -221,7 +255,7 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
             className="bg-amber-600 hover:bg-amber-700 text-white"
             disabled={isRepairing}
           >
-            <Tool className="mr-2 h-4 w-4" />
+            <Wrench className="mr-2 h-4 w-4" />
             Repair Progress Data
           </Button>
         ) : repairStatus === 'running' ? (
