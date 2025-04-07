@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -61,9 +62,11 @@ const Progress = () => {
     const loadProgressData = async () => {
       if (user) {
         try {
-          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all');
-          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
-          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
+          // Pass the required arguments to calculateOverallProficiency function
+          // The function expects (userId, type, options) where options might be optional
+          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all', {});
+          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana', {});
+          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana', {});
           
           setOverallProgress({
             all: allProgress,

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { KanaCharacter, UserKanaProgress } from '@/types/kana';
 import { kanaService } from '@/services/kanaModules';
@@ -5,6 +6,7 @@ import JapaneseCharacter from '../ui/JapaneseCharacter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '@/lib/utils';
 
+// Log the function signature for debugging purposes
 console.log('kanaService.calculateOverallProficiency signature:', kanaService.calculateOverallProficiency);
 
 interface KanaGridProps {
