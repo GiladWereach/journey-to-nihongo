@@ -28,7 +28,7 @@ const MobileOptimizedInput = forwardRef<HTMLInputElement, MobileOptimizedInputPr
           if (document.activeElement !== inputRef.current && inputRef.current) {
             inputRef.current.focus();
           }
-        }, 500);
+        }, 300); // Check more frequently for better responsiveness
         
         return () => clearInterval(focusInterval);
       }

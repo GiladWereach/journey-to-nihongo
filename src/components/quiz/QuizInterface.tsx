@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,6 +34,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const [attemptCount, setAttemptCount] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  // Add state to track visual transition
+  const [transitionState, setTransitionState] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle');
+  const [visibleCharacterIndex, setVisibleCharacterIndex] = useState(0);
+  
   const [sessionStats, setSessionStats] = useState<QuizSessionStats>({
     startTime: new Date(),
     endTime: null,
@@ -215,6 +220,28 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     };
   }, [isPaused, isTransitioning, user, pendingProgressUpdates, isMobile]);
   
+  // When current character index changes, update visible character with a transition
+  useEffect(() => {
+    if (currentCharacterIndex !== visibleCharacterIndex && quizCharacters.length > 0) {
+      // Only start transition if we're not already transitioning
+      if (transitionState === 'idle') {
+        // Start transition - fade out current character
+        setTransitionState('fadeOut');
+        
+        // After fadeOut is complete, change the visible character and fade in
+        setTimeout(() => {
+          setVisibleCharacterIndex(currentCharacterIndex);
+          setTransitionState('fadeIn');
+          
+          // After fadeIn is complete, return to idle state
+          setTimeout(() => {
+            setTransitionState('idle');
+          }, 150);
+        }, 150);
+      }
+    }
+  }, [currentCharacterIndex, quizCharacters, transitionState, visibleCharacterIndex]);
+  
   useEffect(() => {
     if (!isPaused && !isTransitioning) {
       setTimeout(maintainInputFocus, 20);
@@ -236,13 +263,28 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }
   }, [isMobile, isPaused, isTransitioning]);
   
-  const currentCharacter = quizCharacters[currentCharacterIndex];
+  // Get the current character based on the visibleCharacterIndex, not currentCharacterIndex
+  const currentCharacter = quizCharacters[visibleCharacterIndex];
   
   const moveToNextCharacter = () => {
     if (currentCharacterIndex >= quizCharacters.length - 1) {
       handleEndQuiz();
     } else {
-      setCurrentCharacterIndex(prevIndex => prevIndex + 1);
+      // Set isTransitioning to true before changing index
+      setIsTransitioning(true);
+      
+      // Set a timer to change the character index
+      setTimeout(() => {
+        setCurrentCharacterIndex(prevIndex => prevIndex + 1);
+        
+        // Clear the transition state after changing the index
+        setTimeout(() => {
+          setIsTransitioning(false);
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, 300);
+      }, 150);
     }
   };
   
@@ -320,6 +362,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     setSessionStats(newStats);
     setFeedback('correct');
     
+    // Extend the timeout to ensure user sees the feedback
     setTimeout(() => {
       setInput('');
       setFeedback('none');
@@ -329,16 +372,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       if (currentCharacterIndex >= quizCharacters.length - 1) {
         handleEndQuiz();
       } else {
-        setCurrentCharacterIndex(prevIndex => prevIndex + 1);
+        moveToNextCharacter();
       }
-      
-      setTimeout(() => {
-        setIsTransitioning(false);
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 100);
-    }, 350);
+    }, 700); // Increased from 350 to give more time to see feedback
   };
   
   const handleWrongAnswer = () => {
@@ -380,6 +416,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }]);
       }
       
+      // Extend the timeout to allow better reading of the hint
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -389,16 +426,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (currentCharacterIndex >= quizCharacters.length - 1) {
           handleEndQuiz();
         } else {
-          setCurrentCharacterIndex(prevIndex => prevIndex + 1);
+          moveToNextCharacter();
         }
-        
-        setTimeout(() => {
-          setIsTransitioning(false);
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-        }, 1500);
-      }, 1500);
+      }, 2500); // Increased from 1500 to give more time
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
       
@@ -419,6 +449,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         }]);
       }
       
+      // Extend timeout for better hint reading
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -428,17 +459,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (currentCharacterIndex >= quizCharacters.length - 1) {
           handleEndQuiz();
         } else {
-          setCurrentCharacterIndex(prevIndex => prevIndex + 1);
+          moveToNextCharacter();
         }
-        
-        setTimeout(() => {
-          setIsTransitioning(false);
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-        }, 100);
-      }, 1500);
+      }, 2500); // Increased from 1500 to give more time
     } else {
+      // For normal incorrect attempts
       setTimeout(() => {
         setInput('');
         setFeedback('none');
@@ -447,7 +472,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 500);
+      }, 700); // Increased from 500 to be more visible
     }
     
     newStats.accuracy = Math.round((newStats.correctCount / Math.max(newStats.correctCount + newStats.incorrectCount, 1)) * 100);
@@ -624,10 +649,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   />
                 </div>
                 
-                <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full transition-colors ${
+                <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full transition-all duration-300 ${
                   feedback === 'correct' ? 'bg-matcha/10' : 
                   feedback === 'incorrect' ? 'bg-vermilion/10' : 
                   kanaType === 'hiragana' ? 'bg-matcha/5' : 'bg-vermilion/5'
+                } ${
+                  transitionState === 'fadeOut' ? 'opacity-0 scale-95' :
+                  transitionState === 'fadeIn' ? 'opacity-100 scale-100' : ''
                 }`}>
                   <JapaneseCharacter 
                     character={currentCharacter.character} 
@@ -635,11 +663,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     color={feedback === 'correct' ? 'text-matcha' : 
                            feedback === 'incorrect' ? 'text-vermilion' : 
                            kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'}
+                    animated={transitionState === 'fadeIn'}
                   />
                 </div>
                 
                 {feedback !== 'none' && (
-                  <div className="absolute top-0 right-0 -mt-4 -mr-4">
+                  <div className="absolute top-0 right-0 -mt-4 -mr-4 animate-fade-in">
                     {feedback === 'correct' ? (
                       <div className="bg-matcha text-white rounded-full p-1 sm:p-2">
                         <Check size={16} className="sm:w-5 sm:h-5" />
@@ -663,7 +692,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
               )}
               
               {showHint && (
-                <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-indigo/5 border border-indigo/20 rounded-md w-full max-w-md">
+                <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-indigo/5 border border-indigo/20 rounded-md w-full max-w-md animate-fade-in">
                   <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
                     <AlertTriangle size={14} className="text-indigo sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm font-medium">The correct answer is:</span>
@@ -706,6 +735,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     autoCorrect="off"
                     spellCheck="false"
                     autoFocus={true}
+                    maintainFocus={true}
                     inputMode={isMobile ? "text" : undefined}
                     style={isMobile ? { fontSize: '16px' } : undefined}
                   />
@@ -744,7 +774,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     
                     setTimeout(() => {
                       moveToNextCharacter();
-                      setIsTransitioning(false);
                     }, 100);
                   }}
                   disabled={isPaused || isTransitioning}
