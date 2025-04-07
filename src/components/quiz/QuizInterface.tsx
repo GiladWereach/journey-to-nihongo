@@ -34,8 +34,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const [attemptCount, setAttemptCount] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // Add state to track visual transition
+  
+  // State to track the transition animation state
   const [transitionState, setTransitionState] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle');
+  // Separate state for the visible character (what the user sees) vs the current index (internal tracker)
   const [visibleCharacterIndex, setVisibleCharacterIndex] = useState(0);
   
   const [sessionStats, setSessionStats] = useState<QuizSessionStats>({
@@ -68,6 +70,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     }
   };
   
+  // This function will be called when the card is touched
   const handleCardTouch = () => {
     if (!isPaused && !isTransitioning && inputRef.current) {
       inputRef.current.focus();
@@ -130,6 +133,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           accuracy: 0,
           characterResults: [],
         });
+        
+        // Initialize visible character index to match current index
+        setVisibleCharacterIndex(0);
         
         if (inputRef.current) {
           inputRef.current.focus();
@@ -220,11 +226,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     };
   }, [isPaused, isTransitioning, user, pendingProgressUpdates, isMobile]);
   
-  // When current character index changes, update visible character with a transition
+  // Improved transition effect when current character index changes
   useEffect(() => {
     if (currentCharacterIndex !== visibleCharacterIndex && quizCharacters.length > 0) {
       // Only start transition if we're not already transitioning
       if (transitionState === 'idle') {
+        // Ensure we're in transition mode
+        setIsTransitioning(true);
+        
         // Start transition - fade out current character
         setTransitionState('fadeOut');
         
@@ -236,15 +245,17 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           // After fadeIn is complete, return to idle state
           setTimeout(() => {
             setTransitionState('idle');
-          }, 150);
-        }, 150);
+            setIsTransitioning(false);
+            maintainInputFocus();
+          }, 300); // Increased from 150ms for smoother fade-in
+        }, 300); // Increased from 150ms for smoother fade-out
       }
     }
   }, [currentCharacterIndex, quizCharacters, transitionState, visibleCharacterIndex]);
   
   useEffect(() => {
     if (!isPaused && !isTransitioning) {
-      setTimeout(maintainInputFocus, 20);
+      setTimeout(maintainInputFocus, 50);
     }
   }, [currentCharacterIndex, feedback, isPaused, isTransitioning]);
   
@@ -269,27 +280,26 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const moveToNextCharacter = () => {
     if (currentCharacterIndex >= quizCharacters.length - 1) {
       handleEndQuiz();
-    } else {
-      // Set isTransitioning to true before changing index
-      setIsTransitioning(true);
-      
-      // Set a timer to change the character index
-      setTimeout(() => {
-        setCurrentCharacterIndex(prevIndex => prevIndex + 1);
-        
-        // Clear the transition state after changing the index
-        setTimeout(() => {
-          setIsTransitioning(false);
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-        }, 300);
-      }, 150);
+      return;
     }
+    
+    // Set isTransitioning to true before changing index
+    setIsTransitioning(true);
+    
+    // Clear input and reset states
+    setInput('');
+    setFeedback('none');
+    setShowHint(false);
+    setAttemptCount(0);
+    
+    // Set a timer to change the character index
+    setTimeout(() => {
+      setCurrentCharacterIndex(prevIndex => prevIndex + 1);
+    }, 100);
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isTransitioning) return;
+    if (isTransitioning || isPaused) return;
     
     const newInput = e.target.value;
     setInput(newInput);
@@ -364,17 +374,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     
     // Extend the timeout to ensure user sees the feedback
     setTimeout(() => {
-      setInput('');
-      setFeedback('none');
-      setShowHint(false);
-      setAttemptCount(0);
-      
       if (currentCharacterIndex >= quizCharacters.length - 1) {
         handleEndQuiz();
       } else {
         moveToNextCharacter();
       }
-    }, 700); // Increased from 350 to give more time to see feedback
+    }, 800); // Increased from 700ms to give more time to see feedback
   };
   
   const handleWrongAnswer = () => {
@@ -418,17 +423,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       
       // Extend the timeout to allow better reading of the hint
       setTimeout(() => {
-        setInput('');
-        setFeedback('none');
-        setShowHint(false);
-        setAttemptCount(0);
-        
         if (currentCharacterIndex >= quizCharacters.length - 1) {
           handleEndQuiz();
         } else {
           moveToNextCharacter();
         }
-      }, 2500); // Increased from 1500 to give more time
+      }, 3000); // Increased from 2500ms to give more time to read the hint
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
       
@@ -451,17 +451,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       
       // Extend timeout for better hint reading
       setTimeout(() => {
-        setInput('');
-        setFeedback('none');
-        setShowHint(false);
-        setAttemptCount(0);
-        
         if (currentCharacterIndex >= quizCharacters.length - 1) {
           handleEndQuiz();
         } else {
           moveToNextCharacter();
         }
-      }, 2500); // Increased from 1500 to give more time
+      }, 3000); // Increased from 2500ms to give more time to read the hint
     } else {
       // For normal incorrect attempts
       setTimeout(() => {
@@ -472,7 +467,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 700); // Increased from 500 to be more visible
+      }, 800); // Increased from 700ms to be more visible
     }
     
     newStats.accuracy = Math.round((newStats.correctCount / Math.max(newStats.correctCount + newStats.incorrectCount, 1)) * 100);
