@@ -62,9 +62,10 @@ const Progress = () => {
     const loadProgressData = async () => {
       if (user) {
         try {
-          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all');
-          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
-          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
+          // Fix here: Add the third required argument (sortOrder) with a default value of 'asc'
+          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all', 'asc');
+          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana', 'asc');
+          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana', 'asc');
           
           setOverallProgress({
             all: allProgress,
