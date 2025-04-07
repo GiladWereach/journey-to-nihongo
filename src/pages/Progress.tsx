@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -62,10 +61,9 @@ const Progress = () => {
     const loadProgressData = async () => {
       if (user) {
         try {
-          // Fix here: Add the third required argument (sortOrder) with a default value of 'asc'
-          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all', 'asc');
-          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana', 'asc');
-          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana', 'asc');
+          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all');
+          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
+          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
           
           setOverallProgress({
             all: allProgress,
@@ -200,13 +198,11 @@ const Progress = () => {
     );
   };
 
-  // Fix the sorting function to handle string dates
   const getMostRecentlyPracticed = () => {
     if (!userProgress.length) return [];
     
     return [...userProgress]
       .sort((a, b) => {
-        // Ensure we have Date objects for comparison
         const dateA = typeof a.last_practiced === 'string' 
           ? new Date(a.last_practiced).getTime() 
           : a.last_practiced instanceof Date 
