@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Check, X, Pause, Play, SkipForward, AlertTriangle } from 'lucide-react';
 import { KanaType, QuizCharacterSet, QuizSettings, QuizCharacter, QuizSessionStats, CharacterResult } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileOptimizedInput } from '@/components/ui/MobileOptimizedInput';
 
 interface QuizInterfaceProps {
   kanaType: KanaType;
@@ -59,6 +59,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   
   const maintainInputFocus = () => {
     if (inputRef.current && !isPaused && !isTransitioning) {
+      inputRef.current.focus();
+    }
+  };
+  
+  const handleCardTouch = () => {
+    if (!isPaused && !isTransitioning && inputRef.current) {
       inputRef.current.focus();
     }
   };
@@ -686,7 +692,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
               
               <form onSubmit={handleSubmit} className="w-full max-w-md">
                 <div className="flex items-center gap-2">
-                  <Input
+                  <MobileOptimizedInput
                     ref={inputRef}
                     type="text"
                     placeholder="Enter romaji..."
