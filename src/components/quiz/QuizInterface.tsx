@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Check, X, Pause, Play, SkipForward, AlertTriangle } from 'lucide-react';
-import { KanaType, QuizCharacterSet, QuizSettings, QuizCharacter, QuizSessionStats } from '@/types/quiz';
+import { KanaType, QuizCharacterSet, QuizSettings, QuizCharacter, QuizSessionStats, CharacterResult } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 
@@ -30,6 +31,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [sessionStats, setSessionStats] = useState<QuizSessionStats>({
     startTime: new Date(),
     endTime: null,
@@ -149,7 +151,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         batchUpdateProgress();
       };
     }
-  }, [kanaType, characterSets, settings, user, pendingProgressUpdates]);
+  }, [kanaType, characterSets, settings, user]);
   
   useEffect(() => {
     if (!isPaused && inputRef.current) {
@@ -163,7 +165,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     const newInput = e.target.value;
     setInput(newInput);
     
-    if (settings.speedMode && currentCharacter && !isPaused) {
+    if (settings.speedMode && currentCharacter && !isPaused && !isTransitioning) {
       const userAnswer = newInput.trim().toLowerCase();
       const correctAnswer = currentCharacter.romaji.toLowerCase();
       
@@ -190,7 +192,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   };
   
   const handleCorrectAnswer = () => {
-    if (!currentCharacter || isPaused) return;
+    if (!currentCharacter || isPaused || isTransitioning) return;
     
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
@@ -208,13 +210,17 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       correctAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
     }
     
-    newStats.characterResults.push({
+    // Create a new character result for this answer
+    const newResult: CharacterResult = {
       characterId: currentCharacter.id,
       character: currentCharacter.character,
       romaji: currentCharacter.romaji,
       isCorrect: true,
       attemptCount: newAttemptCount,
-    });
+    };
+    
+    // Add the result to our session stats
+    newStats.characterResults = [...newStats.characterResults, newResult];
     
     if (user) {
       setPendingProgressUpdates(prev => [...prev, {
@@ -223,9 +229,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       }]);
     }
     
-    newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
+    newStats.accuracy = Math.round((newStats.correctCount / (newStats.correctCount + newStats.incorrectCount)) * 100);
     setSessionStats(newStats);
     setFeedback('correct');
+    setIsTransitioning(true);
     
     setTimeout(() => {
       setInput('');
@@ -233,6 +240,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       setShowHint(false);
       setAttemptCount(0);
       moveToNextCharacter();
+      setIsTransitioning(false);
       
       if (inputRef.current) {
         inputRef.current.focus();
@@ -241,7 +249,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   };
   
   const handleWrongAnswer = () => {
-    if (!currentCharacter || isPaused) return;
+    if (!currentCharacter || isPaused || isTransitioning) return;
     
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
@@ -259,14 +267,19 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     
     if (settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
+      setIsTransitioning(true);
       
-      newStats.characterResults.push({
+      // Create a new character result for this answer
+      const newResult: CharacterResult = {
         characterId: currentCharacter.id,
         character: currentCharacter.character,
         romaji: currentCharacter.romaji,
         isCorrect: false,
         attemptCount: newAttemptCount,
-      });
+      };
+      
+      // Add the result to our session stats
+      newStats.characterResults = [...newStats.characterResults, newResult];
       
       if (user) {
         setPendingProgressUpdates(prev => [...prev, {
@@ -281,6 +294,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         setShowHint(false);
         setAttemptCount(0);
         moveToNextCharacter();
+        setIsTransitioning(false);
         
         if (inputRef.current) {
           inputRef.current.focus();
@@ -288,14 +302,19 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       }, 1500);
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
+      setIsTransitioning(true);
       
-      newStats.characterResults.push({
+      // Create a new character result for this answer
+      const newResult: CharacterResult = {
         characterId: currentCharacter.id,
         character: currentCharacter.character,
         romaji: currentCharacter.romaji,
         isCorrect: false,
         attemptCount: newAttemptCount,
-      });
+      };
+      
+      // Add the result to our session stats
+      newStats.characterResults = [...newStats.characterResults, newResult];
       
       if (user) {
         setPendingProgressUpdates(prev => [...prev, {
@@ -310,6 +329,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         setShowHint(false);
         setAttemptCount(0);
         moveToNextCharacter();
+        setIsTransitioning(false);
         
         if (inputRef.current) {
           inputRef.current.focus();
@@ -326,7 +346,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       }, 500);
     }
     
-    newStats.accuracy = Math.round((newStats.correctCount / newStats.totalAttempts) * 100);
+    newStats.accuracy = Math.round((newStats.correctCount / (newStats.correctCount + newStats.incorrectCount)) * 100);
     setSessionStats(newStats);
   };
   
@@ -335,7 +355,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       e.preventDefault();
     }
     
-    if (!currentCharacter || input.trim() === '' || isPaused) return;
+    if (!currentCharacter || input.trim() === '' || isPaused || isTransitioning) return;
     
     const userAnswer = input.trim().toLowerCase();
     const correctAnswer = currentCharacter.romaji.toLowerCase();
@@ -349,7 +369,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   };
   
   const moveToNextCharacter = () => {
-    const nextIndex = (currentCharacterIndex + 1) % quizCharacters.length;
+    if (currentCharacterIndex >= quizCharacters.length - 1) {
+      // We've gone through all the characters, end the quiz
+      handleEndQuiz();
+      return;
+    }
+    
+    const nextIndex = currentCharacterIndex + 1;
     setCurrentCharacterIndex(nextIndex);
   };
   
@@ -360,6 +386,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       endTime,
       durationSeconds: Math.round((endTime.getTime() - sessionStats.startTime.getTime()) / 1000),
     };
+    
+    // Make sure accuracy is calculated correctly
+    finalStats.accuracy = Math.round((finalStats.correctCount / Math.max(finalStats.correctCount + finalStats.incorrectCount, 1)) * 100);
     
     if (user && pendingProgressUpdates.length > 0) {
       try {
@@ -384,15 +413,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           characterIds: quizCharacters.map(char => char.id),
           startTime: sessionStats.startTime,
           endTime,
-          correctCount: sessionStats.correctCount,
-          totalAttempts: sessionStats.totalAttempts,
-          streak: sessionStats.currentStreak
+          correctCount: finalStats.correctCount,
+          totalAttempts: finalStats.totalAttempts,
+          streak: finalStats.currentStreak
         });
       } catch (error) {
         console.error('Error recording quiz session:', error);
       }
     }
     
+    console.log("Ending quiz with results:", finalStats);
     onEndQuiz(finalStats);
   };
   
@@ -477,7 +507,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                 <div className="absolute top-0 -mt-8 sm:-mt-10 w-full max-w-xs">
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-indigo">{sessionStats.correctCount} correct</span>
-                    <span className="text-muted-foreground">{Math.round((sessionStats.correctCount / Math.max(sessionStats.totalAttempts, 1)) * 100)}% accuracy</span>
+                    <span className="text-muted-foreground">{Math.round((sessionStats.correctCount / Math.max(sessionStats.correctCount + sessionStats.incorrectCount, 1)) * 100)}% accuracy</span>
                   </div>
                   <Progress 
                     value={(sessionStats.currentStreak / 10) * 100} 
@@ -559,9 +589,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     placeholder="Enter romaji..."
                     value={input}
                     onChange={handleInputChange}
-                    className={`text-center text-base sm:text-lg ${isPaused ? 'bg-gray-100' : ''} 
+                    className={`text-center text-base sm:text-lg ${isPaused || isTransitioning ? 'bg-gray-100' : ''} 
                       border-2 ${kanaType === 'hiragana' ? 'focus:border-matcha' : 'focus:border-vermilion'}`}
-                    disabled={isPaused || showHint}
+                    disabled={isPaused || showHint || isTransitioning}
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck="false"
@@ -570,7 +600,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   {!settings.speedMode && (
                     <Button 
                       type="submit" 
-                      disabled={isPaused || showHint || input.trim() === ''}
+                      disabled={isPaused || showHint || input.trim() === '' || isTransitioning}
                       className={kanaType === 'hiragana' ? 'bg-matcha hover:bg-matcha/90' : 'bg-vermilion hover:bg-vermilion/90'}
                     >
                       Check
@@ -592,13 +622,19 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                   variant="outline" 
                   size="sm"
                   onClick={() => {
+                    if (isTransitioning) return;
+                    setIsTransitioning(true);
                     setInput('');
                     setFeedback('none');
                     setShowHint(false);
                     setAttemptCount(0);
-                    moveToNextCharacter();
+                    
+                    setTimeout(() => {
+                      moveToNextCharacter();
+                      setIsTransitioning(false);
+                    }, 100);
                   }}
-                  disabled={isPaused}
+                  disabled={isPaused || isTransitioning}
                   className="text-xs sm:text-sm border-indigo/30 hover:bg-indigo/5"
                 >
                   <SkipForward size={14} className="mr-1 sm:w-4 sm:h-4" />

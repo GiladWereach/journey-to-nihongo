@@ -107,6 +107,7 @@ const QuickQuiz: React.FC = () => {
   };
 
   const handleEndQuiz = async (results: QuizSessionStats) => {
+    console.log("Quiz ended with results:", results);
     setQuizResults(results);
     setQuizState('results');
     setActiveTab('results');
