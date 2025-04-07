@@ -1123,3 +1123,405 @@ const kanaData = [
     strokes: 2,
     position: 58,
     examples: [
+      {
+        word: 'ぢしん',
+        romaji: 'jishin',
+        meaning: 'earthquake'
+      }
+    ],
+    mnemonic: 'Chi with dakuten'
+  },
+  {
+    id: 'hiragana-du',
+    character: 'づ',
+    romaji: 'zu',
+    type: 'hiragana',
+    group: 'd-row',
+    strokes: 1,
+    position: 59,
+    examples: [
+      {
+        word: 'みかづき',
+        romaji: 'mikazuki',
+        meaning: 'crescent moon'
+      }
+    ],
+    mnemonic: 'Tsu with dakuten'
+  },
+  {
+    id: 'hiragana-de',
+    character: 'で',
+    romaji: 'de',
+    type: 'hiragana',
+    group: 'd-row',
+    strokes: 1,
+    position: 60,
+    examples: [
+      {
+        word: 'でんわ',
+        romaji: 'denwa',
+        meaning: 'telephone'
+      }
+    ],
+    mnemonic: 'Te with dakuten'
+  },
+  {
+    id: 'hiragana-do',
+    character: 'ど',
+    romaji: 'do',
+    type: 'hiragana',
+    group: 'd-row',
+    strokes: 2,
+    position: 61,
+    examples: [
+      {
+        word: 'どこ',
+        romaji: 'doko',
+        meaning: 'where'
+      }
+    ],
+    mnemonic: 'To with dakuten'
+  },
+  {
+    id: 'hiragana-ba',
+    character: 'ば',
+    romaji: 'ba',
+    type: 'hiragana',
+    group: 'b-row',
+    strokes: 3,
+    position: 62,
+    examples: [
+      {
+        word: 'ばす',
+        romaji: 'basu',
+        meaning: 'bus'
+      }
+    ],
+    mnemonic: 'Ha with dakuten'
+  },
+  {
+    id: 'hiragana-bi',
+    character: 'び',
+    romaji: 'bi',
+    type: 'hiragana',
+    group: 'b-row',
+    strokes: 1,
+    position: 63,
+    examples: [
+      {
+        word: 'えんぴつ',
+        romaji: 'enpitsu',
+        meaning: 'pencil'
+      }
+    ],
+    mnemonic: 'Hi with dakuten'
+  },
+  {
+    id: 'hiragana-bu',
+    character: 'ぶ',
+    romaji: 'bu',
+    type: 'hiragana',
+    group: 'b-row',
+    strokes: 4,
+    position: 64,
+    examples: [
+      {
+        word: 'ぶどう',
+        romaji: 'budou',
+        meaning: 'grapes'
+      }
+    ],
+    mnemonic: 'Fu with dakuten'
+  },
+  {
+    id: 'hiragana-be',
+    character: 'べ',
+    romaji: 'be',
+    type: 'hiragana',
+    group: 'b-row',
+    strokes: 1,
+    position: 65,
+    examples: [
+      {
+        word: 'べんきょう',
+        romaji: 'benkyou',
+        meaning: 'study'
+      }
+    ],
+    mnemonic: 'He with dakuten'
+  },
+  {
+    id: 'hiragana-bo',
+    character: 'ぼ',
+    romaji: 'bo',
+    type: 'hiragana',
+    group: 'b-row',
+    strokes: 5,
+    position: 66,
+    examples: [
+      {
+        word: 'ぼうし',
+        romaji: 'boushi',
+        meaning: 'hat'
+      }
+    ],
+    mnemonic: 'Ho with dakuten'
+  },
+  {
+    id: 'hiragana-pa',
+    character: 'ぱ',
+    romaji: 'pa',
+    type: 'hiragana',
+    group: 'p-row',
+    strokes: 3,
+    position: 67,
+    examples: [
+      {
+        word: 'ぱん',
+        romaji: 'pan',
+        meaning: 'bread'
+      }
+    ],
+    mnemonic: 'Ha with handakuten'
+  },
+  {
+    id: 'hiragana-pi',
+    character: 'ぴ',
+    romaji: 'pi',
+    type: 'hiragana',
+    group: 'p-row',
+    strokes: 1,
+    position: 68,
+    examples: [
+      {
+        word: 'ぴあの',
+        romaji: 'piano',
+        meaning: 'piano'
+      }
+    ],
+    mnemonic: 'Hi with handakuten'
+  },
+  {
+    id: 'hiragana-pu',
+    character: 'ぷ',
+    romaji: 'pu',
+    type: 'hiragana',
+    group: 'p-row',
+    strokes: 4,
+    position: 69,
+    examples: [
+      {
+        word: 'コンピュータ',
+        romaji: 'conpyu-ta',
+        meaning: 'computer'
+      }
+    ],
+    mnemonic: 'Fu with handakuten'
+  },
+  {
+    id: 'hiragana-pe',
+    character: 'ぺ',
+    romaji: 'pe',
+    type: 'hiragana',
+    group: 'p-row',
+    strokes: 1,
+    position: 70,
+    examples: [
+      {
+        word: 'ぺん',
+        romaji: 'pen',
+        meaning: 'pen'
+      }
+    ],
+    mnemonic: 'He with handakuten'
+  },
+  {
+    id: 'hiragana-po',
+    character: 'ぽ',
+    romaji: 'po',
+    type: 'hiragana',
+    group: 'p-row',
+    strokes: 5,
+    position: 71,
+    examples: [
+      {
+        word: 'ぽけっと',
+        romaji: 'poketto',
+        meaning: 'pocket'
+      }
+    ],
+    mnemonic: 'Ho with handakuten'
+  },
+  
+  // Katakana characters
+  {
+    id: 'katakana-a',
+    character: 'ア',
+    romaji: 'a',
+    type: 'katakana',
+    group: 'vowels',
+    strokes: 2,
+    position: 1,
+    examples: [
+      {
+        word: 'アイス',
+        romaji: 'aisu',
+        meaning: 'ice cream'
+      }
+    ],
+    mnemonic: 'Looks like an A with missing middle bar'
+  },
+  {
+    id: 'katakana-i',
+    character: 'イ',
+    romaji: 'i',
+    type: 'katakana',
+    group: 'vowels',
+    strokes: 2,
+    position: 2,
+    examples: [
+      {
+        word: 'イチゴ',
+        romaji: 'ichigo',
+        meaning: 'strawberry'
+      }
+    ],
+    mnemonic: 'Looks like a half-drawn E'
+  },
+  {
+    id: 'katakana-u',
+    character: 'ウ',
+    romaji: 'u',
+    type: 'katakana',
+    group: 'vowels',
+    strokes: 2,
+    position: 3,
+    examples: [
+      {
+        word: 'ウソ',
+        romaji: 'uso',
+        meaning: 'lie'
+      }
+    ],
+    mnemonic: 'Looks like a smile'
+  },
+  {
+    id: 'katakana-e',
+    character: 'エ',
+    romaji: 'e',
+    type: 'katakana',
+    group: 'vowels',
+    strokes: 3,
+    position: 4,
+    examples: [
+      {
+        word: 'エレベーター',
+        romaji: 'erebe-ta-',
+        meaning: 'elevator'
+      }
+    ],
+    mnemonic: 'Looks like a ヨ without the right stroke'
+  },
+  {
+    id: 'katakana-o',
+    character: 'オ',
+    romaji: 'o',
+    type: 'katakana',
+    group: 'vowels',
+    strokes: 3,
+    position: 5,
+    examples: [
+      {
+        word: 'オレンジ',
+        romaji: 'orenji',
+        meaning: 'orange'
+      }
+    ],
+    mnemonic: 'Looks like a slightly bent T'
+  },
+  {
+    id: 'katakana-ka',
+    character: 'カ',
+    romaji: 'ka',
+    type: 'katakana',
+    group: 'k-row',
+    strokes: 2,
+    position: 6,
+    examples: [
+      {
+        word: 'カメラ',
+        romaji: 'kamera',
+        meaning: 'camera'
+      }
+    ],
+    mnemonic: 'Looks like a K without the vertical line'
+  },
+  {
+    id: 'katakana-ki',
+    character: 'キ',
+    romaji: 'ki',
+    type: 'katakana',
+    group: 'k-row',
+    strokes: 3,
+    position: 7,
+    examples: [
+      {
+        word: 'キーボード',
+        romaji: 'ki-bo-do',
+        meaning: 'keyboard'
+      }
+    ],
+    mnemonic: 'Looks like a key'
+  },
+  {
+    id: 'katakana-ku',
+    character: 'ク',
+    romaji: 'ku',
+    type: 'katakana',
+    group: 'k-row',
+    strokes: 2,
+    position: 8,
+    examples: [
+      {
+        word: 'クッキー',
+        romaji: 'kukki-',
+        meaning: 'cookie'
+      }
+    ],
+    mnemonic: 'Looks like the number 7'
+  },
+  {
+    id: 'katakana-ke',
+    character: 'ケ',
+    romaji: 'ke',
+    type: 'katakana',
+    group: 'k-row',
+    strokes: 3,
+    position: 9,
+    examples: [
+      {
+        word: 'ケーキ',
+        romaji: 'ke-ki',
+        meaning: 'cake'
+      }
+    ],
+    mnemonic: 'Looks like a backward 7 with a line'
+  },
+  {
+    id: 'katakana-ko',
+    character: 'コ',
+    romaji: 'ko',
+    type: 'katakana',
+    group: 'k-row',
+    strokes: 2,
+    position: 10,
+    examples: [
+      {
+        word: 'コーヒー',
+        romaji: 'ko-hi-',
+        meaning: 'coffee'
+      }
+    ],
+    mnemonic: 'Looks like a lowercase c'
+  }
+];
