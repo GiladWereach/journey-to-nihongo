@@ -6,4 +6,11 @@ export * from './kanaProgressService';
 
 // Re-export specific functions for direct import 
 import { kanaLearningService, updateKanaCharacterProgress, completeKanaLearningSession } from './kanaLearningService';
-export { kanaLearningService, updateKanaCharacterProgress, completeKanaLearningSession };
+import { kanaService } from './kanaService';
+
+export { 
+  kanaLearningService, 
+  updateKanaCharacterProgress, 
+  completeKanaLearningSession,
+  kanaService
+};
