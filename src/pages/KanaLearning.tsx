@@ -196,6 +196,30 @@ const KanaLearning = () => {
     );
   };
 
+  // Fix the sorting function to handle string dates
+  const getMostRecentlyPracticed = () => {
+    if (!userProgress.length) return [];
+    
+    return [...userProgress]
+      .sort((a, b) => {
+        // Ensure we have Date objects for comparison
+        const dateA = typeof a.last_practiced === 'string' 
+          ? new Date(a.last_practiced).getTime() 
+          : a.last_practiced instanceof Date 
+            ? a.last_practiced.getTime() 
+            : 0;
+        
+        const dateB = typeof b.last_practiced === 'string' 
+          ? new Date(b.last_practiced).getTime() 
+          : b.last_practiced instanceof Date 
+            ? b.last_practiced.getTime() 
+            : 0;
+        
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+  };
+
   return (
     <div className="container mx-auto px-4">
       <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md shadow-sm border-b">
@@ -776,180 +800,3 @@ const KanaLearning = () => {
                             {getMostPracticed().map(progress => {
                               const kana = allKana.find(k => k.id === progress.character_id);
                               if (!kana) return null;
-                              
-                              return (
-                                <div key={progress.character_id} className="flex items-center gap-3">
-                                  <div className="w-12 h-12 flex items-center justify-center text-2xl border rounded-lg">
-                                    {kana.character}
-                                  </div>
-                                  <div className="flex-grow">
-                                    <div className="flex justify-between">
-                                      <span className="font-medium">{kana.romaji}</span>
-                                      <span className="text-sm text-gray-500">
-                                        {progress.total_practice_count} practices
-                                      </span>
-                                    </div>
-                                    <ProgressIndicator
-                                      progress={progress.proficiency}
-                                      size="sm"
-                                      proficiencyLevel={calculateProficiencyLevel(progress.proficiency)}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            
-                            {getMostPracticed().length === 0 && (
-                              <div className="text-center py-6 text-gray-500">
-                                No practice data yet
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Activity className="h-5 w-5 text-red-500" />
-                            Most Challenging Characters
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {getMostChallenging().map(progress => {
-                              const kana = allKana.find(k => k.id === progress.character_id);
-                              if (!kana) return null;
-                              
-                              return (
-                                <div key={progress.character_id} className="flex items-center gap-3">
-                                  <div className="w-12 h-12 flex items-center justify-center text-2xl border rounded-lg">
-                                    {kana.character}
-                                  </div>
-                                  <div className="flex-grow">
-                                    <div className="flex justify-between">
-                                      <span className="font-medium">{kana.romaji}</span>
-                                      <span className="text-sm text-gray-500">
-                                        {progress.mistake_count} mistakes
-                                      </span>
-                                    </div>
-                                    <ProgressIndicator
-                                      progress={progress.proficiency}
-                                      size="sm"
-                                      proficiencyLevel={calculateProficiencyLevel(progress.proficiency)}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            
-                            {getMostChallenging().length === 0 && (
-                              <div className="text-center py-6 text-gray-500">
-                                No challenge data yet
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Calendar className="h-5 w-5 text-indigo" />
-                          Recent Practice History
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b">
-                                <th className="px-4 py-2 text-left">Character</th>
-                                <th className="px-4 py-2 text-left">Reading</th>
-                                <th className="px-4 py-2 text-left">Last Practiced</th>
-                                <th className="px-4 py-2 text-left">Proficiency</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {userProgress
-                                .sort((a, b) => b.last_practiced.getTime() - a.last_practiced.getTime())
-                                .slice(0, 10)
-                                .map(progress => {
-                                  const kana = allKana.find(k => k.id === progress.character_id);
-                                  if (!kana) return null;
-                                  
-                                  return (
-                                    <tr key={progress.character_id} className="border-b">
-                                      <td className="px-4 py-2 text-center">
-                                        <span className="text-xl">{kana.character}</span>
-                                      </td>
-                                      <td className="px-4 py-2">{kana.romaji}</td>
-                                      <td className="px-4 py-2">
-                                        {new Date(progress.last_practiced).toLocaleDateString()}
-                                      </td>
-                                      <td className="px-4 py-2">
-                                        <ProgressIndicator
-                                          progress={progress.proficiency}
-                                          size="sm"
-                                          showPercentage
-                                        />
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                                
-                                {userProgress.length === 0 && (
-                                  <tr>
-                                    <td colSpan={4} className="text-center py-6 text-gray-500">
-                                      No practice history yet
-                                    </td>
-                                  </tr>
-                                )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="text-center py-10 bg-gray-50 rounded-lg border">
-                    <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium mb-2">No Progress Yet</h3>
-                    <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                      Start practicing with Hiragana and Katakana to see your progress here.
-                    </p>
-                    <Button 
-                      onClick={() => {
-                        setActiveTab('practice');
-                        setPracticeMode('selection');
-                      }}
-                      className="bg-indigo hover:bg-indigo/90"
-                    >
-                      Start Practice Now
-                    </Button>
-                  </div>
-                )
-              ) : (
-                <div className="text-center py-10 bg-gray-50 rounded-lg border">
-                  <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium mb-2">Sign In to Track Progress</h3>
-                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                    Create an account or sign in to track your progress and see your learning stats.
-                  </p>
-                  <Link to="/auth">
-                    <Button className="bg-indigo hover:bg-indigo/90">
-                      Sign In
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
-};
-
-export default KanaLearning;
