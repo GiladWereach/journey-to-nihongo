@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -12,6 +13,11 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        // Use a minimum font size of 16px to prevent zoom on iOS
+        style={{
+          ...((props as any).style || {}),
+          fontSize: props.style?.fontSize || '16px',
+        }}
         {...props}
       />
     )

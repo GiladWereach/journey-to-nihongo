@@ -8,6 +8,7 @@ import { Check, X, Pause, Play, SkipForward, AlertTriangle } from 'lucide-react'
 import { KanaType, QuizCharacterSet, QuizSettings, QuizCharacter, QuizSessionStats, CharacterResult } from '@/types/quiz';
 import { quizService } from '@/services/quizService';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuizInterfaceProps {
   kanaType: KanaType;
@@ -23,6 +24,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   onEndQuiz 
 }) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [quizCharacters, setQuizCharacters] = useState<QuizCharacter[]>([]);
   const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
   const [input, setInput] = useState('');
@@ -53,6 +55,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const incorrectAudioRef = useRef<HTMLAudioElement>(null);
   
   const updateTimerRef = useRef<number | null>(null);
+  const focusTimerRef = useRef<number | null>(null);
+  
+  const maintainInputFocus = () => {
+    if (inputRef.current && !isPaused && !isTransitioning) {
+      inputRef.current.focus();
+    }
+  };
   
   useEffect(() => {
     const initializeQuiz = async () => {
@@ -153,29 +162,38 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   }, [kanaType, characterSets, settings, user]);
   
   useEffect(() => {
-    if (inputRef.current && !isPaused) {
-      inputRef.current.focus();
+    maintainInputFocus();
+    
+    if (isMobile) {
+      focusTimerRef.current = window.setInterval(() => {
+        maintainInputFocus();
+      }, 300);
     }
     
-    const handleClick = () => {
-      if (inputRef.current && !isPaused && !isTransitioning) {
-        inputRef.current.focus();
-      }
-    };
+    const handleClick = () => maintainInputFocus();
+    const handleFocus = () => maintainInputFocus();
+    const handleTouchStart = () => maintainInputFocus();
     
     document.addEventListener('click', handleClick);
-    
-    const handleFocus = () => {
-      if (inputRef.current && !isPaused && !isTransitioning) {
-        inputRef.current.focus();
-      }
-    };
-    
     window.addEventListener('focus', handleFocus);
+    
+    if (isMobile) {
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchend', maintainInputFocus);
+    }
     
     return () => {
       document.removeEventListener('click', handleClick);
-      window.addEventListener('focus', handleFocus);
+      window.removeEventListener('focus', handleFocus);
+      
+      if (isMobile) {
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.addEventListener('touchend', maintainInputFocus);
+      }
+      
+      if (focusTimerRef.current) {
+        clearInterval(focusTimerRef.current);
+      }
       
       if (updateTimerRef.current) {
         clearInterval(updateTimerRef.current);
@@ -189,15 +207,28 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
         });
       }
     };
-  }, [isPaused, isTransitioning, user, pendingProgressUpdates]);
+  }, [isPaused, isTransitioning, user, pendingProgressUpdates, isMobile]);
   
   useEffect(() => {
-    if (!isPaused && !isTransitioning && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 10);
+    if (!isPaused && !isTransitioning) {
+      setTimeout(maintainInputFocus, 20);
     }
   }, [currentCharacterIndex, feedback, isPaused, isTransitioning]);
+  
+  useEffect(() => {
+    if (isMobile && inputRef.current && !isPaused && !isTransitioning) {
+      const mobileFocusInterval = setInterval(() => {
+        if (document.activeElement !== inputRef.current) {
+          inputRef.current.focus();
+          if (isMobile && inputRef.current) {
+            inputRef.current.click();
+          }
+        }
+      }, 500);
+      
+      return () => clearInterval(mobileFocusInterval);
+    }
+  }, [isMobile, isPaused, isTransitioning]);
   
   const currentCharacter = quizCharacters[currentCharacterIndex];
   
@@ -360,7 +391,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
           if (inputRef.current) {
             inputRef.current.focus();
           }
-        }, 100);
+        }, 1500);
       }, 1500);
     } else if (!settings.speedMode && newAttemptCount >= 3) {
       setShowHint(true);
@@ -512,10 +543,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   };
   
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!isPaused && !isTransitioning && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
+    if (!isPaused && !isTransitioning) {
+      const refocusDelay = isMobile ? 20 : 50;
+      setTimeout(maintainInputFocus, refocusDelay);
+      
+      if (isMobile && inputRef.current) {
+        inputRef.current.click();
+      }
     }
   };
   
@@ -561,11 +595,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       </div>
       
       <div className="grid grid-cols-1 gap-4">
-        <Card className={`overflow-hidden border-2 transition-colors duration-150 ${
-          feedback === 'correct' ? 'border-matcha bg-matcha/5' : 
-          feedback === 'incorrect' ? 'border-vermilion bg-vermilion/5' : 
-          kanaType === 'hiragana' ? 'border-matcha/40' : 'border-vermilion/40'
-        }`}>
+        <Card 
+          className={`overflow-hidden border-2 transition-colors duration-150 ${
+            feedback === 'correct' ? 'border-matcha bg-matcha/5' : 
+            feedback === 'incorrect' ? 'border-vermilion bg-vermilion/5' : 
+            kanaType === 'hiragana' ? 'border-matcha/40' : 'border-vermilion/40'
+          }`}
+          onClick={handleCardTouch}
+          onTouchStart={handleCardTouch}
+        >
           <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
             <div className="flex flex-col items-center">
               <div className="flex justify-center items-center mb-4 sm:mb-6 relative">
@@ -662,6 +700,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
                     autoCorrect="off"
                     spellCheck="false"
                     autoFocus={true}
+                    inputMode={isMobile ? "text" : undefined}
+                    style={isMobile ? { fontSize: '16px' } : undefined}
                   />
                   
                   {!settings.speedMode && (
