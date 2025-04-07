@@ -121,6 +121,76 @@ export const kanaLearningService = {
       console.error('Error recording study activity:', error);
       return false;
     }
+  },
+
+  /**
+   * Verify progress status for all characters for a user
+   * This is a debugging/repair tool that ensures all character progress is correctly recorded
+   */
+  verifyAllProgressEntries: async (userId: string): Promise<boolean> => {
+    try {
+      console.log("Verifying progress entries for user:", userId);
+      
+      // Get all kana characters
+      const { data: allKana, error: kanaError } = await supabaseClient
+        .from('kana_characters')
+        .select('id');
+        
+      if (kanaError) {
+        console.error('Error fetching kana characters:', kanaError);
+        return false;
+      }
+      
+      // Get all existing progress entries
+      const { data: existingProgress, error: progressError } = await supabaseClient
+        .from('user_kana_progress')
+        .select('character_id')
+        .eq('user_id', userId);
+        
+      if (progressError) {
+        console.error('Error fetching existing progress:', progressError);
+        return false;
+      }
+      
+      // Convert to Set for faster lookups
+      const existingCharacterIds = new Set(existingProgress.map((p: any) => p.character_id));
+      
+      // Find characters without progress entries
+      const missingEntries = allKana.filter((k: any) => !existingCharacterIds.has(k.id));
+      
+      console.log(`Found ${missingEntries.length} characters without progress entries`);
+      
+      // Create default progress entries for missing characters
+      if (missingEntries.length > 0) {
+        const newEntries = missingEntries.map((k: any) => ({
+          user_id: userId,
+          character_id: k.id,
+          proficiency: 0,
+          mistake_count: 0,
+          total_practice_count: 0,
+          consecutive_correct: 0,
+          last_practiced: new Date().toISOString(),
+          review_due: new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString(),
+          mastery_level: 0
+        }));
+        
+        const { error: insertError } = await supabaseClient
+          .from('user_kana_progress')
+          .insert(newEntries);
+          
+        if (insertError) {
+          console.error('Error creating missing progress entries:', insertError);
+          return false;
+        }
+        
+        console.log(`Created ${newEntries.length} default progress entries`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in verifyAllProgressEntries:', error);
+      return false;
+    }
   }
 };
 
@@ -243,24 +313,50 @@ export const completeKanaLearningSession = async (
   try {
     console.log("Completing kana learning session:", { userId, sessionId, results });
     
-    // Update the session as completed
-    const { error: sessionError } = await supabaseClient
-      .from('kana_learning_sessions')
-      .update({ 
-        completed: true,
-        end_time: new Date().toISOString(),
-        accuracy: results.accuracy,
-        characters_studied: results.charactersStudied
-      })
-      .eq('id', sessionId)
-      .eq('user_id', userId);
-      
-    if (sessionError) {
-      console.error('Error completing kana session:', sessionError);
-      return false;
+    // Create session ID if not provided (for backward compatibility)
+    const effectiveSessionId = sessionId || `session-${Date.now()}`;
+    
+    // Check if this is an existing session or a new auto-generated one
+    if (sessionId) {
+      // Update the session as completed
+      const { error: sessionError } = await supabaseClient
+        .from('kana_learning_sessions')
+        .update({ 
+          completed: true,
+          end_time: new Date().toISOString(),
+          accuracy: results.accuracy,
+          characters_studied: results.charactersStudied
+        })
+        .eq('id', sessionId)
+        .eq('user_id', userId);
+        
+      if (sessionError) {
+        console.error('Error completing kana session:', sessionError);
+        // Continue anyway - this might be a dynamically generated session ID
+      }
+    } else {
+      // Create a new session record for tracking purposes
+      const { error: createError } = await supabaseClient
+        .from('kana_learning_sessions')
+        .insert({ 
+          id: effectiveSessionId,
+          user_id: userId,
+          kana_type: results.charactersStudied[0]?.startsWith('hiragana') ? 'hiragana' : 'katakana',
+          start_time: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
+          end_time: new Date().toISOString(),
+          characters_studied: results.charactersStudied,
+          accuracy: results.accuracy,
+          completed: true
+        });
+        
+      if (createError) {
+        console.error('Error creating kana session record:', createError);
+        // Continue anyway - we'll still update character progress
+      }
     }
     
     // Update the user's progress for each character
+    console.log(`Updating progress for ${results.progressUpdates.length} characters`);
     for (const update of results.progressUpdates) {
       await updateKanaCharacterProgress(userId, update.characterId, update.isCorrect);
     }
@@ -287,4 +383,10 @@ export const completeKanaLearningSession = async (
     console.error('Error in completeKanaLearningSession:', error);
     return false;
   }
+};
+
+export default {
+  kanaLearningService,
+  updateKanaCharacterProgress,
+  completeKanaLearningSession
 };

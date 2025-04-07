@@ -21,6 +21,8 @@ interface ProgressIndicatorProps {
   showCharacter?: boolean;
   masteryLevel?: number; // New prop for mastery level
   showMasteryBadge?: boolean; // Whether to show mastery badge
+  isAnimated?: boolean; // New prop to control animation
+  showCompletionCelebration?: boolean; // New prop to show completion celebration
 }
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
@@ -42,6 +44,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   showCharacter = false,
   masteryLevel = 0,
   showMasteryBadge = false,
+  isAnimated = false,
+  showCompletionCelebration = false,
 }) => {
   // Ensure progress is between 0 and 100
   const normalizedProgress = Math.min(100, Math.max(0, progress));
@@ -163,6 +167,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             'transition-all duration-500 rounded-full', 
             progressColor,
             animated && 'animate-pulse',
+            isAnimated && 'animate-progress',
             glowOnCompletion && (normalizedProgress >= 100 || masteryLevel > 0) && 'animate-glow'
           )} 
           style={{ width: `${normalizedProgress}%` }}
@@ -187,7 +192,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       )}
       
       {/* Optional animated celebration for completed progress */}
-      {glowOnCompletion && (normalizedProgress >= 100 || masteryLevel > 0) && (
+      {(showCompletionCelebration || glowOnCompletion) && (normalizedProgress >= 100 || masteryLevel > 0) && (
         <div className="text-xs text-center text-green-600 animate-bounce mt-1">
           {masteryLevel > 0 ? "✨ Mastered! ✨" : "✨ Completed! ✨"}
         </div>

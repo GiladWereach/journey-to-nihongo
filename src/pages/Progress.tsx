@@ -30,6 +30,7 @@ const Progress: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [showRepairTools, setShowRepairTools] = useState(false);
+  const [debugData, setDebugData] = useState<any>(null);
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
@@ -82,8 +83,34 @@ const Progress: React.FC = () => {
     try {
       console.log("Fetching progress data for user:", user.id);
       
+      // Direct database query to get all user progress data for debugging
+      const { data: rawProgressData, error: rawProgressError } = await supabaseClient
+        .from('user_kana_progress')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (rawProgressError) {
+        console.error("Error fetching raw progress data:", rawProgressError);
+      } else {
+        console.log("Raw progress data found:", rawProgressData?.length || 0, "records");
+        setDebugData(rawProgressData);
+      }
+      
+      // Fetch streak data directly from the database
+      const { data: streakRawData, error: streakRawError } = await supabaseClient
+        .from('user_learning_streaks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+      
+      if (streakRawError) {
+        console.error("Error fetching raw streak data:", streakRawError);
+      } else {
+        console.log("Raw streak data found:", streakRawData?.length || 0, "records");
+      }
+      
       // Fetch streak data
-      const streak = await progressTrackingService.getLearningStreak(user.id);
+      const streak = await kanaProgressService.getUserLearningStreak(user.id);
       console.log("Streak data:", streak);
       setStreakData(streak);
       
@@ -124,7 +151,7 @@ const Progress: React.FC = () => {
         total: katakanaTotal
       });
       
-      // Calculate overall proficiency
+      // Calculate overall proficiency - force a direct database query to get the most up-to-date data
       const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
       const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
       console.log("Overall proficiency - Hiragana:", hiraganaProgress, "Katakana:", katakanaProgress);
@@ -332,6 +359,27 @@ const Progress: React.FC = () => {
             {(showRepairTools || hasNoActivity) && (
               <div className="mb-6">
                 <ProgressRepairTools onRepairComplete={fetchProgressData} />
+              </div>
+            )}
+            
+            {/* Debug information - only show when no progress data is found */}
+            {debugData && debugData.length === 0 && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <h3 className="flex items-center text-amber-800 font-medium mb-2">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  No Progress Data Found
+                </h3>
+                <p className="text-sm text-amber-700 mb-3">
+                  We couldn't find any progress data for your account. This could be because:
+                </p>
+                <ul className="text-sm text-amber-700 list-disc pl-5 mb-3">
+                  <li>You haven't completed any practice sessions yet</li>
+                  <li>Your practice sessions may not have been properly recorded</li>
+                  <li>There might be a database connectivity issue</li>
+                </ul>
+                <p className="text-sm text-amber-700">
+                  Try completing a kana practice session or quiz, then return to this page and click "Refresh Data".
+                </p>
               </div>
             )}
             
