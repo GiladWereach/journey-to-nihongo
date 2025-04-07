@@ -1,3 +1,4 @@
+
 // This is a partial update focusing on the user progress calculation
 import { supabaseClient } from '@/lib/supabase';
 
@@ -114,4 +115,60 @@ export const kanaService = {
       { id: 'katakana-zo', type: 'katakana', character: 'ゾ', romaji: 'zo', group: 'z', strokes: 1, position: 57, examples: [{ word: 'ゾーン', romaji: 'zōn', meaning: 'zone' }], mnemonic: "Like 'so' with extra marks (voiced 's' becomes 'z')" },
       { id: 'katakana-da', type: 'katakana', character: 'ダ', romaji: 'da', group: 'd', strokes: 3, position: 58, examples: [{ word: 'ダム', romaji: 'damu', meaning: 'dam' }], mnemonic: "Like 'ta' with extra marks (voiced 't' becomes 'd')" },
       { id: 'katakana-di', type: 'katakana', character: 'ヂ', romaji: 'di', group: 'd', strokes: 2, position: 59, examples: [{ word: 'デジタル', romaji: 'dejitaru', meaning: 'digital' }], mnemonic: "Rarely used, same pronunciation as 'ji'" },
-      { id: 'katakana-du', type: 'katakana', character: 'ヅ', romaji: 'du', group: 'd', strokes: 1, position: 60
+      { id: 'katakana-du', type: 'katakana', character: 'ヅ', romaji: 'du', group: 'd', strokes: 1, position: 60, examples: [{ word: 'ツヅキ', romaji: 'tsuzuki', meaning: 'continuation' }], mnemonic: "Like 'tsu' with extra marks (voiced 't' becomes 'd')" }
+    ];
+  },
+
+  /**
+   * Get user progress data for kana characters
+   * @param userId - The user's ID
+   * @param kanaType - hiragana or katakana
+   * @returns Array of progress data for each character
+   */
+  getUserKanaProgress: async (userId, kanaType = null) => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('kana_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq(kanaType ? 'kana_type' : 'is_not_null', kanaType || true);
+
+      if (error) {
+        console.error('Error fetching kana progress:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (err) {
+      console.error('Error in getUserKanaProgress:', err);
+      return [];
+    }
+  },
+
+  /**
+   * Calculate proficiency level for a character based on user progress
+   * @param progressData - The progress data for a character
+   * @returns Proficiency level as a percentage (0-100)
+   */
+  calculateProficiency: (progressData) => {
+    if (!progressData) return 0;
+    
+    const { correct_count, incorrect_count } = progressData;
+    const totalAttempts = correct_count + incorrect_count;
+    
+    if (totalAttempts === 0) return 0;
+    
+    // Calculate base accuracy
+    let proficiency = Math.round((correct_count / totalAttempts) * 100);
+    
+    // Apply weight based on total attempts (more attempts = more reliable proficiency)
+    if (totalAttempts >= 10) {
+      // Full confidence in the proficiency at 10+ attempts
+      return proficiency;
+    } else {
+      // Scale confidence with number of attempts
+      const confidenceFactor = totalAttempts / 10;
+      return Math.round(proficiency * confidenceFactor);
+    }
+  }
+};
