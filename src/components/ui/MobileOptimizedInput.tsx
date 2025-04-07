@@ -21,9 +21,9 @@ const MobileOptimizedInput = forwardRef<HTMLInputElement, MobileOptimizedInputPr
       inputRef.current = node;
     };
 
-    // For mobile devices, maintain focus if requested
+    // For all devices, maintain focus if requested
     useEffect(() => {
-      if (isMobile && maintainFocus && inputRef.current) {
+      if (maintainFocus && inputRef.current) {
         // Force initial focus
         inputRef.current.focus();
         
@@ -31,12 +31,12 @@ const MobileOptimizedInput = forwardRef<HTMLInputElement, MobileOptimizedInputPr
           if (document.activeElement !== inputRef.current && inputRef.current && !inputRef.current.disabled) {
             inputRef.current.focus();
             
-            // On iOS, sometimes just focusing isn't enough - a click may help
+            // On mobile, sometimes just focusing isn't enough - a click may help
             if (isMobile) {
               inputRef.current.click();
             }
           }
-        }, 300); // Check frequently for better responsiveness
+        }, 150); // Check more frequently for better responsiveness
         
         return () => clearInterval(focusInterval);
       }
@@ -48,18 +48,19 @@ const MobileOptimizedInput = forwardRef<HTMLInputElement, MobileOptimizedInputPr
         onBlur(e);
       }
       
-      // On mobile, refocus if maintainFocus is true and input is not disabled
-      if (isMobile && maintainFocus && inputRef.current && !inputRef.current.disabled) {
-        setTimeout(() => {
+      // Refocus if maintainFocus is true and input is not disabled
+      if (maintainFocus && inputRef.current && !inputRef.current.disabled) {
+        // Immediate refocus to prevent keyboard from hiding
+        requestAnimationFrame(() => {
           if (inputRef.current && !inputRef.current.disabled) {
             inputRef.current.focus();
             
-            // On iOS, sometimes just focusing isn't enough - a click may help
+            // On mobile, sometimes just focusing isn't enough - a click may help
             if (isMobile) {
               inputRef.current.click();
             }
           }
-        }, 10); // Reduced from 50ms to make it more immediate
+        });
       }
     };
 
