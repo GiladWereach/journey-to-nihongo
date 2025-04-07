@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +16,7 @@ import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
 
-const KanaLearning = () => {
+const Progress = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('intro');
@@ -800,4 +801,115 @@ const KanaLearning = () => {
                         <CardContent>
                           <div className="space-y-3">
                             {getMostPracticed().map(progress => {
-                              const kana = allKana.find(k => k.id === progress.
+                              const kana = allKana.find(k => k.id === progress.character_id);
+                              if (!kana) return null;
+                              
+                              return (
+                                <div key={progress.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <div className="bg-white border rounded-full h-10 w-10 flex items-center justify-center">
+                                      <span className="text-lg japanese-text">{kana.character}</span>
+                                    </div>
+                                    <div>
+                                      <div className="font-medium">{kana.romaji}</div>
+                                      <div className="text-xs text-gray-500">{kana.type}</div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-medium">{progress.total_practice_count} times</div>
+                                    <div className="text-xs text-gray-500">{progress.proficiency}% proficiency</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            
+                            {getMostPracticed().length === 0 && (
+                              <div className="text-center py-6 text-gray-500">
+                                <p>No practice data yet.</p>
+                                <p className="text-sm">Start practicing to see stats!</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Activity className="h-5 w-5 text-rose-500" />
+                            Challenging Characters
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {getMostChallenging().map(progress => {
+                              const kana = allKana.find(k => k.id === progress.character_id);
+                              if (!kana) return null;
+                              
+                              return (
+                                <div key={progress.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`border rounded-full h-10 w-10 flex items-center justify-center ${
+                                      progress.proficiency < 40 ? 'bg-red-50 border-red-200' : 'bg-white'
+                                    }`}>
+                                      <span className="text-lg japanese-text">{kana.character}</span>
+                                    </div>
+                                    <div>
+                                      <div className="font-medium">{kana.romaji}</div>
+                                      <div className="text-xs text-gray-500">{kana.type}</div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-medium text-red-500">{progress.proficiency}%</div>
+                                    <div className="text-xs text-gray-500">
+                                      {progress.mistake_count} mistakes / {progress.total_practice_count} tries
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            
+                            {getMostChallenging().length === 0 && (
+                              <div className="text-center py-6 text-gray-500">
+                                <p>No challenging characters yet.</p>
+                                <p className="text-sm">Keep practicing to identify your weak points!</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-8 bg-white rounded-lg shadow-sm border">
+                    <BookOpen className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No Progress Data Yet</h3>
+                    <p className="text-gray-600 mb-6">Start learning and practicing kana to build your proficiency.</p>
+                    <Button
+                      onClick={() => setActiveTab('learn')}
+                      className="bg-indigo hover:bg-indigo/90"
+                    >
+                      Start Learning
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <div className="text-center p-8 bg-white rounded-lg shadow-sm border">
+                  <h3 className="text-xl font-semibold mb-2">Sign in to Track Progress</h3>
+                  <p className="text-gray-600 mb-6">Create an account to save your learning progress.</p>
+                  <Link to="/auth">
+                    <Button className="bg-indigo hover:bg-indigo/90">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Progress;
