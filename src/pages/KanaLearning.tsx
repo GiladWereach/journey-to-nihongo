@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { kanaService } from '@/services/kanaService';
+import { kanaService } from '@/services/kanaModules';
 import KanaGrid from '@/components/kana/KanaGrid';
 import KanaPractice from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
@@ -146,7 +146,9 @@ const KanaLearning = () => {
         };
       }).filter(Boolean) as Array<{ characterId: string; correct: boolean; timestamp: Date }>;
       
-      await kanaService.updateProgressFromResults(user.id, practiceResults);
+      for (const result of practiceResults) {
+        await kanaService.updateProgressFromResults(user.id, result.characterId, result.correct);
+      }
       
       const updatedProgress = await kanaService.getUserKanaProgress(user.id);
       setUserProgress(updatedProgress);
@@ -196,13 +198,11 @@ const KanaLearning = () => {
     );
   };
 
-  // Fix the sorting function to handle string dates
   const getMostRecentlyPracticed = () => {
     if (!userProgress.length) return [];
     
     return [...userProgress]
       .sort((a, b) => {
-        // Ensure we have Date objects for comparison
         const dateA = typeof a.last_practiced === 'string' 
           ? new Date(a.last_practiced).getTime() 
           : a.last_practiced instanceof Date 
@@ -800,3 +800,76 @@ const KanaLearning = () => {
                             {getMostPracticed().map(progress => {
                               const kana = allKana.find(k => k.id === progress.character_id);
                               if (!kana) return null;
+
+                              return (
+                                <div key={progress.character_id} className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <JapaneseCharacter character={kana.character} size="sm" color="text-matcha" />
+                                    <span className="text-lg">{kana.character}</span>
+                                  </div>
+                                  <span className="text-sm">{progress.total_practice_count}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Layers className="h-5 w-5 text-gray-500" />
+                            Most Challenging Characters
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {getMostChallenging().map(progress => {
+                              const kana = allKana.find(k => k.id === progress.character_id);
+                              if (!kana) return null;
+
+                              return (
+                                <div key={progress.character_id} className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <JapaneseCharacter character={kana.character} size="sm" color="text-matcha" />
+                                    <span className="text-lg">{kana.character}</span>
+                                  </div>
+                                  <span className="text-sm">{progress.total_practice_count}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-gray-600 mb-4">You haven't practiced any kana characters yet.</p>
+                    <Button 
+                      onClick={() => setActiveTab('practice')}
+                      className="bg-indigo hover:bg-indigo/90"
+                    >
+                      Start Practice
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 mb-4">Sign in to track your learning progress.</p>
+                  <Link to="/auth">
+                    <Button className="bg-indigo hover:bg-indigo/90">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default KanaLearning;

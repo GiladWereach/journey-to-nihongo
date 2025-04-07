@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { kanaService } from '@/services/kanaService';
+import { kanaService } from '@/services/kanaModules';
 import KanaGrid from '@/components/kana/KanaGrid';
 import KanaPractice from '@/components/kana/KanaPractice';
 import KanaPracticeResults from '@/components/kana/KanaPracticeResults';

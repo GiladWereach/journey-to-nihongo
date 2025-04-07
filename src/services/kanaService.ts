@@ -30,10 +30,10 @@ export const kanaService = {
       { id: 'hiragana:te', character: 'て', romaji: 'te', type: 'hiragana', stroke_count: 1, stroke_order: [], examples: [{ word: '手', reading: 'て', meaning: 'hand', romaji: 'te' }] },
       { id: 'hiragana:to', character: 'と', romaji: 'to', type: 'hiragana', stroke_count: 2, stroke_order: [], examples: [{ word: '戸', reading: 'と', meaning: 'door', romaji: 'to' }] },
       { id: 'hiragana:na', character: 'な', romaji: 'na', type: 'hiragana', stroke_count: 4, stroke_order: [], examples: [{ word: '名', reading: 'な', meaning: 'name', romaji: 'na' }] },
-      { id: 'hiragana:ni', character: 'に', romaji: 'ni', type: 'hiragana', stroke_count: 3, stroke_order: [], examples: [{ word: '二', reading: 'に', meaning: 'two', romaji: 'ni' }] },
-      { id: 'hiragana:nu', character: 'ぬ', romaji: 'nu', type: 'hiragana', stroke_count: 2, stroke_order: [], examples: [{ word: '布', reading: 'ぬの', meaning: 'cloth', romaji: 'nuno' }] },
-      { id: 'hiragana:ne', character: 'ね', romaji: 'ne', type: 'hiragana', stroke_count: 2, stroke_order: [], examples: [{ word: '根', reading: 'ね', meaning: 'root', romaji: 'ne' }] },
-      { id: 'hiragana:no', character: 'の', romaji: 'no', type: 'hiragana', stroke_count: 1, stroke_order: [], examples: [{ word: '野', reading: 'の', meaning: 'field', romaji: 'no' }] },
+      { id: 'hiragana:ni', character: 'ni', romaji: 'ni', type: 'hiragana', stroke_count: 3, stroke_order: [], examples: [{ word: '二', reading: 'に', meaning: 'two', romaji: 'ni' }] },
+      { id: 'hiragana:nu', character: 'nu', romaji: 'nu', type: 'hiragana', stroke_count: 2, stroke_order: [], examples: [{ word: '布', reading: 'ぬの', meaning: 'cloth', romaji: 'nuno' }] },
+      { id: 'hiragana:ne', character: 'ne', romaji: 'ne', type: 'hiragana', stroke_count: 2, stroke_order: [], examples: [{ word: '根', reading: 'ね', meaning: 'root', romaji: 'ne' }] },
+      { id: 'hiragana:no', character: 'no', romaji: 'no', type: 'hiragana', stroke_count: 1, stroke_order: [], examples: [{ word: '野', reading: 'の', meaning: 'field', romaji: 'no' }] },
       { id: 'hiragana:ha', character: 'は', romaji: 'ha', type: 'hiragana', stroke_count: 3, stroke_order: [], examples: [{ word: '歯', reading: 'は', meaning: 'tooth', romaji: 'ha' }] },
       { id: 'hiragana:hi', character: 'ひ', romaji: 'hi', type: 'hiragana', stroke_count: 1, stroke_order: [], examples: [{ word: '火', reading: 'ひ', meaning: 'fire', romaji: 'hi' }] },
       { id: 'hiragana:fu', character: 'ふ', romaji: 'fu', type: 'hiragana', stroke_count: 4, stroke_order: [], examples: [{ word: '風', reading: 'ふ', meaning: 'wind', romaji: 'fu' }] },
@@ -188,14 +188,11 @@ export const kanaService = {
       
       if (!progressEntries || progressEntries.length === 0) return 0;
       
-      // Filter entries by type if specified and not already filtered
-      let filteredEntries = progressEntries;
-      
       // Calculate total proficiency
-      const totalProficiency = filteredEntries.reduce((sum, entry) => 
+      const totalProficiency = progressEntries.reduce((sum, entry) => 
         sum + kanaService.calculateProficiency(entry), 0);
       
-      return Math.round(totalProficiency / filteredEntries.length);
+      return Math.round(totalProficiency / progressEntries.length);
     } catch (error) {
       console.error('Error calculating overall proficiency:', error);
       return 0;
@@ -209,7 +206,7 @@ export const kanaService = {
    * @param correct Whether the practice was correct or not
    * @returns Promise resolving to success status
    */
-  updateProgress: async (userId: string, characterId: string, correct: boolean): Promise<boolean> => {
+  updateProgressFromResults: async (userId: string, characterId: string, correct: boolean): Promise<boolean> => {
     try {
       // Fetch existing progress
       const { data: existingProgress, error: selectError } = await supabaseClient
@@ -298,10 +295,5 @@ export const kanaService = {
       console.error('Error updating kana progress:', error);
       return false;
     }
-  },
-
-  /**
-   * Update progress based on practice results
-   * @param userId User ID
-   * @param results Array of practice results
-   * @returns Promise
+  }
+};
