@@ -86,6 +86,9 @@ const Dashboard = () => {
           session => session.module === 'assessment' && session.completed === true
         );
         
+        console.log('Assessment completed check:', hasCompletedAssessment);
+        console.log('Sessions data:', sessionsData);
+        
         // Only show assessment prompt if user hasn't completed it
         setShowAssessmentPrompt(!hasCompletedAssessment);
         
