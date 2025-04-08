@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +5,7 @@ import { Award, Trophy, Medal, BadgeCheck, Star, Badge, ChevronRight } from 'luc
 import { Achievement, UserAchievement } from '@/types/achievements';
 import { achievementService } from '@/services/achievementService';
 import { Button } from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 // Map of icon names to Lucide icon components
 const achievementIcons: Record<string, React.ReactNode> = {
@@ -60,7 +60,7 @@ const AchievementsList = ({ limit = 3, showViewAll = true }: AchievementsListPro
   if (loading) {
     return (
       <div className="flex justify-center py-4">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo border-t-transparent"></div>
+        <LoadingSpinner size="sm" color="text-indigo" />
       </div>
     );
   }
