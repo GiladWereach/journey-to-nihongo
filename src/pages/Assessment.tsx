@@ -110,11 +110,20 @@ const Assessment = () => {
   };
   
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be signed in to save assessment results.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
+      console.log('Starting assessment submission...');
+      
       const knowledgeLevel = assessmentQuestions
         .find(q => q.category === 'level')
         ?.options.find(o => o.value === answers[1])?.value || 'beginner';
@@ -133,6 +142,7 @@ const Assessment = () => {
         .find(q => q.category === 'knowledge')
         ?.options.find(o => o.value === answers[4])?.value || 'none';
       
+      console.log('Updating profiles table...');
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -143,8 +153,12 @@ const Assessment = () => {
         })
         .eq('id', user.id);
         
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
       
+      console.log('Updating user_settings table...');
       const { error: settingsError } = await supabase
         .from('user_settings')
         .update({
@@ -155,10 +169,12 @@ const Assessment = () => {
         })
         .eq('id', user.id);
         
-      if (settingsError) throw settingsError;
+      if (settingsError) {
+        console.error('Settings update error:', settingsError);
+        throw settingsError;
+      }
       
-      // Fix: Remove start_time which doesn't exist in the study_sessions table
-      // Instead use session_date which is what the table actually has
+      console.log('Creating study session...');
       const currentDate = new Date().toISOString();
       const { error: sessionError } = await supabase
         .from('study_sessions')
@@ -171,8 +187,12 @@ const Assessment = () => {
           completed: true
         });
         
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Study session creation error:', sessionError);
+        throw sessionError;
+      }
       
+      console.log('Assessment completed successfully!');
       toast({
         title: 'Assessment Complete',
         description: 'Your learning plan is being customized based on your responses.',
