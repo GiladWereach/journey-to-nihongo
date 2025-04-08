@@ -273,10 +273,12 @@ const Dashboard = () => {
         if (sessionsError) throw sessionsError;
         setStudySessions(sessionsData || []);
         
+        // Improved assessment completion check
         const hasCompletedAssessment = (sessionsData || []).some(
-          session => session.module === 'assessment' && session.completed
+          session => session.module === 'assessment' && session.completed === true
         );
         
+        // Only show assessment prompt if user hasn't completed it
         setShowAssessmentPrompt(!hasCompletedAssessment);
         
         // Get kana progress statistics
