@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface AssessmentQuestion {
   id: number;
@@ -114,7 +114,6 @@ const Assessment = () => {
     setIsSubmitting(true);
     
     try {
-      // Process the answers to get learning preferences
       const knowledgeLevel = assessmentQuestions
         .find(q => q.category === 'level')
         ?.options.find(o => o.value === answers[1])?.value || 'beginner';
@@ -133,7 +132,6 @@ const Assessment = () => {
         .find(q => q.category === 'knowledge')
         ?.options.find(o => o.value === answers[4])?.value || 'none';
       
-      // Update profile with assessment results
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -146,7 +144,6 @@ const Assessment = () => {
         
       if (profileError) throw profileError;
       
-      // Update settings with prior knowledge
       const { error: settingsError } = await supabase
         .from('user_settings')
         .update({
@@ -159,7 +156,6 @@ const Assessment = () => {
         
       if (settingsError) throw settingsError;
       
-      // Create a study session for the assessment completion
       const { error: sessionError } = await supabase
         .from('study_sessions')
         .insert({
@@ -178,7 +174,6 @@ const Assessment = () => {
         description: 'Your learning plan is being customized based on your responses.',
       });
       
-      // Navigate to dashboard with success message
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error submitting assessment:', error);
