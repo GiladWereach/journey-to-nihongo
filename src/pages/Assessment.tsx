@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -156,6 +157,9 @@ const Assessment = () => {
         
       if (settingsError) throw settingsError;
       
+      // Fix: Remove start_time which doesn't exist in the study_sessions table
+      // Instead use session_date which is what the table actually has
+      const currentDate = new Date().toISOString();
       const { error: sessionError } = await supabase
         .from('study_sessions')
         .insert({
@@ -163,7 +167,7 @@ const Assessment = () => {
           module: 'assessment',
           topics: ['initial-assessment'],
           duration_minutes: 5,
-          session_date: new Date().toISOString(),
+          session_date: currentDate,
           completed: true
         });
         
