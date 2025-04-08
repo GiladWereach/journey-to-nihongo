@@ -252,6 +252,7 @@ export type Database = {
           notes: string | null
           performance_score: number | null
           session_date: string
+          start_time: string | null
           topics: string[]
           updated_at: string | null
           user_id: string
@@ -265,6 +266,7 @@ export type Database = {
           notes?: string | null
           performance_score?: number | null
           session_date: string
+          start_time?: string | null
           topics?: string[]
           updated_at?: string | null
           user_id: string
@@ -278,6 +280,7 @@ export type Database = {
           notes?: string | null
           performance_score?: number | null
           session_date?: string
+          start_time?: string | null
           topics?: string[]
           updated_at?: string | null
           user_id?: string
