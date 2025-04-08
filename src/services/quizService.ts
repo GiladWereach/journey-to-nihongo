@@ -763,12 +763,20 @@ export const quizService = {
         streak = 0;
       }
       
+      // Fix: Store only the character IDs, not the full objects
+      // This prevents invalid UUID errors
+      const characterIdsOnly = quizData.characterIds.map(id => {
+        // If the id contains a hyphen (like "hiragana-a"), extract just the UUID part
+        // Or if it's already a UUID, use it as is
+        return id.includes('-') ? id.split('-')[1] : id;
+      });
+      
       const { data, error } = await supabaseClient
         .from('kana_learning_sessions')
         .insert({
           user_id: userId,
           kana_type: quizData.kanaType,
-          characters_studied: quizData.characterIds,
+          characters_studied: characterIdsOnly,
           start_time: quizData.startTime.toISOString(),
           end_time: quizData.endTime.toISOString(),
           accuracy: accuracy,

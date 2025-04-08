@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface AssessmentQuestion {
   id: number;
@@ -190,6 +191,18 @@ const Assessment = () => {
       setIsSubmitting(false);
     }
   };
+  
+  if (isSubmitting) {
+    return (
+      <LoadingSpinner
+        size="lg"
+        color="text-indigo"
+        label="Saving your preferences..."
+        fullPage={true}
+        educational={true}
+      />
+    );
+  }
   
   return (
     <div className="min-h-screen pt-20 px-4 bg-softgray">
