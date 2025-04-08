@@ -175,7 +175,13 @@ const Assessment = () => {
       }
       
       console.log('Creating study session...');
-      const currentDate = new Date().toISOString();
+      const now = new Date();
+      const currentDate = now.toISOString();
+      
+      // Create the study session with all required fields
+      // Note: Looking at the database schema (kana_learning_sessions table), 
+      // it has a start_time column, but the study_sessions table doesn't.
+      // We're only sending fields that exist in the study_sessions table
       const { error: sessionError } = await supabase
         .from('study_sessions')
         .insert({
@@ -183,7 +189,7 @@ const Assessment = () => {
           module: 'assessment',
           topics: ['initial-assessment'],
           duration_minutes: 5,
-          session_date: currentDate,
+          session_date: currentDate, // This is the correct column name in study_sessions
           completed: true
         });
         
