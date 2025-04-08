@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { CirclePlay, Book } from 'lucide-react';
-import { StarHalf } from 'lucide-react';
+import { CirclePlay, Book, StarHalf } from 'lucide-react';
 
 interface QuickPracticeSectionProps {
   onNavigate: (path: string, isReady: boolean) => void;
@@ -9,15 +8,15 @@ interface QuickPracticeSectionProps {
 
 const QuickPracticeSection: React.FC<QuickPracticeSectionProps> = ({ onNavigate }) => {
   return (
-    <div className="w-full max-w-4xl mb-8">
-      <h2 className="text-xl font-semibold text-indigo mb-4 flex items-center">
+    <div className="w-full max-w-4xl mb-10">
+      <h2 className="text-xl font-semibold text-indigo mb-5 flex items-center">
         <StarHalf className="mr-2 h-5 w-5" />
         Quick Practice
       </h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div 
-          className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+          className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
           onClick={() => onNavigate('/quick-quiz', true)}
         >
           <h3 className="font-semibold mb-2 flex items-center">
@@ -28,7 +27,7 @@ const QuickPracticeSection: React.FC<QuickPracticeSectionProps> = ({ onNavigate 
         </div>
         
         <div 
-          className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+          className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
           onClick={() => onNavigate('/kana-learning', true)}
         >
           <h3 className="font-semibold mb-2 flex items-center">
@@ -39,7 +38,7 @@ const QuickPracticeSection: React.FC<QuickPracticeSectionProps> = ({ onNavigate 
         </div>
         
         <div 
-          className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+          className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
           onClick={() => onNavigate('/kana-learning?type=katakana', true)}
         >
           <h3 className="font-semibold mb-2 flex items-center">

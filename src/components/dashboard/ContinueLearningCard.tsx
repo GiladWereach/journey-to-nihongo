@@ -17,7 +17,7 @@ const ContinueLearningCard: React.FC<ContinueLearningCardProps> = ({
   if (!continueLearning) return null;
   
   return (
-    <div className="w-full max-w-4xl mb-8 bg-indigo/10 border border-indigo/20 rounded-xl p-6">
+    <div className="w-full max-w-4xl mb-10 bg-indigo/10 border border-indigo/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-indigo flex items-center">
@@ -25,20 +25,20 @@ const ContinueLearningCard: React.FC<ContinueLearningCardProps> = ({
             Continue Learning
           </h2>
           {continueLearning.lastActive && (
-            <span className="text-sm text-gray-500">Last active: {continueLearning.lastActive}</span>
+            <span className="text-sm text-gray-600 bg-white/50 px-3 py-1 rounded-full">Last active: {continueLearning.lastActive}</span>
           )}
         </div>
         
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+          <div className="flex flex-col md:flex-row gap-5 items-center">
             <div className="flex-grow">
-              <div className="flex items-center">
+              <div className="flex items-center mb-1">
                 {continueLearning.japaneseTitle && (
                   <span className="text-2xl font-japanese mr-2">{continueLearning.japaneseTitle}</span>
                 )}
                 <h3 className="text-lg font-semibold">{continueLearning.title}</h3>
               </div>
-              <p className="text-gray-600 text-sm mb-2">{continueLearning.description}</p>
+              <p className="text-gray-600 text-sm mb-3">{continueLearning.description}</p>
               <ProgressIndicator 
                 progress={continueLearning.progress} 
                 size="sm" 
@@ -46,7 +46,7 @@ const ContinueLearningCard: React.FC<ContinueLearningCardProps> = ({
               />
             </div>
             <Button
-              className="bg-indigo hover:bg-indigo/90 whitespace-nowrap"
+              className="bg-indigo hover:bg-indigo/90 whitespace-nowrap shadow-sm"
               onClick={() => onContinue(continueLearning.route)}
             >
               Continue Learning

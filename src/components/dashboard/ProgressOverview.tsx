@@ -23,15 +23,15 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
   const navigate = useNavigate();
   
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all">
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-indigo mb-4 flex items-center">
+        <h2 className="text-2xl font-bold text-indigo mb-5 flex items-center">
           <BarChart2 className="mr-2 h-5 w-5 text-indigo" />
           Your Progress
         </h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          <div className="bg-softgray/30 p-4 rounded-lg">
+          <div className="bg-softgray/30 p-4 rounded-lg shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium text-gray-800">Weekly Study Time</h3>
               <span className="text-xl font-bold text-indigo">{totalStudyTime} min</span>
@@ -48,7 +48,7 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
             </p>
           </div>
           
-          <div className="bg-softgray/30 p-4 rounded-lg">
+          <div className="bg-softgray/30 p-4 rounded-lg shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium text-gray-800">Study Streak</h3>
               <div className="flex items-center">
@@ -77,14 +77,14 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
         <div className="flex flex-col sm:flex-row gap-4">
           <Button 
             onClick={() => navigate('/progress')}
-            className="flex-1 bg-softgray hover:bg-softgray/80 text-gray-800"
+            className="flex-1 bg-indigo/10 hover:bg-indigo/20 text-indigo shadow-sm"
           >
             <Calendar className="mr-2 h-4 w-4" />
             View Detailed Progress
           </Button>
           <Button
             onClick={() => navigate('/achievements')}
-            className="flex-1 bg-softgray hover:bg-softgray/80 text-gray-800"
+            className="flex-1 bg-matcha/10 hover:bg-matcha/20 text-matcha shadow-sm"
           >
             <Award className="mr-2 h-4 w-4" />
             Achievements
