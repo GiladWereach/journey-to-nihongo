@@ -9,6 +9,7 @@ const DashboardSkeleton: React.FC = () => {
       color="text-indigo" 
       label="Loading your profile..." 
       fullPage={true} 
+      educational={true}
     />
   );
 };
