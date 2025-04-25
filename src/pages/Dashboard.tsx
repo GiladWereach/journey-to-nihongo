@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,9 +6,10 @@ import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/layout/Navbar';
 import { Profile, UserSettings } from '@/types/kana';
 import { kanaProgressService } from '@/services/kanaProgressService';
+import { useUserProgress } from '@/hooks/useUserProgress';
 import { StudySession, ContinueLearningData } from '@/types/dashboard';
 
-// Import the dashboard components
+// Import dashboard components
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
@@ -29,15 +29,24 @@ const Dashboard = () => {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [studySessions, setStudySessions] = useState<StudySession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAssessmentPrompt, setShowAssessmentPrompt] = useState(false);
-  const [continueLearning, setContinueLearning] = useState<ContinueLearningData | null>(null);
   const [hiraganaStats, setHiraganaStats] = useState({ learned: 0, total: 0, avgProficiency: 0 });
   const [katakanaStats, setKatakanaStats] = useState({ learned: 0, total: 0, avgProficiency: 0 });
   const { toast } = useToast();
+  const { progress: userProgress, loading: progressLoading } = useUserProgress();
   
   const totalStudyTime = calculateTotalStudyTimeInPastWeek(studySessions);
   
   const handleModuleNavigation = (path: string, isReady: boolean = true) => {
+    if (!userProgress?.assessment_completed && path !== '/assessment') {
+      toast({
+        title: "Assessment Required",
+        description: "Please complete the assessment first to personalize your learning journey.",
+        variant: "default",
+      });
+      navigate('/assessment');
+      return;
+    }
+    
     if (isReady) {
       navigate(path);
     } else {
@@ -72,6 +81,7 @@ const Dashboard = () => {
         if (settingsError) throw settingsError;
         setSettings(settingsData as UserSettings);
         
+        // Fetch study sessions
         const { data: sessionsData, error: sessionsError } = await supabase
           .from('study_sessions')
           .select('*')
@@ -80,17 +90,6 @@ const Dashboard = () => {
           
         if (sessionsError) throw sessionsError;
         setStudySessions(sessionsData || []);
-        
-        // Improved assessment completion check
-        const hasCompletedAssessment = (sessionsData || []).some(
-          session => session.module === 'assessment' && session.completed === true
-        );
-        
-        console.log('Assessment completed check:', hasCompletedAssessment);
-        console.log('Sessions data:', sessionsData);
-        
-        // Only show assessment prompt if user hasn't completed it
-        setShowAssessmentPrompt(!hasCompletedAssessment);
         
         // Get kana progress statistics
         if (user.id) {
@@ -121,25 +120,12 @@ const Dashboard = () => {
     getProfile();
   }, [user, toast]);
   
-  useEffect(() => {
-    // Determine what module to continue learning
-    if (!loading && profile) {
-      const lastModule = findLastActiveModule(studySessions, hiraganaStats, katakanaStats);
-      setContinueLearning(lastModule);
-    }
-  }, [loading, profile, hiraganaStats, katakanaStats, studySessions]);
-  
-  if (loading) {
+  if (loading || progressLoading) {
     return <DashboardSkeleton />;
   }
   
-  const recommendedNextModule = determineRecommendedNextModule(
-    profile, 
-    settings, 
-    hiraganaStats, 
-    katakanaStats, 
-    showAssessmentPrompt
-  );
+  // If assessment not completed, show assessment prompt
+  const showAssessmentPrompt = !userProgress?.assessment_completed;
   
   return (
     <>
@@ -154,14 +140,14 @@ const Dashboard = () => {
               settings={settings}
               studySessions={studySessions}
               showAssessmentPrompt={showAssessmentPrompt}
-              continueLearning={continueLearning}
+              continueLearning={null} // We'll implement this based on userProgress
               hiraganaStats={hiraganaStats}
               katakanaStats={katakanaStats}
-              calculateStreak={() => calculateStreak(studySessions)}
-              totalStudyTime={totalStudyTime}
               signOut={signOut}
               handleModuleNavigation={handleModuleNavigation}
-              recommendedNextModule={recommendedNextModule}
+              recommendedNextModule={null} // We'll implement this based on userProgress
+              calculateStreak={() => calculateStreak(studySessions)}
+              totalStudyTime={totalStudyTime}
             />
           )}
         </div>

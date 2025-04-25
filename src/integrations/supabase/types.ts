@@ -245,6 +245,7 @@ export type Database = {
       study_sessions: {
         Row: {
           completed: boolean | null
+          completion_validated: boolean | null
           created_at: string | null
           duration_minutes: number
           id: string
@@ -256,9 +257,11 @@ export type Database = {
           topics: string[]
           updated_at: string | null
           user_id: string
+          validation_timestamp: string | null
         }
         Insert: {
           completed?: boolean | null
+          completion_validated?: boolean | null
           created_at?: string | null
           duration_minutes: number
           id?: string
@@ -270,9 +273,11 @@ export type Database = {
           topics?: string[]
           updated_at?: string | null
           user_id: string
+          validation_timestamp?: string | null
         }
         Update: {
           completed?: boolean | null
+          completion_validated?: boolean | null
           created_at?: string | null
           duration_minutes?: number
           id?: string
@@ -284,6 +289,7 @@ export type Database = {
           topics?: string[]
           updated_at?: string | null
           user_id?: string
+          validation_timestamp?: string | null
         }
         Relationships: [
           {
@@ -392,6 +398,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_learning_progress: {
+        Row: {
+          assessment_completed: boolean | null
+          assessment_completed_at: string | null
+          created_at: string | null
+          current_stage: string
+          hiragana_completed: boolean | null
+          id: string
+          katakana_completed: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assessment_completed?: boolean | null
+          assessment_completed_at?: string | null
+          created_at?: string | null
+          current_stage?: string
+          hiragana_completed?: boolean | null
+          id?: string
+          katakana_completed?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assessment_completed?: boolean | null
+          assessment_completed_at?: string | null
+          created_at?: string | null
+          current_stage?: string
+          hiragana_completed?: boolean | null
+          id?: string
+          katakana_completed?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_learning_streaks: {
         Row: {

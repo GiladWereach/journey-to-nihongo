@@ -65,6 +65,25 @@ const Assessment = () => {
     setIsSubmitting(true);
     
     try {
+      const now = new Date().toISOString();
+      
+      // Create a validated study session for the assessment
+      const { error: sessionError } = await supabase
+        .from('study_sessions')
+        .insert({
+          user_id: user.id,
+          module: 'assessment',
+          topics: ['initial-assessment'],
+          duration_minutes: 5,
+          session_date: now,
+          start_time: now,
+          completed: true,
+          completion_validated: true,
+          validation_timestamp: now
+        });
+        
+      if (sessionError) throw sessionError;
+      
       await submitAssessment(user, answers);
       
       toast({
