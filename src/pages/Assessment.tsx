@@ -7,9 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/components/ui/use-toast';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { supabase } from '@/integrations/supabase/client'; // Added missing import
+import { supabase } from '@/integrations/supabase/client'; // Fixed missing import
 
-// Import our new components
+// Import our components
 import AssessmentQuestion from '@/components/assessment/AssessmentQuestion';
 import AssessmentProgress from '@/components/assessment/AssessmentProgress';
 import AssessmentNavigation from '@/components/assessment/AssessmentNavigation';
@@ -66,26 +66,20 @@ const Assessment = () => {
     setIsSubmitting(true);
     
     try {
+      // Create session and mark assessment as completed
       const now = new Date().toISOString();
       
-      // Create a validated study session for the assessment
-      const { error: sessionError } = await supabase
-        .from('study_sessions')
-        .insert({
-          user_id: user.id,
-          module: 'assessment',
-          topics: ['initial-assessment'],
-          duration_minutes: 5,
-          session_date: now,
-          start_time: now,
-          completed: true,
-          completion_validated: true,
-          validation_timestamp: now
-        });
-        
-      if (sessionError) throw sessionError;
-      
       await submitAssessment(user, answers);
+      
+      // Also update user_learning_progress directly to ensure assessment is marked as completed
+      await supabase
+        .from('user_learning_progress')
+        .update({
+          assessment_completed: true,
+          assessment_completed_at: now,
+          current_stage: 'hiragana'
+        })
+        .eq('user_id', user.id);
       
       toast({
         title: 'Assessment Complete',

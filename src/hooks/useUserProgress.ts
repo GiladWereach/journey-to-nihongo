@@ -20,32 +20,59 @@ export function useUserProgress() {
           .from('user_learning_progress')
           .select('*')
           .eq('user_id', user.id)
-          .maybeSingle(); // Use maybeSingle instead of single to handle case when no record exists
+          .maybeSingle();
 
         if (error) throw error;
         
-        // If data exists, convert it to the proper type
         if (data) {
+          // Explicitly cast current_stage to the correct type
           const typedData: UserLearningProgress = {
             ...data,
             current_stage: data.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
           };
           setProgress(typedData);
         } else {
-          // If no progress record exists, create one
-          const { data: newProgress, error: insertError } = await supabase
-            .from('user_learning_progress')
-            .insert([{ user_id: user.id }])
-            .select('*')
-            .single();
+          // Create new progress entry if none exists
+          try {
+            const { data: newProgress, error: insertError } = await supabase
+              .from('user_learning_progress')
+              .insert([{ 
+                user_id: user.id,
+                current_stage: 'assessment',
+                assessment_completed: false,
+                hiragana_completed: false,
+                katakana_completed: false
+              }])
+              .select()
+              .single();
+              
+            if (insertError) throw insertError;
             
-          if (insertError) throw insertError;
-          
-          const typedNewData: UserLearningProgress = {
-            ...newProgress,
-            current_stage: newProgress.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
-          };
-          setProgress(typedNewData);
+            const typedNewData: UserLearningProgress = {
+              ...newProgress,
+              current_stage: newProgress.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
+            };
+            setProgress(typedNewData);
+          } catch (insertErr: any) {
+            console.error('Error creating user progress:', insertErr);
+            // If insert fails (possibly due to race condition with another insert),
+            // try fetching again
+            const { data: refetchData, error: refetchError } = await supabase
+              .from('user_learning_progress')
+              .select('*')
+              .eq('user_id', user.id)
+              .maybeSingle();
+              
+            if (refetchError) throw refetchError;
+            
+            if (refetchData) {
+              const typedRefetchData: UserLearningProgress = {
+                ...refetchData,
+                current_stage: refetchData.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
+              };
+              setProgress(typedRefetchData);
+            }
+          }
         }
       } catch (error: any) {
         console.error('Error fetching user progress:', error);

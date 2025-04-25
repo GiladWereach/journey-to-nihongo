@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,8 +37,18 @@ const Dashboard = () => {
   
   const totalStudyTime = calculateTotalStudyTimeInPastWeek(studySessions);
   
+  // Check if we have assessment completion in study sessions even if userProgress doesn't reflect it
+  const [assessmentCompleted, setAssessmentCompleted] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Update from userProgress when available
+    if (userProgress) {
+      setAssessmentCompleted(userProgress.assessment_completed);
+    }
+  }, [userProgress]);
+  
   const handleModuleNavigation = (path: string, isReady: boolean = true) => {
-    if (!userProgress?.assessment_completed && path !== '/assessment') {
+    if (!assessmentCompleted && path !== '/assessment') {
       toast({
         title: "Assessment Required",
         description: "Please complete the assessment first to personalize your learning journey.",
@@ -91,6 +102,17 @@ const Dashboard = () => {
         if (sessionsError) throw sessionsError;
         setStudySessions(sessionsData || []);
         
+        // Check if there's an assessment session that's completed
+        if (sessionsData && sessionsData.length > 0) {
+          const hasCompletedAssessment = sessionsData.some(
+            session => session.module === 'assessment' && session.completed === true
+          );
+          
+          if (hasCompletedAssessment) {
+            setAssessmentCompleted(true);
+          }
+        }
+        
         // Get kana progress statistics
         if (user.id) {
           const hiraganaProgressStats = await kanaProgressService.getKanaProficiencyStats(
@@ -124,8 +146,24 @@ const Dashboard = () => {
     return <DashboardSkeleton />;
   }
   
-  // If assessment not completed, show assessment prompt
-  const showAssessmentPrompt = !userProgress?.assessment_completed;
+  // Update to use our assessmentCompleted state which considers both sources
+  const showAssessmentPrompt = !assessmentCompleted;
+  
+  // Calculate recommended next module based on progress
+  const recommendedNextModule = determineRecommendedNextModule(
+    profile, 
+    settings,
+    hiraganaStats,
+    katakanaStats,
+    showAssessmentPrompt
+  );
+  
+  // Find last active module for continue learning
+  const continueLearning = findLastActiveModule(
+    studySessions,
+    hiraganaStats,
+    katakanaStats
+  );
   
   return (
     <>
@@ -140,12 +178,12 @@ const Dashboard = () => {
               settings={settings}
               studySessions={studySessions}
               showAssessmentPrompt={showAssessmentPrompt}
-              continueLearning={null} // We'll implement this based on userProgress
+              continueLearning={continueLearning}
               hiraganaStats={hiraganaStats}
               katakanaStats={katakanaStats}
               signOut={signOut}
               handleModuleNavigation={handleModuleNavigation}
-              recommendedNextModule={null} // We'll implement this based on userProgress
+              recommendedNextModule={recommendedNextModule}
               calculateStreak={() => calculateStreak(studySessions)}
               totalStudyTime={totalStudyTime}
             />
