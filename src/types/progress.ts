@@ -10,3 +10,18 @@ export interface UserLearningProgress {
   created_at: string;
   updated_at: string;
 }
+
+export type LearningStage = {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  current: boolean;
+  progress: number;
+  features?: Array<{
+    name: string;
+    description: string;
+    icon: string;
+    available: boolean;
+  }>;
+};

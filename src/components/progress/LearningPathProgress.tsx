@@ -1,18 +1,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, CheckCircle2, Circle } from 'lucide-react';
+import { MapPin, CheckCircle2, Circle, BookOpen, Clock, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
-
-interface LearningStage {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  current: boolean;
-  progress: number;
-}
+import { LearningStage } from '@/types/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface LearningPathProgressProps {
   hiraganaProgress: number;
@@ -33,32 +26,68 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
   const stages: LearningStage[] = [
     {
       id: 'hiragana',
-      title: 'Hiragana Mastery',
-      description: 'Learn all hiragana characters and basic vocabulary',
+      title: 'Hiragana Recognition',
+      description: 'Learn all hiragana characters with quiz-based practice',
       completed: hiraganaProgress >= 90,
       current: hiraganaProgress < 90,
-      progress: hiraganaProgress
+      progress: hiraganaProgress,
+      features: [
+        {
+          name: 'Multiple Choice Quiz',
+          description: 'Test your knowledge with multiple choice questions',
+          icon: 'book-open',
+          available: true
+        },
+        {
+          name: 'Speed Quiz',
+          description: 'Test your recognition speed with timed challenges',
+          icon: 'clock',
+          available: true
+        }
+      ]
     },
     {
       id: 'katakana',
-      title: 'Katakana Challenge',
-      description: 'Master katakana and common foreign loanwords',
+      title: 'Katakana Recognition',
+      description: 'Master katakana through interactive quizzes',
       completed: katakanaProgress >= 90 && hiraganaProgress >= 90,
       current: hiraganaProgress >= 90 && katakanaProgress < 90,
-      progress: katakanaProgress
+      progress: katakanaProgress,
+      features: [
+        {
+          name: 'Multiple Choice Quiz',
+          description: 'Test your knowledge with multiple choice questions',
+          icon: 'book-open',
+          available: true
+        },
+        {
+          name: 'Speed Quiz',
+          description: 'Test your recognition speed with timed challenges',
+          icon: 'clock',
+          available: true
+        }
+      ]
     },
     {
       id: 'basic-kanji',
       title: 'Basic Kanji Introduction',
-      description: 'Learn common kanji and sentence structures',
+      description: 'Learn common kanji through guided practice',
       completed: basicKanjiProgress >= 90 && katakanaProgress >= 90,
       current: katakanaProgress >= 90 && basicKanjiProgress < 90,
-      progress: basicKanjiProgress
+      progress: basicKanjiProgress,
+      features: [
+        {
+          name: 'Multiple Choice Quiz',
+          description: 'Test your knowledge with multiple choice questions',
+          icon: 'book-open',
+          available: true
+        }
+      ]
     },
     {
       id: 'grammar-basics',
       title: 'Grammar Foundations',
-      description: 'Master essential grammar patterns and conversational phrases',
+      description: 'Master essential grammar patterns through quizzes',
       completed: grammarProgress >= 90 && basicKanjiProgress >= 90,
       current: basicKanjiProgress >= 90 && grammarProgress < 90,
       progress: grammarProgress
@@ -66,12 +95,26 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
     {
       id: 'jlpt-n5',
       title: 'JLPT N5 Preparation',
-      description: 'Prepare for the JLPT N5 certification',
+      description: 'Prepare for the JLPT N5 certification with comprehensive quizzes',
       completed: false,
       current: grammarProgress >= 90,
       progress: 0
     }
   ];
+
+  // Helper function to render feature icon
+  const renderFeatureIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'book-open':
+        return <BookOpen className="h-4 w-4" />;
+      case 'clock':
+        return <Clock className="h-4 w-4" />;
+      case 'zap':
+        return <Zap className="h-4 w-4" />;
+      default:
+        return <BookOpen className="h-4 w-4" />;
+    }
+  };
 
   return (
     <Card className={className}>
@@ -118,6 +161,25 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
                       {stage.title}
                     </h3>
                     <p className="text-gray-500 mt-1 text-sm">{stage.description}</p>
+                    
+                    {/* Available features for this stage */}
+                    {stage.features && stage.features.length > 0 && (stage.current || stage.completed) && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {stage.features.map((feature, idx) => (
+                          <Badge 
+                            key={idx} 
+                            variant="outline"
+                            className={cn(
+                              "flex items-center gap-1 py-1",
+                              feature.available ? "bg-gray-50" : "bg-gray-50 opacity-60"
+                            )}
+                          >
+                            {renderFeatureIcon(feature.icon)}
+                            <span className="text-xs">{feature.name}</span>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                     
                     {/* Progress indicator for current stage */}
                     {stage.current && stage.progress > 0 && (
