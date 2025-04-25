@@ -20,17 +20,32 @@ export function useUserProgress() {
           .from('user_learning_progress')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to handle case when no record exists
 
         if (error) throw error;
         
-        // Convert the string to the valid enum type
+        // If data exists, convert it to the proper type
         if (data) {
           const typedData: UserLearningProgress = {
             ...data,
             current_stage: data.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
           };
           setProgress(typedData);
+        } else {
+          // If no progress record exists, create one
+          const { data: newProgress, error: insertError } = await supabase
+            .from('user_learning_progress')
+            .insert([{ user_id: user.id }])
+            .select('*')
+            .single();
+            
+          if (insertError) throw insertError;
+          
+          const typedNewData: UserLearningProgress = {
+            ...newProgress,
+            current_stage: newProgress.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
+          };
+          setProgress(typedNewData);
         }
       } catch (error: any) {
         console.error('Error fetching user progress:', error);

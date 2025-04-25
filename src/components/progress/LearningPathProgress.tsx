@@ -27,7 +27,7 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
     {
       id: 'hiragana',
       title: 'Hiragana Recognition',
-      description: 'Learn all hiragana characters with quiz-based practice',
+      description: 'Learn all hiragana characters through multiple choice and speed quizzes',
       completed: hiraganaProgress >= 90,
       current: hiraganaProgress < 90,
       progress: hiraganaProgress,
@@ -49,7 +49,7 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
     {
       id: 'katakana',
       title: 'Katakana Recognition',
-      description: 'Master katakana through interactive quizzes',
+      description: 'Master katakana through multiple choice and speed quizzes',
       completed: katakanaProgress >= 90 && hiraganaProgress >= 90,
       current: hiraganaProgress >= 90 && katakanaProgress < 90,
       progress: katakanaProgress,
@@ -71,7 +71,7 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
     {
       id: 'basic-kanji',
       title: 'Basic Kanji Introduction',
-      description: 'Learn common kanji through guided practice',
+      description: 'Learn common kanji through guided multiple choice quizzes',
       completed: basicKanjiProgress >= 90 && katakanaProgress >= 90,
       current: katakanaProgress >= 90 && basicKanjiProgress < 90,
       progress: basicKanjiProgress,
@@ -81,24 +81,52 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
           description: 'Test your knowledge with multiple choice questions',
           icon: 'book-open',
           available: true
+        },
+        {
+          name: 'Speed Quiz',
+          description: 'Test your recognition speed with timed challenges',
+          icon: 'clock',
+          available: false
         }
       ]
     },
     {
       id: 'grammar-basics',
       title: 'Grammar Foundations',
-      description: 'Master essential grammar patterns through quizzes',
+      description: 'Master essential Japanese grammar patterns through interactive quizzes',
       completed: grammarProgress >= 90 && basicKanjiProgress >= 90,
       current: basicKanjiProgress >= 90 && grammarProgress < 90,
-      progress: grammarProgress
+      progress: grammarProgress,
+      features: [
+        {
+          name: 'Multiple Choice Quiz',
+          description: 'Test your grammar knowledge with interactive exercises',
+          icon: 'book-open',
+          available: false
+        }
+      ]
     },
     {
       id: 'jlpt-n5',
       title: 'JLPT N5 Preparation',
-      description: 'Prepare for the JLPT N5 certification with comprehensive quizzes',
+      description: 'Prepare for the JLPT N5 certification with comprehensive practice',
       completed: false,
       current: grammarProgress >= 90,
-      progress: 0
+      progress: 0,
+      features: [
+        {
+          name: 'Multiple Choice Quiz',
+          description: 'JLPT-style practice questions',
+          icon: 'book-open',
+          available: false
+        },
+        {
+          name: 'Vocabulary Practice',
+          description: 'Learn essential N5 vocabulary',
+          icon: 'zap',
+          available: false
+        }
+      ]
     }
   ];
 
@@ -176,6 +204,9 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
                           >
                             {renderFeatureIcon(feature.icon)}
                             <span className="text-xs">{feature.name}</span>
+                            {!feature.available && (
+                              <span className="text-xs text-gray-400 ml-1">(Coming Soon)</span>
+                            )}
                           </Badge>
                         ))}
                       </div>
@@ -214,7 +245,7 @@ const LearningPathProgress: React.FC<LearningPathProgressProps> = ({
                     {/* Future stage indicator */}
                     {!stage.completed && !stage.current && index > stages.findIndex(s => s.current) && (
                       <div className="mt-1 text-xs text-gray-400">
-                        Unlock by completing previous stage
+                        Complete previous stage to unlock
                       </div>
                     )}
                   </div>
