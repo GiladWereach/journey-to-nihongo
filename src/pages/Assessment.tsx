@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/components/ui/use-toast';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client'; // Added missing import
 
 // Import our new components
 import AssessmentQuestion from '@/components/assessment/AssessmentQuestion';

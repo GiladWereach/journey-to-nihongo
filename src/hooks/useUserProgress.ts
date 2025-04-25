@@ -23,7 +23,15 @@ export function useUserProgress() {
           .single();
 
         if (error) throw error;
-        setProgress(data);
+        
+        // Convert the string to the valid enum type
+        if (data) {
+          const typedData: UserLearningProgress = {
+            ...data,
+            current_stage: data.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
+          };
+          setProgress(typedData);
+        }
       } catch (error: any) {
         console.error('Error fetching user progress:', error);
         toast({
@@ -50,7 +58,12 @@ export function useUserProgress() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setProgress(payload.new as UserLearningProgress);
+          const newData = payload.new as any;
+          const typedData: UserLearningProgress = {
+            ...newData,
+            current_stage: newData.current_stage as "assessment" | "hiragana" | "katakana" | "kanji"
+          };
+          setProgress(typedData);
         }
       )
       .subscribe();
