@@ -2,219 +2,184 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { assessmentQuestions } from '@/data/assessmentQuestions';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { assessmentQuestions, AssessmentQuestion } from '@/data/assessmentQuestions';
+import { supabase } from '@/integrations/supabase/client';
 
-interface AssessmentQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-}
-
-const Assessment: React.FC = () => {
+const Assessment = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  const currentQuestion = assessmentQuestions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / assessmentQuestions.length) * 100;
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
-      return;
     }
   }, [user, navigate]);
 
-  const handleAnswerSelect = (answerIndex: number) => {
-    setSelectedAnswer(answerIndex);
+  const handleAnswer = (answer: string) => {
+    const newAnswers = [...answers];
+    newAnswers[currentQuestion] = answer;
+    setAnswers(newAnswers);
   };
 
-  const handleNext = async () => {
-    if (selectedAnswer === null) return;
-
-    const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = selectedAnswer;
-    setAnswers(newAnswers);
-
-    if (currentQuestionIndex < assessmentQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
+  const handleNext = () => {
+    if (currentQuestion < assessmentQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Assessment completed
-      setIsCompleted(true);
-      setShowResult(true);
-      
-      // Calculate score
-      const score = newAnswers.reduce((acc, answer, index) => {
-        return acc + (answer === assessmentQuestions[index].correctAnswer ? 1 : 0);
-      }, 0);
-
-      const percentage = Math.round((score / assessmentQuestions.length) * 100);
-
-      if (user) {
-        try {
-          // Update user profile with assessment completion
-          const { error } = await supabase
-            .from('profiles')
-            .update({
-              learning_level: percentage >= 80 ? 'intermediate' : percentage >= 60 ? 'beginner-plus' : 'beginner'
-            })
-            .eq('id', user.id);
-
-          if (error) {
-            console.error('Error updating profile:', error);
-          }
-        } catch (error) {
-          console.error('Error in assessment completion:', error);
-        }
-      }
-
-      toast({
-        title: "Assessment completed!",
-        description: `You scored ${score}/${assessmentQuestions.length} (${percentage}%)`,
-        variant: "default",
-      });
+      completeAssessment();
     }
   };
 
   const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setSelectedAnswer(answers[currentQuestionIndex - 1] ?? null);
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
     }
   };
 
-  const calculateResults = () => {
-    const score = answers.reduce((acc, answer, index) => {
-      return acc + (answer === assessmentQuestions[index].correctAnswer ? 1 : 0);
-    }, 0);
+  const completeAssessment = async () => {
+    if (!user) return;
     
-    const percentage = Math.round((score / assessmentQuestions.length) * 100);
-    let level = 'beginner';
+    setIsSubmitting(true);
     
-    if (percentage >= 80) level = 'intermediate';
-    else if (percentage >= 60) level = 'beginner-plus';
-    
-    return { score, percentage, level };
+    try {
+      // Calculate score
+      let score = 0;
+      answers.forEach((answer, index) => {
+        const question = assessmentQuestions[index];
+        if (answer === question.correct) {
+          score++;
+        }
+      });
+      
+      const percentage = (score / assessmentQuestions.length) * 100;
+      
+      // Update user profile with assessment completion
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          learning_level: percentage >= 80 ? 'intermediate' : percentage >= 50 ? 'beginner' : 'absolute_beginner'
+        })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
+      }
+
+      setIsComplete(true);
+      
+      toast({
+        title: "Assessment Complete!",
+        description: `You scored ${score}/${assessmentQuestions.length} (${Math.round(percentage)}%)`,
+      });
+      
+    } catch (error) {
+      console.error('Error completing assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete assessment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (showResult) {
-    const results = calculateResults();
-    
+  const currentQuestionData = assessmentQuestions[currentQuestion];
+  const progress = ((currentQuestion + 1) / assessmentQuestions.length) * 100;
+
+  if (isComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-softgray">
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-indigo">Assessment Complete!</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 text-center">
-              <div className="space-y-2">
-                <div className="text-4xl font-bold text-indigo">{results.score}/{assessmentQuestions.length}</div>
-                <div className="text-lg text-gray-600">{results.percentage}% Correct</div>
-                <div className="text-lg font-medium">Level: <span className="text-matcha">{results.level}</span></div>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="font-semibold">What's Next?</h3>
-                <p className="text-gray-600">
-                  Based on your results, we recommend starting with our structured learning path.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Button onClick={() => navigate('/learn')} className="w-full">
-                  Start Learning
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/')} className="w-full">
-                  Return to Dashboard
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl">Assessment Complete!</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p>Your learning path has been customized based on your responses.</p>
+            <Button onClick={() => navigate('/dashboard')} size="lg">
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  if (!currentQuestionData) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-softgray">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
-            <div className="text-sm text-gray-500">
-              Question {currentQuestionIndex + 1} of {assessmentQuestions.length}
-            </div>
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>Question {currentQuestion + 1} of {assessmentQuestions.length}</span>
+            <span>{Math.round(progress)}% complete</span>
+          </div>
+          <Progress value={progress} className="w-full" />
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">{currentQuestionData.question}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            {currentQuestionData.options.map((option, index) => (
+              <Button
+                key={index}
+                variant={answers[currentQuestion] === option.value ? "default" : "outline"}
+                className="w-full text-left justify-start h-auto p-4"
+                onClick={() => handleAnswer(option.value)}
+              >
+                <div>
+                  <div className="font-medium">{option.text}</div>
+                </div>
+              </Button>
+            ))}
           </div>
 
-          {/* Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progress</span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
-          {/* Question Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{currentQuestion.question}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {currentQuestion.options.map((option, index) => (
-                <Button
-                  key={index}
-                  variant={selectedAnswer === index ? "default" : "outline"}
-                  className="w-full text-left justify-start h-auto p-4"
-                  onClick={() => handleAnswerSelect(index)}
-                >
-                  <span className="mr-3 font-semibold">{String.fromCharCode(65 + index)}.</span>
-                  {option}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Navigation */}
-          <div className="flex justify-between">
+          <div className="flex justify-between pt-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentQuestionIndex === 0}
+              disabled={currentQuestion === 0}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
               Previous
             </Button>
             
             <Button
               onClick={handleNext}
-              disabled={selectedAnswer === null}
+              disabled={!answers[currentQuestion]}
             >
-              {currentQuestionIndex === assessmentQuestions.length - 1 ? 'Complete' : 'Next'}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              {currentQuestion === assessmentQuestions.length - 1 ? 'Complete' : 'Next'}
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

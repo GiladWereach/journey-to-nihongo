@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { kanaService } from '@/services/kanaModules';
+import { kanaService } from '@/services/kanaService';
 import KanaGrid from '@/components/kana/KanaGrid';
 import { KanaType, UserKanaProgress, PracticeResult } from '@/types/kana';
 import { Book, PenTool, BookOpen, BarChart } from 'lucide-react';

@@ -1,45 +1,5 @@
 
-import { KanaCharacter } from './kana';
-
 export type KanaType = 'hiragana' | 'katakana';
-
-export interface QuizCharacter {
-  id: string;
-  character: string;
-  romaji: string;
-  type: KanaType;
-  isDakuten?: boolean;
-  isHandakuten?: boolean;
-  group?: string;
-  row?: string;
-  quizMode?: 'recognition' | 'production' | 'both';
-}
-
-export interface QuizSession {
-  id: string;
-  user_id: string;
-  kana_type: KanaType;
-  questions_answered: number;
-  correct_answers: number;
-  accuracy: number;
-  streak: number;
-  start_time: string;
-  end_time?: string;
-  completed: boolean;
-}
-
-export interface CharacterProgress {
-  id: string;
-  user_id: string;
-  character_id: string;
-  proficiency: number;
-  mistake_count: number;
-  total_practice_count: number;
-  consecutive_correct: number;
-  last_practiced: string;
-  review_due: string;
-  mastery_level: number;
-}
 
 export interface QuizSettings {
   showBasicOnly: boolean;
@@ -47,28 +7,65 @@ export interface QuizSettings {
   showTroubleCharacters: boolean;
   characterSize: 'small' | 'medium' | 'large';
   audioFeedback: boolean;
-  speedMode?: boolean;
-  includeDakuten?: boolean;
-  includeHandakuten?: boolean;
+  speedMode: boolean;
+  includeDakuten: boolean;
+  includeHandakuten: boolean;
 }
 
-export interface CharacterResult {
-  characterId: string;
+export interface QuizCharacter {
+  id: string;
   character: string;
   romaji: string;
-  isCorrect: boolean;
-  attemptCount: number;
+  type: KanaType;
+  stroke_count: number;
+  stroke_order: string[];
+  examples?: Array<{
+    word: string;
+    reading: string;
+    meaning: string;
+    romaji: string;
+  }>;
+}
+
+export interface QuizCharacterSet {
+  id: string;
+  name: string;
+  description: string;
+  characters: QuizCharacter[];
+  type: KanaType;
 }
 
 export interface QuizSessionStats {
-  startTime: Date;
-  endTime: Date | null;
-  totalAttempts: number;
-  correctCount: number;
-  incorrectCount: number;
-  currentStreak: number;
-  longestStreak: number;
+  totalQuestions: number;
+  correctAnswers: number;
   accuracy: number;
-  durationSeconds?: number;
-  characterResults: CharacterResult[];
+  timeSpent: number;
+  characterResults: Array<{
+    character: string;
+    correct: boolean;
+    timeSpent: number;
+  }>;
+}
+
+export interface QuizState {
+  currentQuestionIndex: number;
+  questions: QuizQuestion[];
+  answers: QuizAnswer[];
+  startTime: Date;
+  endTime?: Date;
+  isComplete: boolean;
+}
+
+export interface QuizQuestion {
+  character: QuizCharacter;
+  options: string[];
+  correctAnswer: string;
+  type: 'character-to-romaji' | 'romaji-to-character';
+}
+
+export interface QuizAnswer {
+  questionIndex: number;
+  selectedAnswer: string;
+  isCorrect: boolean;
+  timeSpent: number;
 }
