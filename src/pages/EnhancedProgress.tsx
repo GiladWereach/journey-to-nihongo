@@ -82,9 +82,22 @@ const EnhancedProgress: React.FC = () => {
     
     setLoading(true);
     try {
-      // Use the regular character progress service for broader compatibility
-      const progress = await characterProgressService.getCharacterProgress(user.id);
-      setProgressData(progress);
+      // Get basic progress data and transform it to enhanced format
+      const basicProgress = await characterProgressService.getCharacterProgress(user.id);
+      
+      // Transform UserKanaProgress to EnhancedUserKanaProgress
+      const enhancedProgress: EnhancedUserKanaProgress[] = basicProgress.map(progress => ({
+        ...progress,
+        confidence_score: progress.proficiency || 0,
+        average_response_time: 2000, // Default response time in ms
+        sessions_practiced: Math.max(1, progress.total_practice_count),
+        first_seen_at: new Date(progress.created_at || new Date()),
+        graduation_date: progress.proficiency >= 90 ? new Date() : null,
+        last_mistake_date: progress.mistake_count > 0 ? new Date(progress.updated_at || new Date()) : null,
+        similar_character_confusions: {}
+      }));
+      
+      setProgressData(enhancedProgress);
 
       const hiragana = await enhancedCharacterProgressService.calculateMasteryStats(user.id, 'hiragana');
       const katakana = await enhancedCharacterProgressService.calculateMasteryStats(user.id, 'katakana');
@@ -192,39 +205,33 @@ const EnhancedProgress: React.FC = () => {
   };
 
   const getCharactersByType = (type: 'hiragana' | 'katakana') => {
-    // Use local data as primary source and supplement with database data
+    // Combine local data with database characters for comprehensive coverage
     const localCharacters = type === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
+    const dbCharsOfType = dbCharacters.filter(char => char.type === type);
     
-    // Also get database characters of the same type for completeness
-    const dbChars = dbCharacters.filter(char => char.type === type);
-    
-    // Create a map to merge data from both sources
+    // Create a comprehensive character map
     const characterMap = new Map();
     
-    // Add local characters first (they have more complete grouping info)
-    localCharacters.forEach(char => {
+    // Add all database characters first (they have the authoritative IDs)
+    dbCharsOfType.forEach(char => {
       characterMap.set(char.character, {
-        ...char,
-        source: 'local'
+        id: char.id,
+        character: char.character,
+        romaji: char.romaji,
+        type: char.type,
+        source: 'database'
       });
     });
     
-    // Add any database characters that might be missing from local data
-    dbChars.forEach(char => {
+    // Add any local characters that might not be in the database yet
+    localCharacters.forEach(char => {
       if (!characterMap.has(char.character)) {
         characterMap.set(char.character, {
           id: char.id,
           character: char.character,
           romaji: char.romaji,
           type: char.type,
-          source: 'database'
-        });
-      } else {
-        // Update with database ID if available
-        const existing = characterMap.get(char.character);
-        characterMap.set(char.character, {
-          ...existing,
-          dbId: char.id
+          source: 'local'
         });
       }
     });
@@ -238,16 +245,8 @@ const EnhancedProgress: React.FC = () => {
     characters.forEach(character => {
       let group = 'basic';
       
-      // Extract group from character ID if it follows the pattern
-      if (character.id && character.id.includes('-')) {
-        const parts = character.id.split('-');
-        if (parts.length >= 2) {
-          group = parts[1];
-        }
-      }
-      
-      // Fallback grouping based on romaji for better organization
-      if (group === 'basic' && character.romaji) {
+      // Determine group based on romaji
+      if (character.romaji) {
         const romaji = character.romaji.toLowerCase();
         if (['a', 'i', 'u', 'e', 'o'].includes(romaji)) {
           group = 'vowels';
@@ -318,17 +317,11 @@ const EnhancedProgress: React.FC = () => {
   };
 
   const findProgressForCharacter = (character: any): any => {
-    // Try to find progress by database ID first
-    if (character.dbId) {
-      const dbProgress = progressData.find(p => p.character_id === character.dbId);
-      if (dbProgress) return dbProgress;
-    }
+    // Try to find progress by database ID first (most reliable)
+    const dbProgress = progressData.find(p => p.character_id === character.id);
+    if (dbProgress) return dbProgress;
     
-    // Fallback to local ID
-    const localProgress = progressData.find(p => p.character_id === character.id);
-    if (localProgress) return localProgress;
-    
-    // Try to match by character itself as a last resort
+    // Fallback: try to match by character content
     return progressData.find(p => {
       const dbChar = dbCharacters.find(db => db.id === p.character_id);
       return dbChar && dbChar.character === character.character;
