@@ -23,10 +23,22 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { enhancedCharacterProgressService, EnhancedUserKanaProgress, MasteryStats } from '@/services/enhancedCharacterProgressService';
-import { kanaService } from '@/services/kanaService';
+import { characterProgressService } from '@/services/characterProgressService';
+import { supabase } from '@/integrations/supabase/client';
 import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
+
+interface DatabaseCharacter {
+  id: string;
+  character: string;
+  romaji: string;
+  type: string;
+  stroke_count: number;
+  stroke_order: string[];
+  mnemonic?: string;
+  examples?: any;
+}
 
 const EnhancedProgress: React.FC = () => {
   const { user } = useAuth();
@@ -36,19 +48,42 @@ const EnhancedProgress: React.FC = () => {
   const [hiraganaStats, setHiraganaStats] = useState<MasteryStats | null>(null);
   const [katakanaStats, setKatakanaStats] = useState<MasteryStats | null>(null);
   const [overallStats, setOverallStats] = useState<MasteryStats | null>(null);
+  const [dbCharacters, setDbCharacters] = useState<DatabaseCharacter[]>([]);
 
   useEffect(() => {
     if (user) {
       loadProgressData();
+      loadDatabaseCharacters();
     }
   }, [user]);
+
+  const loadDatabaseCharacters = async () => {
+    try {
+      const { data: characters, error } = await supabase
+        .from('kana_characters')
+        .select('*')
+        .order('type', { ascending: true });
+
+      if (error) {
+        console.error('Error loading database characters:', error);
+        return;
+      }
+
+      if (characters) {
+        setDbCharacters(characters);
+      }
+    } catch (error) {
+      console.error('Error loading database characters:', error);
+    }
+  };
 
   const loadProgressData = async () => {
     if (!user) return;
     
     setLoading(true);
     try {
-      const progress = await enhancedCharacterProgressService.getEnhancedCharacterProgress(user.id);
+      // Use the regular character progress service for broader compatibility
+      const progress = await characterProgressService.getCharacterProgress(user.id);
       setProgressData(progress);
 
       const hiragana = await enhancedCharacterProgressService.calculateMasteryStats(user.id, 'hiragana');
@@ -156,11 +191,51 @@ const EnhancedProgress: React.FC = () => {
     return `${seconds}s`;
   };
 
+  const getCharactersByType = (type: 'hiragana' | 'katakana') => {
+    // Use local data as primary source and supplement with database data
+    const localCharacters = type === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
+    
+    // Also get database characters of the same type for completeness
+    const dbChars = dbCharacters.filter(char => char.type === type);
+    
+    // Create a map to merge data from both sources
+    const characterMap = new Map();
+    
+    // Add local characters first (they have more complete grouping info)
+    localCharacters.forEach(char => {
+      characterMap.set(char.character, {
+        ...char,
+        source: 'local'
+      });
+    });
+    
+    // Add any database characters that might be missing from local data
+    dbChars.forEach(char => {
+      if (!characterMap.has(char.character)) {
+        characterMap.set(char.character, {
+          id: char.id,
+          character: char.character,
+          romaji: char.romaji,
+          type: char.type,
+          source: 'database'
+        });
+      } else {
+        // Update with database ID if available
+        const existing = characterMap.get(char.character);
+        characterMap.set(char.character, {
+          ...existing,
+          dbId: char.id
+        });
+      }
+    });
+    
+    return Array.from(characterMap.values());
+  };
+
   const groupCharactersByType = (characters: any[], type: 'hiragana' | 'katakana') => {
     const groups: {[key: string]: any[]} = {};
     
     characters.forEach(character => {
-      // Use a more reliable grouping based on the character structure
       let group = 'basic';
       
       // Extract group from character ID if it follows the pattern
@@ -242,6 +317,24 @@ const EnhancedProgress: React.FC = () => {
     return groupNames[groupKey] || groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
   };
 
+  const findProgressForCharacter = (character: any): any => {
+    // Try to find progress by database ID first
+    if (character.dbId) {
+      const dbProgress = progressData.find(p => p.character_id === character.dbId);
+      if (dbProgress) return dbProgress;
+    }
+    
+    // Fallback to local ID
+    const localProgress = progressData.find(p => p.character_id === character.id);
+    if (localProgress) return localProgress;
+    
+    // Try to match by character itself as a last resort
+    return progressData.find(p => {
+      const dbChar = dbCharacters.find(db => db.id === p.character_id);
+      return dbChar && dbChar.character === character.character;
+    });
+  };
+
   const renderCharacterGrid = (characters: any[], type: 'hiragana' | 'katakana') => {
     const groupedCharacters = groupCharactersByType(characters, type);
     const groupOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'combinations', 'basic'];
@@ -269,13 +362,13 @@ const EnhancedProgress: React.FC = () => {
               
               <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
                 {groupCharacters.map(character => {
-                  const progress = getCharacterProgress(character.id);
+                  const progress = findProgressForCharacter(character);
                   const masteryLevel = progress?.mastery_level || 0;
-                  const confidenceScore = progress?.confidence_score || 0;
+                  const confidenceScore = progress?.confidence_score || progress?.proficiency || 0;
                   const practiceCount = progress?.total_practice_count || 0;
                   
                   return (
-                    <div key={character.id} className="group">
+                    <div key={`${character.id}-${character.character}`} className="group">
                       <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center relative">
                         <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
                           {character.character}
@@ -553,7 +646,7 @@ const EnhancedProgress: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Mastery Distribution - Visual Progress Bar */}
+              {/* Mastery Distribution */}
               <Card className="bg-white shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold flex items-center gap-2">
@@ -637,7 +730,10 @@ const EnhancedProgress: React.FC = () => {
                     <h3 className="text-lg font-semibold mb-2 text-purple-700">Practice Time</h3>
                     <div className="text-2xl font-bold text-purple-600 mb-2">
                       {formatTime(progressData
-                        .filter(p => p.character_id.startsWith('hiragana'))
+                        .filter(p => {
+                          const dbChar = dbCharacters.find(db => db.id === p.character_id);
+                          return dbChar && dbChar.type === 'hiragana';
+                        })
                         .reduce((total, p) => total + (p.average_response_time * p.total_practice_count), 0)
                       )}
                     </div>
@@ -651,11 +747,11 @@ const EnhancedProgress: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <span className="text-2xl">あ</span>
-                    Hiragana Characters ({hiraganaCharacters.length} total)
+                    Hiragana Characters ({getCharactersByType('hiragana').length} total)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {renderCharacterGrid(hiraganaCharacters, 'hiragana')}
+                  {renderCharacterGrid(getCharactersByType('hiragana'), 'hiragana')}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -698,7 +794,10 @@ const EnhancedProgress: React.FC = () => {
                     <h3 className="text-lg font-semibold mb-2 text-purple-700">Practice Time</h3>
                     <div className="text-2xl font-bold text-purple-600 mb-2">
                       {formatTime(progressData
-                        .filter(p => p.character_id.startsWith('katakana'))
+                        .filter(p => {
+                          const dbChar = dbCharacters.find(db => db.id === p.character_id);
+                          return dbChar && dbChar.type === 'katakana';
+                        })
                         .reduce((total, p) => total + (p.average_response_time * p.total_practice_count), 0)
                       )}
                     </div>
@@ -712,11 +811,11 @@ const EnhancedProgress: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <span className="text-2xl">ア</span>
-                    Katakana Characters ({katakanaCharacters.length} total)
+                    Katakana Characters ({getCharactersByType('katakana').length} total)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {renderCharacterGrid(katakanaCharacters, 'katakana')}
+                  {renderCharacterGrid(getCharactersByType('katakana'), 'katakana')}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -734,7 +833,10 @@ const EnhancedProgress: React.FC = () => {
                   <CardContent>
                     <div className="space-y-4">
                       {getTopPerformers().map((progress, index) => {
-                        const character = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
+                        const dbCharacter = dbCharacters.find(db => db.id === progress.character_id);
+                        const localCharacter = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
+                        const character = dbCharacter || localCharacter;
+                        
                         if (!character) return null;
                         
                         return (
@@ -782,7 +884,10 @@ const EnhancedProgress: React.FC = () => {
                   <CardContent>
                     <div className="space-y-4">
                       {getChallengingCharacters().map((progress, index) => {
-                        const character = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
+                        const dbCharacter = dbCharacters.find(db => db.id === progress.character_id);
+                        const localCharacter = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
+                        const character = dbCharacter || localCharacter;
+                        
                         if (!character) return null;
                         
                         return (
@@ -823,7 +928,10 @@ const EnhancedProgress: React.FC = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4">
                     {getRecentlyPracticed().map((progress, index) => {
-                      const character = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
+                      const dbCharacter = dbCharacters.find(db => db.id === progress.character_id);
+                      const localCharacter = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
+                      const character = dbCharacter || localCharacter;
+                      
                       if (!character) return null;
                       
                       return (
