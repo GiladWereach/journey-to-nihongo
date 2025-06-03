@@ -15,14 +15,30 @@ export interface QuizCharacter {
   quizMode?: 'recognition' | 'production' | 'both';
 }
 
-export interface QuizCharacterSet {
+export interface QuizSession {
   id: string;
-  name: string;
-  description?: string;
-  type: KanaType;
-  characters: QuizCharacter[];
-  consonantGroup?: string;
-  vowelGroup?: string;
+  user_id: string;
+  kana_type: KanaType;
+  questions_answered: number;
+  correct_answers: number;
+  accuracy: number;
+  streak: number;
+  start_time: string;
+  end_time?: string;
+  completed: boolean;
+}
+
+export interface CharacterProgress {
+  id: string;
+  user_id: string;
+  character_id: string;
+  proficiency: number;
+  mistake_count: number;
+  total_practice_count: number;
+  consecutive_correct: number;
+  last_practiced: string;
+  review_due: string;
+  mastery_level: number;
 }
 
 export interface QuizSettings {
@@ -55,18 +71,4 @@ export interface QuizSessionStats {
   accuracy: number;
   durationSeconds?: number;
   characterResults: CharacterResult[];
-}
-
-export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  criteria: {
-    type: 'streak' | 'correct_answers' | 'accuracy' | 'completion' | 'time';
-    threshold: number;
-    scope?: KanaType | 'all';
-  };
-  icon: string;
-  unlocked: boolean;
-  progress: number;
 }

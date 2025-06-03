@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,16 +7,22 @@ import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { KanaType } from '@/types/kana';
 import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
+import { useAuth } from '@/contexts/AuthContext';
+import { quizSessionService, QuizSession } from '@/services/quizSessionService';
+import { characterProgressService } from '@/services/characterProgressService';
 
 interface SimpleQuizInterfaceProps {
   kanaType: KanaType;
   onEndQuiz: () => void;
+  session: QuizSession | null;
 }
 
 const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({ 
   kanaType, 
-  onEndQuiz 
+  onEndQuiz,
+  session
 }) => {
+  const { user } = useAuth();
   const [currentCharacter, setCurrentCharacter] = useState<any>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
@@ -32,17 +39,25 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
     setCurrentCharacter(getRandomCharacter());
   }, [kanaType]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!currentCharacter || !userInput.trim()) return;
 
     const isCorrect = userInput.trim().toLowerCase() === currentCharacter.romaji.toLowerCase();
     setFeedback(isCorrect ? 'correct' : 'incorrect');
-    setScore(prev => ({
-      correct: prev.correct + (isCorrect ? 1 : 0),
-      total: prev.total + 1
-    }));
+    
+    const newScore = {
+      correct: score.correct + (isCorrect ? 1 : 0),
+      total: score.total + 1
+    };
+    setScore(newScore);
+
+    // Update session progress if user is logged in
+    if (user && session) {
+      await quizSessionService.updateSession(session.id, newScore.total, newScore.correct);
+      await characterProgressService.updateCharacterProgress(user.id, currentCharacter.id, isCorrect);
+    }
 
     // Auto-advance after showing feedback
     setTimeout(() => {

@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      achievements: {
-        Row: {
-          category: string
-          created_at: string | null
-          description: string
-          icon: string | null
-          id: string
-          name: string
-          points: number | null
-          required_progress: number
-          requirements: string | null
-          title: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          description: string
-          icon?: string | null
-          id?: string
-          name: string
-          points?: number | null
-          required_progress: number
-          requirements?: string | null
-          title?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          description?: string
-          icon?: string | null
-          id?: string
-          name?: string
-          points?: number | null
-          required_progress?: number
-          requirements?: string | null
-          title?: string | null
-        }
-        Relationships: []
-      }
       kana_characters: {
         Row: {
           character: string
@@ -153,44 +114,41 @@ export type Database = {
       kana_learning_sessions: {
         Row: {
           accuracy: number | null
-          characters_studied: string[]
           completed: boolean | null
-          completed_at: string | null
+          correct_answers: number | null
           created_at: string | null
           end_time: string | null
           id: string
           kana_type: string
+          questions_answered: number | null
           start_time: string | null
           streak: number | null
-          updated_at: string | null
           user_id: string
         }
         Insert: {
           accuracy?: number | null
-          characters_studied?: string[]
           completed?: boolean | null
-          completed_at?: string | null
+          correct_answers?: number | null
           created_at?: string | null
           end_time?: string | null
           id?: string
           kana_type: string
+          questions_answered?: number | null
           start_time?: string | null
           streak?: number | null
-          updated_at?: string | null
           user_id: string
         }
         Update: {
           accuracy?: number | null
-          characters_studied?: string[]
           completed?: boolean | null
-          completed_at?: string | null
+          correct_answers?: number | null
           created_at?: string | null
           end_time?: string | null
           id?: string
           kana_type?: string
+          questions_answered?: number | null
           start_time?: string | null
           streak?: number | null
-          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -241,110 +199,6 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
-      }
-      study_sessions: {
-        Row: {
-          completed: boolean | null
-          completion_validated: boolean | null
-          created_at: string | null
-          duration_minutes: number
-          id: string
-          module: string
-          notes: string | null
-          performance_score: number | null
-          session_date: string
-          start_time: string | null
-          topics: string[]
-          updated_at: string | null
-          user_id: string
-          validation_timestamp: string | null
-        }
-        Insert: {
-          completed?: boolean | null
-          completion_validated?: boolean | null
-          created_at?: string | null
-          duration_minutes: number
-          id?: string
-          module: string
-          notes?: string | null
-          performance_score?: number | null
-          session_date: string
-          start_time?: string | null
-          topics?: string[]
-          updated_at?: string | null
-          user_id: string
-          validation_timestamp?: string | null
-        }
-        Update: {
-          completed?: boolean | null
-          completion_validated?: boolean | null
-          created_at?: string | null
-          duration_minutes?: number
-          id?: string
-          module?: string
-          notes?: string | null
-          performance_score?: number | null
-          session_date?: string
-          start_time?: string | null
-          topics?: string[]
-          updated_at?: string | null
-          user_id?: string
-          validation_timestamp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "study_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_achievements: {
-        Row: {
-          achievement_id: string
-          created_at: string | null
-          current_progress: number
-          id: string
-          unlocked_at: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          achievement_id: string
-          created_at?: string | null
-          current_progress?: number
-          id?: string
-          unlocked_at?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          achievement_id?: string
-          created_at?: string | null
-          current_progress?: number
-          id?: string
-          unlocked_at?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_achievements_achievement_id_fkey"
-            columns: ["achievement_id"]
-            isOneToOne: false
-            referencedRelation: "achievements"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_achievements_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_kana_progress: {
         Row: {
@@ -399,119 +253,33 @@ export type Database = {
           },
         ]
       }
-      user_learning_progress: {
-        Row: {
-          assessment_completed: boolean | null
-          assessment_completed_at: string | null
-          created_at: string | null
-          current_stage: string
-          hiragana_completed: boolean | null
-          id: string
-          katakana_completed: boolean | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          assessment_completed?: boolean | null
-          assessment_completed_at?: string | null
-          created_at?: string | null
-          current_stage?: string
-          hiragana_completed?: boolean | null
-          id?: string
-          katakana_completed?: boolean | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          assessment_completed?: boolean | null
-          assessment_completed_at?: string | null
-          created_at?: string | null
-          current_stage?: string
-          hiragana_completed?: boolean | null
-          id?: string
-          katakana_completed?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_learning_streaks: {
-        Row: {
-          activity_count: number
-          created_at: string | null
-          date: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          activity_count?: number
-          created_at?: string | null
-          date: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          activity_count?: number
-          created_at?: string | null
-          date?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_learning_streaks_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_settings: {
         Row: {
           created_at: string | null
-          daily_goal: number | null
-          daily_goal_minutes: number | null
           display_furigana: boolean | null
           id: string
-          notifications_enabled: boolean | null
-          preferred_study_time: string | null
-          prior_knowledge: string | null
-          reminder_time: string | null
-          study_reminder: boolean | null
+          quiz_auto_advance: boolean | null
+          show_stroke_order: boolean | null
           theme: string | null
           updated_at: string | null
-          weekly_goal_days: number | null
         }
         Insert: {
           created_at?: string | null
-          daily_goal?: number | null
-          daily_goal_minutes?: number | null
           display_furigana?: boolean | null
           id: string
-          notifications_enabled?: boolean | null
-          preferred_study_time?: string | null
-          prior_knowledge?: string | null
-          reminder_time?: string | null
-          study_reminder?: boolean | null
+          quiz_auto_advance?: boolean | null
+          show_stroke_order?: boolean | null
           theme?: string | null
           updated_at?: string | null
-          weekly_goal_days?: number | null
         }
         Update: {
           created_at?: string | null
-          daily_goal?: number | null
-          daily_goal_minutes?: number | null
           display_furigana?: boolean | null
           id?: string
-          notifications_enabled?: boolean | null
-          preferred_study_time?: string | null
-          prior_knowledge?: string | null
-          reminder_time?: string | null
-          study_reminder?: boolean | null
+          quiz_auto_advance?: boolean | null
+          show_stroke_order?: boolean | null
           theme?: string | null
           updated_at?: string | null
-          weekly_goal_days?: number | null
         }
         Relationships: [
           {

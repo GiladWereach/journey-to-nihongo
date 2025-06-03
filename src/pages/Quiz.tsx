@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,18 +7,30 @@ import { ArrowLeft } from 'lucide-react';
 import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
 import { KanaType } from '@/types/kana';
+import { quizSessionService, QuizSession } from '@/services/quizSessionService';
 
 const Quiz: React.FC = () => {
   const { user } = useAuth();
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType>('hiragana');
+  const [currentSession, setCurrentSession] = useState<QuizSession | null>(null);
 
-  const handleStartQuiz = (kanaType: KanaType) => {
+  const handleStartQuiz = async (kanaType: KanaType) => {
     setSelectedKanaType(kanaType);
+    
+    if (user) {
+      const session = await quizSessionService.startSession(user.id, kanaType);
+      setCurrentSession(session);
+    }
+    
     setIsQuizActive(true);
   };
 
-  const handleEndQuiz = () => {
+  const handleEndQuiz = async () => {
+    if (currentSession) {
+      await quizSessionService.endSession(currentSession.id);
+      setCurrentSession(null);
+    }
     setIsQuizActive(false);
   };
 
@@ -95,6 +107,7 @@ const Quiz: React.FC = () => {
               <SimpleQuizInterface 
                 kanaType={selectedKanaType}
                 onEndQuiz={handleEndQuiz}
+                session={currentSession}
               />
             </div>
           )}
