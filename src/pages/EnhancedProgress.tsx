@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -16,7 +17,10 @@ import {
   Star,
   Zap,
   Award,
-  BarChart3
+  BarChart3,
+  Home,
+  Play,
+  ArrowLeft
 } from 'lucide-react';
 import { enhancedCharacterProgressService, EnhancedUserKanaProgress, MasteryStats } from '@/services/enhancedCharacterProgressService';
 import { kanaService } from '@/services/kanaService';
@@ -42,11 +46,9 @@ const EnhancedProgress: React.FC = () => {
     
     setLoading(true);
     try {
-      // Load enhanced progress data
       const progress = await enhancedCharacterProgressService.getEnhancedCharacterProgress(user.id);
       setProgressData(progress);
 
-      // Load mastery statistics
       const hiragana = await enhancedCharacterProgressService.calculateMasteryStats(user.id, 'hiragana');
       const katakana = await enhancedCharacterProgressService.calculateMasteryStats(user.id, 'katakana');
       const overall = await enhancedCharacterProgressService.calculateMasteryStats(user.id);
@@ -63,13 +65,13 @@ const EnhancedProgress: React.FC = () => {
 
   const getMasteryStageColor = (stage: number): string => {
     switch (stage) {
-      case 0: return 'bg-gray-500';
-      case 1: return 'bg-red-500';
-      case 2: return 'bg-yellow-500';
-      case 3: return 'bg-blue-500';
-      case 4: return 'bg-indigo-500';
-      case 5: return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 0: return 'bg-gray-400';
+      case 1: return 'bg-red-400';
+      case 2: return 'bg-yellow-400';
+      case 3: return 'bg-blue-400';
+      case 4: return 'bg-indigo-400';
+      case 5: return 'bg-green-400';
+      default: return 'bg-gray-400';
     }
   };
 
@@ -89,28 +91,59 @@ const EnhancedProgress: React.FC = () => {
     return [...progressData]
       .filter(p => p.confidence_score > 0)
       .sort((a, b) => b.confidence_score - a.confidence_score)
-      .slice(0, 10);
+      .slice(0, 5);
   };
 
   const getChallengingCharacters = (): EnhancedUserKanaProgress[] => {
     return [...progressData]
       .filter(p => p.total_practice_count > 2 && p.confidence_score < 70)
       .sort((a, b) => a.confidence_score - b.confidence_score)
-      .slice(0, 10);
+      .slice(0, 5);
   };
 
   const getRecentlyPracticed = (): EnhancedUserKanaProgress[] => {
     return [...progressData]
       .sort((a, b) => new Date(b.last_practiced).getTime() - new Date(a.last_practiced).getTime())
-      .slice(0, 10);
+      .slice(0, 8);
   };
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Sign in to view your progress</h2>
-          <p className="text-gray-600">Create an account to track your Japanese learning journey.</p>
+      <div className="min-h-screen bg-gradient-to-br from-softgray via-white to-indigo/5">
+        {/* Navigation Bar */}
+        <nav className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Link to="/" className="flex items-center space-x-2">
+                <ArrowLeft className="h-5 w-5 text-indigo" />
+                <span className="text-xl font-montserrat font-bold text-indigo">
+                  Nihongo Journey
+                </span>
+              </Link>
+              <Link to="/auth">
+                <Button className="bg-indigo hover:bg-indigo/90">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <Brain className="mx-auto h-16 w-16 text-indigo mb-4" />
+              <h2 className="text-2xl font-bold mb-4">Track Your Progress</h2>
+              <p className="text-gray-600 mb-6">
+                Sign in to see detailed insights about your Japanese learning journey.
+              </p>
+              <Link to="/auth">
+                <Button className="bg-indigo hover:bg-indigo/90 w-full">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -118,388 +151,471 @@ const EnhancedProgress: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-softgray via-white to-indigo/5">
+        {/* Navigation Bar */}
+        <nav className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Link to="/" className="flex items-center space-x-2">
+                <ArrowLeft className="h-5 w-5 text-indigo" />
+                <span className="text-xl font-montserrat font-bold text-indigo">
+                  Nihongo Journey
+                </span>
+              </Link>
+              <div className="flex items-center space-x-2">
+                <Link to="/quiz">
+                  <Button variant="outline" size="sm">
+                    <Play className="h-4 w-4 mr-1" />
+                    Quiz
+                  </Button>
+                </Link>
+                <Link to="/">
+                  <Button variant="outline" size="sm">
+                    <Home className="h-4 w-4 mr-1" />
+                    Home
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo border-t-transparent mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your progress...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Learning Progress</h1>
-        <p className="text-gray-600">Track your Japanese character mastery journey</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-softgray via-white to-indigo/5">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <ArrowLeft className="h-5 w-5 text-indigo" />
+              <span className="text-xl font-montserrat font-bold text-indigo">
+                Nihongo Journey
+              </span>
+            </Link>
+            <div className="flex items-center space-x-2">
+              <Link to="/quiz">
+                <Button variant="outline" size="sm" className="bg-indigo/10 text-indigo border-indigo/20 hover:bg-indigo/20">
+                  <Play className="h-4 w-4 mr-1" />
+                  Continue Quiz
+                </Button>
+              </Link>
+              <Link to="/">
+                <Button variant="outline" size="sm">
+                  <Home className="h-4 w-4 mr-1" />
+                  Home
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="hiragana">Hiragana</TabsTrigger>
-          <TabsTrigger value="katakana">Katakana</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-        </TabsList>
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-indigo mb-2">Learning Progress</h1>
+          <p className="text-lg text-gray-600">Track your Japanese character mastery journey</p>
+        </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Overall Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Characters Learned</p>
-                    <p className="text-2xl font-bold">{overallStats?.total || 0}</p>
-                  </div>
-                  <Brain className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Mastered</p>
-                    <p className="text-2xl font-bold">{overallStats?.mastered || 0}</p>
-                  </div>
-                  <Trophy className="h-8 w-8 text-yellow-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Avg. Confidence</p>
-                    <p className="text-2xl font-bold">{overallStats?.averageConfidence || 0}%</p>
-                  </div>
-                  <Target className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Total Practice</p>
-                    <p className="text-2xl font-bold">
-                      {progressData.reduce((sum, p) => sum + p.total_practice_count, 0)}
-                    </p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="flex justify-center">
+            <TabsList className="grid grid-cols-4 w-full max-w-2xl bg-white shadow-sm">
+              <TabsTrigger value="overview" className="text-sm font-medium">Overview</TabsTrigger>
+              <TabsTrigger value="hiragana" className="text-sm font-medium">Hiragana</TabsTrigger>
+              <TabsTrigger value="katakana" className="text-sm font-medium">Katakana</TabsTrigger>
+              <TabsTrigger value="insights" className="text-sm font-medium">Insights</TabsTrigger>
+            </TabsList>
           </div>
 
-          {/* Mastery Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Mastery Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <TabsContent value="overview" className="space-y-8">
+            {/* Quick Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-700">Characters</p>
+                      <p className="text-3xl font-bold text-blue-900">{overallStats?.total || 0}</p>
+                    </div>
+                    <Brain className="h-10 w-10 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-700">Mastered</p>
+                      <p className="text-3xl font-bold text-green-900">{overallStats?.mastered || 0}</p>
+                    </div>
+                    <Trophy className="h-10 w-10 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-purple-700">Confidence</p>
+                      <p className="text-3xl font-bold text-purple-900">{overallStats?.averageConfidence || 0}%</p>
+                    </div>
+                    <Target className="h-10 w-10 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-orange-700">Practice</p>
+                      <p className="text-3xl font-bold text-orange-900">
+                        {progressData.reduce((sum, p) => sum + p.total_practice_count, 0)}
+                      </p>
+                    </div>
+                    <BarChart3 className="h-10 w-10 text-orange-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Mastery Distribution - Visual Progress Bar */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <Award className="h-6 w-6 text-indigo" />
+                  Mastery Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {[
-                  { stage: 0, label: 'New', count: overallStats?.new || 0 },
-                  { stage: 1, label: 'Learning', count: overallStats?.learning || 0 },
-                  { stage: 2, label: 'Familiar', count: overallStats?.familiar || 0 },
-                  { stage: 3, label: 'Practiced', count: overallStats?.practiced || 0 },
-                  { stage: 4, label: 'Reliable', count: overallStats?.reliable || 0 },
-                  { stage: 5, label: 'Mastered', count: overallStats?.mastered || 0 },
-                ].map(({ stage, label, count }) => (
-                  <div key={stage} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded ${getMasteryStageColor(stage)}`}></div>
-                      <span className="font-medium">{label}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{count} characters</span>
-                      <Progress 
-                        value={(count / Math.max(1, overallStats?.total || 1)) * 100} 
-                        className="w-20"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="hiragana" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Hiragana Progress</h3>
-                  <div className="text-3xl font-bold text-matcha mb-2">
-                    {hiraganaStats?.total || 0}
-                  </div>
-                  <p className="text-sm text-gray-600">Characters learned</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Mastered</h3>
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {hiraganaStats?.mastered || 0}
-                  </div>
-                  <p className="text-sm text-gray-600">Fully learned</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Confidence</h3>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {hiraganaStats?.averageConfidence || 0}%
-                  </div>
-                  <p className="text-sm text-gray-600">Average score</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Hiragana character grid would go here */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Hiragana Character Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                {progressData
-                  .filter(p => p.character_id.startsWith('hiragana'))
-                  .map(progress => {
-                    const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                    if (!character) return null;
-                    
-                    return (
-                      <div key={progress.character_id} className="text-center">
-                        <div className="bg-white border rounded-lg p-2 hover:shadow-md transition-shadow">
-                          <div className="text-2xl mb-1">{character.character}</div>
-                          <div className="text-xs text-gray-500 mb-1">{character.romaji}</div>
-                          <ProgressIndicator
-                            progress={progress.confidence_score}
-                            size="sm"
-                            color={getMasteryStageColor(progress.mastery_level)}
-                            showPercentage={false}
-                          />
-                          <Badge 
-                            variant="secondary" 
-                            className="text-xs mt-1"
-                          >
-                            {getMasteryStageLabel(progress.mastery_level)}
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="katakana" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Katakana Progress</h3>
-                  <div className="text-3xl font-bold text-vermilion mb-2">
-                    {katakanaStats?.total || 0}
-                  </div>
-                  <p className="text-sm text-gray-600">Characters learned</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Mastered</h3>
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {katakanaStats?.mastered || 0}
-                  </div>
-                  <p className="text-sm text-gray-600">Fully learned</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Confidence</h3>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {katakanaStats?.averageConfidence || 0}%
-                  </div>
-                  <p className="text-sm text-gray-600">Average score</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Katakana character grid */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Katakana Character Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                {progressData
-                  .filter(p => p.character_id.startsWith('katakana'))
-                  .map(progress => {
-                    const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                    if (!character) return null;
-                    
-                    return (
-                      <div key={progress.character_id} className="text-center">
-                        <div className="bg-white border rounded-lg p-2 hover:shadow-md transition-shadow">
-                          <div className="text-2xl mb-1">{character.character}</div>
-                          <div className="text-xs text-gray-500 mb-1">{character.romaji}</div>
-                          <ProgressIndicator
-                            progress={progress.confidence_score}
-                            size="sm"
-                            color={getMasteryStageColor(progress.mastery_level)}
-                            showPercentage={false}
-                          />
-                          <Badge 
-                            variant="secondary" 
-                            className="text-xs mt-1"
-                          >
-                            {getMasteryStageLabel(progress.mastery_level)}
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="insights" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Top Performers */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  Top Performers
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {getTopPerformers().map((progress, index) => {
-                    const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                    if (!character) return null;
-                    
-                    return (
-                      <div key={progress.character_id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <div className="flex items-center gap-3">
-                          <div className="text-xl">{character.character}</div>
-                          <div>
-                            <div className="font-medium">{character.romaji}</div>
-                            <div className="text-sm text-gray-500">
-                              {getMasteryStageLabel(progress.mastery_level)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-green-600">{progress.confidence_score}%</div>
-                          <div className="text-xs text-gray-500">
-                            {progress.total_practice_count} practices
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Challenging Characters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-red-500" />
-                  Needs Practice
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {getChallengingCharacters().map((progress, index) => {
-                    const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                    if (!character) return null;
-                    
-                    return (
-                      <div key={progress.character_id} className="flex items-center justify-between p-2 bg-red-50 rounded">
-                        <div className="flex items-center gap-3">
-                          <div className="text-xl">{character.character}</div>
-                          <div>
-                            <div className="font-medium">{character.romaji}</div>
-                            <div className="text-sm text-gray-500">
-                              {progress.mistake_count} mistakes
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-red-600">{progress.confidence_score}%</div>
-                          <div className="text-xs text-gray-500">
-                            {progress.total_practice_count} practices
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-500" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
-                {getRecentlyPracticed().map((progress, index) => {
-                  const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                  if (!character) return null;
-                  
+                  { stage: 0, label: 'New', count: overallStats?.new || 0, color: 'bg-gray-400' },
+                  { stage: 1, label: 'Learning', count: overallStats?.learning || 0, color: 'bg-red-400' },
+                  { stage: 2, label: 'Familiar', count: overallStats?.familiar || 0, color: 'bg-yellow-400' },
+                  { stage: 3, label: 'Practiced', count: overallStats?.practiced || 0, color: 'bg-blue-400' },
+                  { stage: 4, label: 'Reliable', count: overallStats?.reliable || 0, color: 'bg-indigo-400' },
+                  { stage: 5, label: 'Mastered', count: overallStats?.mastered || 0, color: 'bg-green-400' },
+                ].map(({ stage, label, count, color }) => {
+                  const percentage = (count / Math.max(1, overallStats?.total || 1)) * 100;
                   return (
-                    <div key={progress.character_id} className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-2xl mb-1">{character.character}</div>
-                      <div className="text-sm font-medium">{character.romaji}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(progress.last_practiced).toLocaleDateString()}
+                    <div key={stage} className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3 min-w-[120px]">
+                        <div className={`w-4 h-4 rounded-full ${color}`}></div>
+                        <span className="font-medium text-sm">{label}</span>
                       </div>
-                      <ProgressIndicator
-                        progress={progress.confidence_score}
-                        size="sm"
-                        color={getMasteryStageColor(progress.mastery_level)}
-                        showPercentage={false}
-                        className="mt-2"
-                      />
+                      <div className="flex-1">
+                        <Progress value={percentage} className="h-3" />
+                      </div>
+                      <div className="text-right min-w-[80px]">
+                        <span className="font-bold text-lg">{count}</span>
+                        <span className="text-sm text-gray-500 ml-1">({Math.round(percentage)}%)</span>
+                      </div>
                     </div>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="hiragana" className="space-y-6">
+            {/* Hiragana Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="bg-gradient-to-br from-matcha/10 to-matcha/20 border-matcha/30">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-matcha">Progress</h3>
+                  <div className="text-4xl font-bold text-matcha mb-2">
+                    {hiraganaStats?.total || 0}
+                  </div>
+                  <p className="text-sm text-matcha/70">Characters learned</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-green-700">Mastered</h3>
+                  <div className="text-4xl font-bold text-green-600 mb-2">
+                    {hiraganaStats?.mastered || 0}
+                  </div>
+                  <p className="text-sm text-green-600">Fully learned</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-blue-700">Confidence</h3>
+                  <div className="text-4xl font-bold text-blue-600 mb-2">
+                    {hiraganaStats?.averageConfidence || 0}%
+                  </div>
+                  <p className="text-sm text-blue-600">Average score</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Hiragana Character Grid */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-2xl">あ</span>
+                  Hiragana Characters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+                  {progressData
+                    .filter(p => p.character_id.startsWith('hiragana'))
+                    .map(progress => {
+                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                      if (!character) return null;
+                      
+                      return (
+                        <div key={progress.character_id} className="group">
+                          <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center">
+                            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
+                              {character.character}
+                            </div>
+                            <div className="text-xs text-gray-500 mb-2 text-center">
+                              {character.romaji}
+                            </div>
+                            <div className="w-full">
+                              <ProgressIndicator
+                                progress={progress.confidence_score}
+                                size="sm"
+                                color={getMasteryStageColor(progress.mastery_level)}
+                                showPercentage={false}
+                              />
+                            </div>
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs mt-1 px-1 py-0"
+                            >
+                              {getMasteryStageLabel(progress.mastery_level)}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="katakana" className="space-y-6">
+            {/* Katakana Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="bg-gradient-to-br from-vermilion/10 to-vermilion/20 border-vermilion/30">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-vermilion">Progress</h3>
+                  <div className="text-4xl font-bold text-vermilion mb-2">
+                    {katakanaStats?.total || 0}
+                  </div>
+                  <p className="text-sm text-vermilion/70">Characters learned</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-green-700">Mastered</h3>
+                  <div className="text-4xl font-bold text-green-600 mb-2">
+                    {katakanaStats?.mastered || 0}
+                  </div>
+                  <p className="text-sm text-green-600">Fully learned</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-blue-700">Confidence</h3>
+                  <div className="text-4xl font-bold text-blue-600 mb-2">
+                    {katakanaStats?.averageConfidence || 0}%
+                  </div>
+                  <p className="text-sm text-blue-600">Average score</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Katakana Character Grid */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-2xl">ア</span>
+                  Katakana Characters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+                  {progressData
+                    .filter(p => p.character_id.startsWith('katakana'))
+                    .map(progress => {
+                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                      if (!character) return null;
+                      
+                      return (
+                        <div key={progress.character_id} className="group">
+                          <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center">
+                            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
+                              {character.character}
+                            </div>
+                            <div className="text-xs text-gray-500 mb-2 text-center">
+                              {character.romaji}
+                            </div>
+                            <div className="w-full">
+                              <ProgressIndicator
+                                progress={progress.confidence_score}
+                                size="sm"
+                                color={getMasteryStageColor(progress.mastery_level)}
+                                showPercentage={false}
+                              />
+                            </div>
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs mt-1 px-1 py-0"
+                            >
+                              {getMasteryStageLabel(progress.mastery_level)}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="insights" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Top Performers */}
+              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-yellow-800">
+                    <Star className="h-6 w-6 text-yellow-600" />
+                    Top Performers
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {getTopPerformers().map((progress, index) => {
+                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                      if (!character) return null;
+                      
+                      return (
+                        <div key={progress.character_id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border">
+                          <div className="flex items-center gap-4">
+                            <div className="text-2xl bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center">
+                              {character.character}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-lg">{character.romaji}</div>
+                              <div className="text-sm text-gray-500">
+                                {getMasteryStageLabel(progress.mastery_level)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-2xl text-green-600">{progress.confidence_score}%</div>
+                            <div className="text-xs text-gray-500">
+                              {progress.total_practice_count} practices
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Challenging Characters */}
+              <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-red-800">
+                    <Zap className="h-6 w-6 text-red-600" />
+                    Needs Practice
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {getChallengingCharacters().map((progress, index) => {
+                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                      if (!character) return null;
+                      
+                      return (
+                        <div key={progress.character_id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border">
+                          <div className="flex items-center gap-4">
+                            <div className="text-2xl bg-red-100 rounded-full w-12 h-12 flex items-center justify-center">
+                              {character.character}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-lg">{character.romaji}</div>
+                              <div className="text-sm text-gray-500">
+                                {progress.mistake_count} mistakes
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-2xl text-red-600">{progress.confidence_score}%</div>
+                            <div className="text-xs text-gray-500">
+                              {progress.total_practice_count} practices
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-6 w-6 text-blue-500" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4">
+                  {getRecentlyPracticed().map((progress, index) => {
+                    const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                    if (!character) return null;
+                    
+                    return (
+                      <div key={progress.character_id} className="text-center p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
+                        <div className="text-3xl mb-2">{character.character}</div>
+                        <div className="font-medium text-sm">{character.romaji}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(progress.last_practiced).toLocaleDateString()}
+                        </div>
+                        <div className="mt-3">
+                          <ProgressIndicator
+                            progress={progress.confidence_score}
+                            size="sm"
+                            color={getMasteryStageColor(progress.mastery_level)}
+                            showPercentage={false}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
