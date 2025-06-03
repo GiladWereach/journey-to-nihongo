@@ -13,7 +13,7 @@ import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressInd
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Target, Clock, Brain } from 'lucide-react';
+import { TrendingUp, Target, Clock, Brain, Award, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface KanaProgressGridProps {
@@ -37,7 +37,7 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
       
       setLoading(true);
       try {
-        // Get local characters
+        // Get local characters first
         const localCharacters = kanaService.getKanaByType(kanaType);
         setKanaCharacters(localCharacters);
         
@@ -50,11 +50,41 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         });
         setProgressData(progressMap);
         
-        // Group characters by consonant group
+        // Group characters properly by their actual structure
         const grouped: {[key: string]: KanaCharacter[]} = {};
+        
         localCharacters.forEach(char => {
-          const parts = char.id.split('-');
-          const group = parts.length > 1 ? parts[1] : 'special';
+          // Use romaji to determine group instead of ID splitting
+          const romaji = char.romaji.toLowerCase();
+          let group = 'special';
+          
+          // Determine group based on consonant sound
+          if (['a', 'i', 'u', 'e', 'o'].includes(romaji)) {
+            group = 'vowels';
+          } else if (romaji.startsWith('k') || romaji.startsWith('g')) {
+            group = romaji.startsWith('g') ? 'g' : 'k';
+          } else if (romaji.startsWith('s') || romaji.startsWith('z') || romaji.startsWith('sh') || romaji.startsWith('j')) {
+            group = romaji.startsWith('z') || romaji.startsWith('j') ? 'z' : 's';
+          } else if (romaji.startsWith('t') || romaji.startsWith('d') || romaji.startsWith('ch') || romaji.startsWith('ts')) {
+            group = romaji.startsWith('d') || romaji.startsWith('ch') || romaji.startsWith('ts') ? 'd' : 't';
+          } else if (romaji.startsWith('n')) {
+            group = 'n';
+          } else if (romaji.startsWith('h') || romaji.startsWith('b') || romaji.startsWith('p') || romaji.startsWith('f')) {
+            if (romaji.startsWith('b')) group = 'b';
+            else if (romaji.startsWith('p')) group = 'p';
+            else group = 'h';
+          } else if (romaji.startsWith('m')) {
+            group = 'm';
+          } else if (romaji.startsWith('y')) {
+            group = 'y';
+          } else if (romaji.startsWith('r')) {
+            group = 'r';
+          } else if (romaji.startsWith('w')) {
+            group = 'w';
+          } else if (romaji.length > 2 || romaji.includes('y')) {
+            group = 'combinations';
+          }
+          
           if (!grouped[group]) {
             grouped[group] = [];
           }
@@ -82,8 +112,25 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
     return progress ? progress.mastery_level : 0;
   };
 
+  const getMasteryLevelName = (level: number): string => {
+    const levels = ['New', 'Learning', 'Familiar', 'Practiced', 'Reliable', 'Mastered'];
+    return levels[level] || 'New';
+  };
+
+  const getMasteryLevelColor = (level: number): string => {
+    const colors = [
+      'bg-slate-100 text-slate-700 border-slate-200',  // New
+      'bg-orange-100 text-orange-700 border-orange-200',  // Learning
+      'bg-yellow-100 text-yellow-700 border-yellow-200',  // Familiar
+      'bg-blue-100 text-blue-700 border-blue-200',     // Practiced
+      'bg-green-100 text-green-700 border-green-200',  // Reliable
+      'bg-purple-100 text-purple-700 border-purple-200' // Mastered
+    ];
+    return colors[level] || colors[0];
+  };
+
   const getSortedGroups = (): string[] => {
-    const order = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'special', 'combinations'];
+    const order = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'combinations', 'special'];
     const availableGroups = Object.keys(groupedCharacters);
     return order.filter(group => availableGroups.includes(group));
   };
@@ -105,8 +152,8 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
       'd': 'D-Row (だぢづでど)',
       'b': 'B-Row (ばびぶべぼ)',
       'p': 'P-Row (ぱぴぷぺぽ)',
-      'special': 'Special Characters',
-      'combinations': 'Combinations'
+      'combinations': 'Combinations (きゃ, しゅ, etc.)',
+      'special': 'Special Characters'
     };
     
     return titles[group] || group.charAt(0).toUpperCase() + group.slice(1);
@@ -128,35 +175,56 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
             {getGroupTitle(group)}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-4">
-            {groupedCharacters[group]?.map(char => (
-              <TooltipProvider key={char.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TraditionalCard className="p-4 cursor-help hover:bg-wood-light/5 transition-colors">
-                      <div className="flex flex-col items-center text-center space-y-2">
-                        <div className="text-3xl font-traditional text-wood-light">{char.character}</div>
-                        <div className="text-sm text-paper-warm/80 font-traditional">{char.romaji}</div>
-                        <TraditionalProgressIndicator 
-                          progress={getCharacterProgress(char.id)}
-                          size="sm"
-                          showPercentage={false}
-                          masteryLevel={getCharacterMasteryLevel(char.id)}
-                          showMasteryBadge={true}
-                          type={kanaType}
-                        />
+            {groupedCharacters[group]?.map(char => {
+              const progress = getCharacterProgress(char.id);
+              const masteryLevel = getCharacterMasteryLevel(char.id);
+              const progressData_char = progressData.get(char.id);
+              
+              return (
+                <TooltipProvider key={char.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TraditionalCard className="p-4 cursor-help hover:bg-wood-light/5 transition-all duration-200 hover:shadow-lg">
+                        <div className="flex flex-col items-center text-center space-y-2">
+                          <div className="text-3xl font-traditional text-wood-light">{char.character}</div>
+                          <div className="text-sm text-paper-warm/80 font-traditional">{char.romaji}</div>
+                          
+                          <TraditionalProgressIndicator 
+                            progress={progress}
+                            size="sm"
+                            showPercentage={false}
+                            masteryLevel={masteryLevel}
+                            showMasteryBadge={false}
+                            type={kanaType}
+                          />
+                          
+                          <Badge className={cn(
+                            'text-xs px-2 py-1 font-traditional border',
+                            getMasteryLevelColor(masteryLevel)
+                          )}>
+                            {getMasteryLevelName(masteryLevel)}
+                          </Badge>
+                        </div>
+                      </TraditionalCard>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-wood-grain border-wood-light/40 text-paper-warm font-traditional">
+                      <div className="space-y-2">
+                        <p className="font-semibold">{char.character} ({char.romaji})</p>
+                        <p>Progress: {progress}%</p>
+                        <p>Mastery: {getMasteryLevelName(masteryLevel)}</p>
+                        <p>Practice count: {progressData_char?.total_practice_count || 0}</p>
+                        {progressData_char?.confidence_score && (
+                          <p>Confidence: {progressData_char.confidence_score}%</p>
+                        )}
+                        {progressData_char?.average_response_time && (
+                          <p>Avg response: {(progressData_char.average_response_time / 1000).toFixed(1)}s</p>
+                        )}
                       </div>
-                    </TraditionalCard>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-wood-grain border-wood-light/40 text-paper-warm font-traditional">
-                    <div className="space-y-1">
-                      <p className="font-semibold">{char.character} ({char.romaji})</p>
-                      <p>Progress: {getCharacterProgress(char.id)}%</p>
-                      <p>Practice count: {progressData.get(char.id)?.total_practice_count || 0}</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -175,16 +243,44 @@ const InsightsTab: React.FC<{ kanaType: 'hiragana' | 'katakana' }> = ({ kanaType
   const [masteryStats, setMasteryStats] = useState<MasteryStats>({
     new: 0, learning: 0, familiar: 0, practiced: 0, reliable: 0, mastered: 0, total: 0, averageConfidence: 0
   });
+  const [challengingChars, setChallengingChars] = useState<EnhancedUserKanaProgress[]>([]);
+  const [practicedChars, setPracticedChars] = useState<EnhancedUserKanaProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      enhancedCharacterProgressService.calculateMasteryStats(user.id, kanaType)
-        .then(stats => {
-          setMasteryStats(stats);
-          setLoading(false);
-        });
-    }
+    const fetchInsights = async () => {
+      if (!user) return;
+      
+      try {
+        // Get mastery stats
+        const stats = await enhancedCharacterProgressService.calculateMasteryStats(user.id, kanaType);
+        setMasteryStats(stats);
+        
+        // Get all progress for this kana type
+        const allProgress = await enhancedCharacterProgressService.getEnhancedCharacterProgress(user.id);
+        const kanaProgress = allProgress.filter(p => p.character_id.startsWith(kanaType));
+        
+        // Get most challenging characters (lowest proficiency but with some practice)
+        const challenging = kanaProgress
+          .filter(p => p.total_practice_count > 0)
+          .sort((a, b) => a.proficiency - b.proficiency)
+          .slice(0, 5);
+        setChallengingChars(challenging);
+        
+        // Get most practiced characters
+        const practiced = kanaProgress
+          .sort((a, b) => b.total_practice_count - a.total_practice_count)
+          .slice(0, 5);
+        setPracticedChars(practiced);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching insights:', error);
+        setLoading(false);
+      }
+    };
+    
+    fetchInsights();
   }, [user, kanaType]);
 
   if (loading) {
@@ -205,16 +301,16 @@ const InsightsTab: React.FC<{ kanaType: 'hiragana' | 'katakana' }> = ({ kanaType
           </div>
           <div className="space-y-3">
             {[
-              { label: 'New', count: masteryStats.new, color: 'bg-green-100' },
-              { label: 'Learning', count: masteryStats.learning, color: 'bg-gray-200' },
-              { label: 'Familiar', count: masteryStats.familiar, color: 'bg-pink-100' },
-              { label: 'Practiced', count: masteryStats.practiced, color: 'bg-blue-100' },
-              { label: 'Reliable', count: masteryStats.reliable, color: 'bg-amber-100' },
-              { label: 'Mastered', count: masteryStats.mastered, color: 'bg-gray-800' }
+              { label: 'New', count: masteryStats.new, color: 'bg-slate-100 text-slate-700' },
+              { label: 'Learning', count: masteryStats.learning, color: 'bg-orange-100 text-orange-700' },
+              { label: 'Familiar', count: masteryStats.familiar, color: 'bg-yellow-100 text-yellow-700' },
+              { label: 'Practiced', count: masteryStats.practiced, color: 'bg-blue-100 text-blue-700' },
+              { label: 'Reliable', count: masteryStats.reliable, color: 'bg-green-100 text-green-700' },
+              { label: 'Mastered', count: masteryStats.mastered, color: 'bg-purple-100 text-purple-700' }
             ].map(({ label, count, color }) => (
               <div key={label} className="flex justify-between items-center">
                 <span className="text-sm text-wood-light/80 font-traditional">{label}</span>
-                <Badge className={`${color} text-gion-night font-traditional`}>
+                <Badge className={`${color} font-traditional border`}>
                   {count}
                 </Badge>
               </div>
@@ -266,6 +362,69 @@ const InsightsTab: React.FC<{ kanaType: 'hiragana' | 'katakana' }> = ({ kanaType
           </div>
         </div>
       </TraditionalCard>
+
+      <TraditionalCard className="p-6 md:col-span-2">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-wood-light" />
+            <h3 className="text-lg font-semibold text-wood-light font-traditional">Most Challenging</h3>
+          </div>
+          <div className="space-y-2">
+            {challengingChars.map(progress => {
+              const kanaChar = kanaService.getKanaByType(kanaType).find(k => k.id === progress.character_id);
+              if (!kanaChar) return null;
+              
+              return (
+                <div key={progress.character_id} className="flex items-center justify-between p-3 bg-wood-grain/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl font-traditional">{kanaChar.character}</div>
+                    <div>
+                      <div className="font-medium text-wood-light">{kanaChar.romaji}</div>
+                      <div className="text-xs text-paper-warm/60">{progress.total_practice_count} practices</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-wood-light">{progress.proficiency}%</div>
+                    <div className="text-xs text-paper-warm/60">{progress.mistake_count} errors</div>
+                  </div>
+                </div>
+              );
+            })}
+            {challengingChars.length === 0 && (
+              <div className="text-center py-4 text-wood-light/60">
+                No challenging characters yet. Keep practicing!
+              </div>
+            )}
+          </div>
+        </div>
+      </TraditionalCard>
+
+      <TraditionalCard className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-wood-light" />
+            <h3 className="text-lg font-semibold text-wood-light font-traditional">Most Practiced</h3>
+          </div>
+          <div className="space-y-2">
+            {practicedChars.slice(0, 3).map(progress => {
+              const kanaChar = kanaService.getKanaByType(kanaType).find(k => k.id === progress.character_id);
+              if (!kanaChar) return null;
+              
+              return (
+                <div key={progress.character_id} className="flex items-center justify-between p-2 bg-wood-grain/20 rounded">
+                  <div className="flex items-center gap-2">
+                    <div className="text-xl font-traditional">{kanaChar.character}</div>
+                    <div className="text-sm text-wood-light">{kanaChar.romaji}</div>
+                  </div>
+                  <div className="text-sm font-medium text-wood-light">
+                    {progress.total_practice_count}×
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </TraditionalCard>
     </div>
   );
 };
@@ -281,7 +440,7 @@ const EnhancedProgress: React.FC = () => {
   }>({
     hiragana: { learned: 0, total: 0, avgProficiency: 0 },
     katakana: { learned: 0, total: 0, avgProficiency: 0 },
-    overall: { streak: 7, mastered: 45, proficiency: 73 }
+    overall: { streak: 7, mastered: 0, proficiency: 0 }
   });
   
   useEffect(() => {
@@ -293,6 +452,7 @@ const EnhancedProgress: React.FC = () => {
         const hiraganaChars = kanaService.getKanaByType('hiragana');
         const katakanaChars = kanaService.getKanaByType('katakana');
         
+        // Filter progress by kana type
         const hiraganaProgress = allProgress.filter(p => 
           hiraganaChars.some(c => c.id === p.character_id)
         );
