@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [isProcessing, setIsProcessing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const characters = kanaType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
 
@@ -39,6 +40,13 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
   useEffect(() => {
     setCurrentCharacter(getRandomCharacter());
   }, [kanaType]);
+
+  // Focus input whenever currentCharacter changes
+  useEffect(() => {
+    if (currentCharacter && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [currentCharacter]);
 
   const processAnswer = async (isCorrect: boolean, inputValue: string) => {
     if (isProcessing) return;
@@ -130,6 +138,7 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
+              ref={inputRef}
               value={userInput}
               onChange={handleInputChange}
               placeholder="Type the romaji..."
