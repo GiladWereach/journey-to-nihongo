@@ -28,7 +28,7 @@ interface ProgressIndicatorProps {
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   progress,
   size = 'md',
-  color = 'bg-gradient-to-r from-green-200 to-green-300',
+  color = 'bg-gradient-to-r from-green-100 to-green-200',
   className,
   showPercentage = false,
   label,
@@ -58,23 +58,23 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
   // Get appropriate color based on proficiency level if not explicitly provided
   const getColorByProficiency = () => {
-    if (color !== 'bg-gradient-to-r from-green-200 to-green-300') return color;
+    if (color !== 'bg-gradient-to-r from-green-100 to-green-200') return color;
     
     if (masteryLevel > 0) {
       switch (masteryLevel) {
-        case 1: return 'bg-gradient-to-r from-gray-300 to-gray-400'; // Learning
-        case 2: return 'bg-gradient-to-r from-pink-200 to-pink-300'; // Familiar
-        case 3: return 'bg-gradient-to-r from-blue-200 to-blue-300'; // Practiced
-        case 4: return 'bg-gradient-to-r from-amber-200 to-amber-300'; // Reliable
-        case 5: return 'bg-gradient-to-r from-gray-700 to-gray-800'; // Mastered
-        default: return 'bg-gradient-to-r from-green-200 to-green-300'; // New
+        case 1: return 'bg-gradient-to-r from-gray-200 to-gray-300'; // Learning - greyish
+        case 2: return 'bg-gradient-to-r from-pink-100 to-pink-200'; // Familiar - pink
+        case 3: return 'bg-gradient-to-r from-blue-100 to-blue-200'; // Practiced - blueish
+        case 4: return 'bg-gradient-to-r from-amber-100 to-amber-200'; // Reliable - light brown
+        case 5: return 'bg-gradient-to-r from-gray-700 to-gray-900'; // Mastered - black
+        default: return 'bg-gradient-to-r from-green-100 to-green-200'; // New - light green
       }
     }
     
-    if (proficiencyLevel === 'mastered' || normalizedProgress >= 90) return 'bg-gradient-to-r from-gray-700 to-gray-800';
-    if (proficiencyLevel === 'advanced' || normalizedProgress >= 70) return 'bg-gradient-to-r from-blue-200 to-blue-300';
-    if (proficiencyLevel === 'intermediate' || normalizedProgress >= 40) return 'bg-gradient-to-r from-pink-200 to-pink-300';
-    return 'bg-gradient-to-r from-gray-300 to-gray-400';
+    if (proficiencyLevel === 'mastered' || normalizedProgress >= 90) return 'bg-gradient-to-r from-gray-700 to-gray-900';
+    if (proficiencyLevel === 'advanced' || normalizedProgress >= 70) return 'bg-gradient-to-r from-blue-100 to-blue-200';
+    if (proficiencyLevel === 'intermediate' || normalizedProgress >= 40) return 'bg-gradient-to-r from-pink-100 to-pink-200';
+    return 'bg-gradient-to-r from-gray-200 to-gray-300';
   };
 
   const progressColor = proficiencyLevel || masteryLevel > 0 ? getColorByProficiency() : color;
@@ -167,7 +167,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         </div>
       )}
       <div className={cn(
-        'w-full bg-gray-100 rounded-full overflow-hidden relative', 
+        'w-full bg-gray-50 rounded-full overflow-hidden relative', 
         sizeClasses[size],
         glowOnCompletion && (normalizedProgress >= 100 || masteryLevel > 0) && 'shadow-glow'
       )}>
@@ -175,7 +175,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         {renderMilestones()}
         <div 
           className={cn(
-            'transition-all duration-500 rounded-full', 
+            'transition-all duration-300 rounded-full', 
             progressColor,
             animated && 'animate-pulse',
             isAnimated && 'animate-progress',

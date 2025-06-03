@@ -30,10 +30,11 @@ interface CharacterWithMastery {
 
 interface SessionStats {
   totalTime: number;
-  totalCharacters: number;
+  totalSubmittedCharacters: number;
   averageTimePerCharacter: number;
   fastestResponse: number;
   slowestResponse: number;
+  submittedAnswersTime: number;
 }
 
 const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({ 
@@ -49,10 +50,11 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     totalTime: 0,
-    totalCharacters: 0,
+    totalSubmittedCharacters: 0,
     averageTimePerCharacter: 0,
     fastestResponse: Infinity,
-    slowestResponse: 0
+    slowestResponse: 0,
+    submittedAnswersTime: 0
   });
   const [masteryStats, setMasteryStats] = useState({
     new: 0, learning: 0, familiar: 0, practiced: 0, reliable: 0, mastered: 0, total: 0, averageConfidence: 0
@@ -107,7 +109,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           confidenceScore: charProgress?.confidence_score || 0
         });
         
-        // Start timing
+        // Start timing for this character
         startTimeRef.current = Date.now();
       }
     } catch (error) {
@@ -120,6 +122,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
         masteryLevel: 0,
         confidenceScore: 0
       });
+      startTimeRef.current = Date.now();
     }
   };
 
@@ -137,14 +140,16 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
   const updateSessionStats = (responseTime: number) => {
     setSessionStats(prev => {
       const totalTime = Date.now() - sessionStartRef.current;
-      const totalCharacters = prev.totalCharacters + 1;
+      const totalSubmittedCharacters = prev.totalSubmittedCharacters + 1;
+      const submittedAnswersTime = prev.submittedAnswersTime + responseTime;
       
       return {
         totalTime,
-        totalCharacters,
-        averageTimePerCharacter: totalTime / totalCharacters,
+        totalSubmittedCharacters,
+        averageTimePerCharacter: totalSubmittedCharacters > 0 ? submittedAnswersTime / totalSubmittedCharacters : 0,
         fastestResponse: Math.min(prev.fastestResponse === Infinity ? responseTime : prev.fastestResponse, responseTime),
-        slowestResponse: Math.max(prev.slowestResponse, responseTime)
+        slowestResponse: Math.max(prev.slowestResponse, responseTime),
+        submittedAnswersTime
       };
     });
   };
@@ -155,6 +160,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     setIsProcessing(true);
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     
+    // Only measure time for submitted answers
     const responseTime = Date.now() - startTimeRef.current;
     updateSessionStats(responseTime);
     
@@ -183,8 +189,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       await quizSessionService.updateSession(session.id, newScore.total, newScore.correct);
     }
 
-    // Faster feedback - reduced timing
-    const feedbackDuration = isCorrect ? 200 : 600;
+    // Faster feedback - much shorter duration for smoother experience
+    const feedbackDuration = isCorrect ? 150 : 400;
     
     setTimeout(async () => {
       await getNextCharacter();
@@ -198,9 +204,16 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     const value = e.target.value;
     setUserInput(value);
 
-    // Check if the input matches the correct answer (case insensitive)
+    // Auto-submit on correct answer (immediate feedback)
     if (currentCharacter && value.trim().toLowerCase() === currentCharacter.romaji.toLowerCase()) {
       processAnswer(true, value);
+    }
+    
+    // Auto-submit on wrong answer if the input length equals or exceeds the correct answer length
+    // This provides immediate feedback for wrong answers without requiring manual submission
+    if (currentCharacter && value.trim().length >= currentCharacter.romaji.length && 
+        value.trim().toLowerCase() !== currentCharacter.romaji.toLowerCase()) {
+      processAnswer(false, value);
     }
   };
 
@@ -220,14 +233,14 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
   const getMasteryLevelColor = (level: number): string => {
     const colors = [
-      'bg-gray-500',      // New
-      'bg-red-500',       // Learning
-      'bg-orange-500',    // Familiar
-      'bg-yellow-500',    // Practiced
-      'bg-blue-500',      // Reliable
-      'bg-green-500'      // Mastered
+      'bg-green-100',     // New - light green
+      'bg-gray-200',      // Learning - greyish  
+      'bg-pink-100',      // Familiar - pink
+      'bg-blue-100',      // Practiced - blueish
+      'bg-amber-100',     // Reliable - light brown
+      'bg-gray-800'       // Mastered - black
     ];
-    return colors[level] || 'bg-gray-500';
+    return colors[level] || 'bg-gray-200';
   };
 
   const formatTime = (milliseconds: number): string => {
@@ -262,21 +275,21 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
         <div>
           <div className="text-lg font-bold text-blue-600 flex items-center justify-center gap-1">
             <Clock className="h-4 w-4" />
-            {formatTime(sessionStats.totalTime)}
+            {formatTime(sessionStats.submittedAnswersTime)}
           </div>
-          <div className="text-sm text-gray-600">Session Time</div>
+          <div className="text-sm text-gray-600">Active Time</div>
         </div>
         <div>
           <div className="text-lg font-bold text-purple-600 flex items-center justify-center gap-1">
             <Target className="h-4 w-4" />
-            {sessionStats.totalCharacters}
+            {sessionStats.totalSubmittedCharacters}
           </div>
-          <div className="text-sm text-gray-600">Characters</div>
+          <div className="text-sm text-gray-600">Submitted</div>
         </div>
       </div>
 
       {/* Session Performance Stats */}
-      {sessionStats.totalCharacters > 0 && (
+      {sessionStats.totalSubmittedCharacters > 0 && (
         <Card className="p-4">
           <div className="grid grid-cols-3 gap-4 text-center text-sm">
             <div>
@@ -316,27 +329,27 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           />
           <div className="grid grid-cols-6 gap-1 text-xs">
             <div className="text-center">
-              <div className="text-gray-500">{masteryStats.new}</div>
+              <div className="text-green-600">{masteryStats.new}</div>
               <div>New</div>
             </div>
             <div className="text-center">
-              <div className="text-red-500">{masteryStats.learning}</div>
+              <div className="text-gray-500">{masteryStats.learning}</div>
               <div>Learning</div>
             </div>
             <div className="text-center">
-              <div className="text-orange-500">{masteryStats.familiar}</div>
+              <div className="text-pink-500">{masteryStats.familiar}</div>
               <div>Familiar</div>
             </div>
             <div className="text-center">
-              <div className="text-yellow-500">{masteryStats.practiced}</div>
+              <div className="text-blue-500">{masteryStats.practiced}</div>
               <div>Practiced</div>
             </div>
             <div className="text-center">
-              <div className="text-blue-500">{masteryStats.reliable}</div>
+              <div className="text-amber-600">{masteryStats.reliable}</div>
               <div>Reliable</div>
             </div>
             <div className="text-center">
-              <div className="text-green-500">{masteryStats.mastered}</div>
+              <div className="text-gray-800">{masteryStats.mastered}</div>
               <div>Mastered</div>
             </div>
           </div>
@@ -353,7 +366,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               </h3>
               {user && (
                 <Badge 
-                  className={`${getMasteryLevelColor(currentCharacter.masteryLevel)} text-white`}
+                  className={`${getMasteryLevelColor(currentCharacter.masteryLevel)} text-gray-800`}
                   variant="secondary"
                 >
                   {getMasteryLevelName(currentCharacter.masteryLevel)}
@@ -389,7 +402,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               autoFocus
             />
             
-            {feedback === null && !isProcessing && (
+            {feedback === null && !isProcessing && userInput.trim().length < (currentCharacter.romaji.length) && (
               <Button 
                 type="submit" 
                 className="w-full py-3 text-lg"
@@ -404,8 +417,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           {feedback && (
             <div className={`p-4 rounded-lg transition-all duration-200 ${
               feedback === 'correct' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
+                ? 'bg-green-50 text-green-800 border border-green-200' 
+                : 'bg-red-50 text-red-800 border border-red-200'
             }`}>
               {feedback === 'correct' ? (
                 <div className="space-y-2">
