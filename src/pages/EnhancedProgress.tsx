@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,7 +75,8 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
               character: dbChar.character,
               romaji: dbChar.romaji,
               type: dbChar.type as 'hiragana' | 'katakana',
-              strokeOrder: []
+              stroke_count: dbChar.stroke_count,
+              stroke_order: dbChar.stroke_order || []
             });
             seenIds.add(dbChar.id);
           });
@@ -102,8 +102,10 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
           mistake_count: Math.floor(p.total_practice_count * 0.3), // Estimate
           average_response_time: 2.5, // Default value
           sessions_practiced: Math.floor(p.total_practice_count / 5), // Estimate
-          first_seen_at: p.created_at,
-          last_seen_at: p.updated_at,
+          first_seen_at: p.created_at || new Date().toISOString(),
+          last_seen_at: p.updated_at || new Date().toISOString(),
+          created_at: p.created_at || new Date().toISOString(),
+          updated_at: p.updated_at || new Date().toISOString(),
         }));
 
         const progressMap = new Map();
