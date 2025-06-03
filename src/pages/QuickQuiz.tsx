@@ -1,16 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, RotateCcw, Home } from 'lucide-react';
+import { Home, RotateCcw } from 'lucide-react';
 import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
 import { KanaType, QuizSettings } from '@/types/quiz';
-import { characterProgressService } from '@/services/characterProgressService';
 
 const QuickQuiz = () => {
   const navigate = useNavigate();
@@ -20,16 +18,6 @@ const QuickQuiz = () => {
 
   const [quizStarted, setQuizStarted] = useState(false);
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
-  const [quizSettings, setQuizSettings] = useState<QuizSettings>({
-    showBasicOnly: true,
-    showPreviouslyLearned: true,
-    showTroubleCharacters: true,
-    characterSize: 'medium',
-    audioFeedback: true,
-    speedMode: false,
-    includeDakuten: false,
-    includeHandakuten: false
-  });
 
   useEffect(() => {
     if (!user) {
@@ -42,9 +30,8 @@ const QuickQuiz = () => {
     }
   }, [user, navigate, location.state]);
 
-  const handleStartQuiz = (type: KanaType, settings: QuizSettings) => {
+  const handleStartQuiz = (type: KanaType) => {
     setKanaType(type);
-    setQuizSettings(settings);
     setQuizStarted(true);
   };
 
@@ -83,7 +70,6 @@ const QuickQuiz = () => {
           ) : (
             <SimpleQuizInterface
               kanaType={kanaType}
-              quizSettings={quizSettings}
               onEndQuiz={handleEndQuiz}
             />
           )}

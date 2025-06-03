@@ -1,419 +1,346 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/layout/Navbar';
-import { Card, CardContent } from '@/components/ui/card';
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Clock, 
-  PlayCircle, 
-  PauseCircle, 
-  RotateCcw, 
-  CheckCircle2, 
-  XCircle,
-  Trophy 
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { kanaService } from '@/services/kanaService';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { KanaType, KanaCharacter } from '@/types/kana';
-import { QuizCharacter } from '@/types/quiz';
-import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { Timer, Trophy, ArrowLeft, Zap } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { KanaType, QuizCharacter } from '@/types/quiz';
+import { hiraganaCharacters } from '@/data/hiraganaData';
+import { katakanaCharacters } from '@/data/katakanaData';
 
-// Default time in seconds
-const DEFAULT_TIME = 60;
-const CORRECT_ANSWER_POINTS = 10;
-const TIME_BONUS_POINTS = 2;
+interface ChallengeResult {
+  score: number;
+  timeRemaining: number;
+  accuracy: number;
+  totalQuestions: number;
+}
 
-interface TimedChallengeProps {}
-
-const TimedChallenge: React.FC<TimedChallengeProps> = () => {
-  const location = useLocation();
+const TimedChallenge = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Get kana type from location state or default to 'hiragana'
-  const kanaType: KanaType = location.state?.kanaType || 'hiragana';
-  
-  // State for game
-  const [characters, setCharacters] = useState<QuizCharacter[]>([]);
-  const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(DEFAULT_TIME);
+
+  const [gameState, setGameState] = useState<'setup' | 'playing' | 'finished'>('setup');
+  const [selectedType, setSelectedType] = useState<KanaType>('hiragana');
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [timeLimit, setTimeLimit] = useState(60);
+  const [currentTime, setCurrentTime] = useState(60);
   const [score, setScore] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [incorrectAnswers, setIncorrectAnswers] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [questions, setQuestions] = useState<QuizCharacter[]>([]);
+  const [currentChar, setCurrentChar] = useState<QuizCharacter | null>(null);
   const [options, setOptions] = useState<string[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  
-  // Refs
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const incorrectSoundRef = useRef<HTMLAudioElement | null>(null);
-  const correctSoundRef = useRef<HTMLAudioElement | null>(null);
-  
-  // Initialize sounds
+  const [correctAnswer, setCorrectAnswer] = useState('');
+  const [userAnswers, setUserAnswers] = useState<boolean[]>([]);
+  const [result, setResult] = useState<ChallengeResult | null>(null);
+
+  // Timer effect
   useEffect(() => {
-    incorrectSoundRef.current = new Audio('/sounds/incorrect.mp3');
-    correctSoundRef.current = new Audio('/sounds/correct.mp3');
+    let interval: NodeJS.Timeout;
     
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-  
-  // Fetch characters
-  useEffect(() => {
-    const fetchCharacters = async () => {
-      try {
-        // Fix: Use getKanaByType instead of getKanaCharacters which doesn't exist
-        const allKanaCharacters = kanaService.getKanaByType(kanaType);
-        
-        // Convert KanaCharacter[] to QuizCharacter[]
-        const quizCharacters: QuizCharacter[] = allKanaCharacters.map(kana => ({
-          id: kana.id,
-          character: kana.character,
-          romaji: kana.romaji,
-          type: kana.type as KanaType
-        }));
-        
-        // Shuffle the characters
-        const shuffled = [...quizCharacters].sort(() => Math.random() - 0.5);
-        setCharacters(shuffled);
-      } catch (error) {
-        console.error('Error fetching characters:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load characters. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    };
-    
-    fetchCharacters();
-  }, [kanaType, toast]);
-  
-  // Generate options when current character changes
-  useEffect(() => {
-    if (characters.length === 0 || currentCharacterIndex >= characters.length) return;
-    
-    const currentCharacter = characters[currentCharacterIndex];
-    const otherCharacters = characters.filter((_, index) => index !== currentCharacterIndex);
-    
-    // Get 3 random incorrect options
-    const shuffledIncorrect = [...otherCharacters].sort(() => Math.random() - 0.5).slice(0, 3);
-    const allOptions = [currentCharacter.romaji, ...shuffledIncorrect.map(c => c.romaji)];
-    
-    // Shuffle all options
-    setOptions(allOptions.sort(() => Math.random() - 0.5));
-  }, [currentCharacterIndex, characters]);
-  
-  // Handle timer
-  useEffect(() => {
-    if (isGameStarted && !isPaused && !showResults) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
+    if (gameState === 'playing' && currentTime > 0) {
+      interval = setInterval(() => {
+        setCurrentTime(prev => {
           if (prev <= 1) {
-            // Time's up - end the game
-            clearInterval(timerRef.current!);
-            setShowResults(true);
+            endGame();
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
     }
+
+    return () => clearInterval(interval);
+  }, [gameState, currentTime]);
+
+  const generateQuestions = () => {
+    const kanaData = selectedType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
     
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isGameStarted, isPaused, showResults]);
-  
-  const startGame = () => {
-    if (characters.length === 0) {
-      toast({
-        title: 'Error',
-        description: 'No characters available. Please try again.',
-        variant: 'destructive',
-      });
+    // Create quiz characters with required properties
+    const quizChars: QuizCharacter[] = kanaData.map(kana => ({
+      id: kana.id,
+      character: kana.character,
+      romaji: kana.romaji,
+      type: selectedType,
+      stroke_count: kana.stroke_count || 1,
+      stroke_order: kana.stroke_order || []
+    }));
+    
+    const questionCount = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 15 : 20;
+    const selectedQuestions = [...quizChars]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, questionCount);
+    
+    setQuestions(selectedQuestions);
+    setTotalQuestions(selectedQuestions.length);
+    setCurrentQuestion(0);
+    setUserAnswers([]);
+    generateQuestion(selectedQuestions, 0);
+  };
+
+  const generateQuestion = (questionSet: QuizCharacter[], index: number) => {
+    if (index >= questionSet.length) {
+      endGame();
       return;
     }
-    
-    setIsGameStarted(true);
-    setIsPaused(false);
-    setTimeRemaining(DEFAULT_TIME);
-    setScore(0);
-    setCorrectAnswers(0);
-    setIncorrectAnswers(0);
-    setCurrentCharacterIndex(0);
-    setShowResults(false);
+
+    const question = questionSet[index];
+    setCurrentChar(question);
+    setCorrectAnswer(question.romaji);
+
+    // Generate 3 wrong answers
+    const allKana = selectedType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
+    const wrongAnswers = allKana
+      .filter(k => k.romaji !== question.romaji)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3)
+      .map(k => k.romaji);
+
+    const allOptions = [question.romaji, ...wrongAnswers].sort(() => Math.random() - 0.5);
+    setOptions(allOptions);
   };
-  
-  const pauseGame = () => {
-    setIsPaused(true);
-  };
-  
-  const resumeGame = () => {
-    setIsPaused(false);
-  };
-  
-  const restartGame = () => {
-    setIsGameStarted(false);
-    setShowResults(false);
-    
-    // Shuffle characters again
-    const shuffled = [...characters].sort(() => Math.random() - 0.5);
-    setCharacters(shuffled);
-    
-    // Small delay to reset the UI
-    setTimeout(() => {
-      startGame();
-    }, 100);
-  };
-  
-  const handleOptionSelect = (selectedRomaji: string) => {
-    const correctRomaji = characters[currentCharacterIndex].romaji;
-    const isCorrect = selectedRomaji === correctRomaji;
+
+  const handleAnswer = (selectedAnswer: string) => {
+    const isCorrect = selectedAnswer === correctAnswer;
     
     if (isCorrect) {
-      // Play sound
-      if (correctSoundRef.current) {
-        correctSoundRef.current.currentTime = 0;
-        correctSoundRef.current.play().catch(e => console.error('Error playing sound:', e));
-      }
-      
-      // Award points - base + time bonus
-      const points = CORRECT_ANSWER_POINTS + TIME_BONUS_POINTS;
-      setScore(prev => prev + points);
-      setCorrectAnswers(prev => prev + 1);
-      
-      // Show toast for correct answer
-      toast({
-        title: 'Correct!',
-        description: `+${points} points`,
-        variant: 'default',
-      });
-    } else {
-      // Play sound
-      if (incorrectSoundRef.current) {
-        incorrectSoundRef.current.currentTime = 0;
-        incorrectSoundRef.current.play().catch(e => console.error('Error playing sound:', e));
-      }
-      
-      setIncorrectAnswers(prev => prev + 1);
-      
-      // Show toast for incorrect answer
-      toast({
-        title: 'Incorrect',
-        description: `The correct answer was: ${correctRomaji}`,
-        variant: 'destructive',
-      });
+      setScore(prev => prev + 1);
     }
+
+    setUserAnswers(prev => [...prev, isCorrect]);
+
+    const nextQuestion = currentQuestion + 1;
+    setCurrentQuestion(nextQuestion);
     
-    // Move to next character
-    const nextIndex = currentCharacterIndex + 1;
-    if (nextIndex < characters.length) {
-      setCurrentCharacterIndex(nextIndex);
+    if (nextQuestion < questions.length) {
+      setTimeout(() => {
+        generateQuestion(questions, nextQuestion);
+      }, 500);
     } else {
-      // If we've gone through all characters, show results
-      setShowResults(true);
-      if (timerRef.current) clearInterval(timerRef.current);
+      endGame();
     }
   };
-  
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+
+  const startGame = () => {
+    setGameState('playing');
+    setCurrentTime(timeLimit);
+    setScore(0);
+    generateQuestions();
   };
-  
-  // Accuracy percentage
-  const accuracy = correctAnswers + incorrectAnswers > 0 
-    ? Math.round((correctAnswers / (correctAnswers + incorrectAnswers)) * 100)
-    : 0;
-  
-  return (
-    <>
-      <Navbar />
-      <div className="min-h-screen pt-24 px-4 bg-softgray/30">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-indigo mb-2">Timed Challenge</h1>
-            <p className="text-gray-600">
-              How many {kanaType} characters can you identify in {DEFAULT_TIME} seconds?
-            </p>
-          </div>
-          
-          {!isGameStarted && !showResults ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center p-10">
-                <Clock className="h-20 w-20 text-indigo mb-6" />
-                <h2 className="text-2xl font-bold mb-4">Ready to Challenge Yourself?</h2>
-                <p className="text-center text-gray-600 mb-6">
-                  Identify as many {kanaType} characters as you can before the timer runs out!
-                  <br />You'll get {CORRECT_ANSWER_POINTS} points for each correct answer plus a time bonus.
-                </p>
-                <Button 
-                  onClick={startGame} 
-                  className="bg-indigo hover:bg-indigo/90 flex items-center gap-2"
-                  size="lg"
-                >
-                  <PlayCircle />
-                  Start Challenge
-                </Button>
-              </CardContent>
-            </Card>
-          ) : showResults ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center p-10">
-                <Trophy className="h-20 w-20 text-amber-500 mb-6" />
-                <h2 className="text-2xl font-bold mb-2">Challenge Complete!</h2>
-                <p className="text-center text-gray-600 mb-6">
-                  Here's how you did:
-                </p>
-                
-                <div className="grid grid-cols-2 gap-6 w-full max-w-md mb-8">
-                  <div className="bg-indigo/10 p-4 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-indigo mb-1">{score}</div>
-                    <div className="text-sm text-gray-600">Total Score</div>
-                  </div>
-                  <div className="bg-indigo/10 p-4 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-indigo mb-1">{accuracy}%</div>
-                    <div className="text-sm text-gray-600">Accuracy</div>
-                  </div>
-                  <div className="bg-green-100 p-4 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-1">{correctAnswers}</div>
-                    <div className="text-sm text-gray-600">Correct</div>
-                  </div>
-                  <div className="bg-red-100 p-4 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-red-600 mb-1">{incorrectAnswers}</div>
-                    <div className="text-sm text-gray-600">Incorrect</div>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <Button 
-                    onClick={restartGame} 
-                    className="bg-indigo hover:bg-indigo/90 flex items-center gap-2"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Play Again
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/practice')}
-                  >
-                    Return to Practice Hub
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-3 bg-indigo/10 px-4 py-2 rounded-lg">
-                  <Clock className="h-5 w-5 text-indigo" />
-                  <span className="text-2xl font-bold text-indigo">{formatTime(timeRemaining)}</span>
-                </div>
-                
-                <div className="flex gap-2">
-                  {isPaused ? (
-                    <Button 
-                      onClick={resumeGame} 
-                      className="bg-indigo hover:bg-indigo/90 flex items-center gap-2"
-                    >
-                      <PlayCircle className="h-4 w-4" />
-                      Resume
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={pauseGame} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <PauseCircle className="h-4 w-4" />
-                      Pause
-                    </Button>
-                  )}
-                  <Button 
-                    onClick={restartGame} 
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Restart
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600">Score</div>
-                    <div className="text-xl font-bold text-indigo">{score}</div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <span className="font-medium">{correctAnswers}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <XCircle className="h-5 w-5 text-red-600" />
-                    <span className="font-medium">{incorrectAnswers}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <Progress 
-                value={(timeRemaining / DEFAULT_TIME) * 100} 
-                className="h-2 mb-8"
-              />
-              
-              {characters.length > 0 && currentCharacterIndex < characters.length && !isPaused ? (
-                <div className="flex flex-col items-center">
-                  <Card className="w-full max-w-md mb-6">
-                    <CardContent className="p-8 flex flex-col items-center">
-                      <JapaneseCharacter 
-                        character={characters[currentCharacterIndex].character} 
-                        size="xl"
-                        className="mb-4"
-                      />
-                      <p className="text-gray-600 text-sm">
-                        What is the romaji for this character?
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-                    {options.map((option, index) => (
-                      <Button
-                        key={index}
-                        onClick={() => handleOptionSelect(option)}
-                        className="py-6 text-lg"
-                        variant="outline"
-                      >
-                        {option}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ) : isPaused ? (
-                <div className="flex flex-col items-center justify-center p-12">
-                  <h3 className="text-xl font-semibold mb-4">Game Paused</h3>
-                  <p className="text-gray-600 mb-6">
-                    Click Resume to continue the challenge.
-                  </p>
-                  <Button 
-                    onClick={resumeGame} 
-                    className="bg-indigo hover:bg-indigo/90"
-                  >
-                    Resume Game
-                  </Button>
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
+
+  const endGame = () => {
+    setGameState('finished');
+    
+    const correctAnswers = userAnswers.filter(answer => answer).length;
+    const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+    
+    setResult({
+      score: correctAnswers,
+      timeRemaining: currentTime,
+      accuracy: Math.round(accuracy),
+      totalQuestions
+    });
+
+    toast({
+      title: "Challenge Complete!",
+      description: `You scored ${correctAnswers}/${totalQuestions} with ${Math.round(accuracy)}% accuracy!`,
+    });
+  };
+
+  const resetGame = () => {
+    setGameState('setup');
+    setScore(0);
+    setCurrentQuestion(0);
+    setUserAnswers([]);
+    setResult(null);
+  };
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="text-center py-8">
+            <p>Please sign in to play the Timed Challenge.</p>
+            <Button onClick={() => navigate('/auth')} className="mt-4">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </div>
+
+      {gameState === 'setup' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-6 w-6" />
+              Timed Challenge
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="font-medium mb-3">Character Type</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant={selectedType === 'hiragana' ? 'default' : 'outline'}
+                  onClick={() => setSelectedType('hiragana')}
+                >
+                  Hiragana
+                </Button>
+                <Button
+                  variant={selectedType === 'katakana' ? 'default' : 'outline'}
+                  onClick={() => setSelectedType('katakana')}
+                >
+                  Katakana
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-3">Difficulty</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <Button
+                  variant={difficulty === 'easy' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setDifficulty('easy');
+                    setTimeLimit(90);
+                  }}
+                >
+                  Easy (10Q)
+                </Button>
+                <Button
+                  variant={difficulty === 'medium' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setDifficulty('medium');
+                    setTimeLimit(60);
+                  }}
+                >
+                  Medium (15Q)
+                </Button>
+                <Button
+                  variant={difficulty === 'hard' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setDifficulty('hard');
+                    setTimeLimit(45);
+                  }}
+                >
+                  Hard (20Q)
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4">
+                Time Limit: {timeLimit} seconds
+              </p>
+              <Button onClick={startGame} size="lg">
+                Start Challenge
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {gameState === 'playing' && currentChar && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                <span className="font-mono text-lg">
+                  {Math.floor(currentTime / 60)}:{(currentTime % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+              <Badge variant="secondary">
+                {currentQuestion + 1} / {totalQuestions}
+              </Badge>
+            </div>
+            <Progress value={(currentTime / timeLimit) * 100} className="mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <div className="text-6xl font-bold mb-4 text-indigo">
+                {currentChar.character}
+              </div>
+              <p className="text-muted-foreground">What is the romaji for this character?</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {options.map((option, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="h-12 text-lg"
+                  onClick={() => handleAnswer(option)}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Score: {score} / {currentQuestion}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {gameState === 'finished' && result && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-6 w-6" />
+              Challenge Complete!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-3xl font-bold text-indigo">{result.score}</div>
+                <div className="text-sm text-muted-foreground">Correct Answers</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-green-600">{result.accuracy}%</div>
+                <div className="text-sm text-muted-foreground">Accuracy</div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4">
+                Time remaining: {result.timeRemaining} seconds
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={resetGame} variant="outline">
+                  Play Again
+                </Button>
+                <Button onClick={() => navigate('/dashboard')}>
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

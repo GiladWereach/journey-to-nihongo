@@ -35,9 +35,6 @@ export async function submitAssessment(user: User, answers: AssessmentAnswers) {
   const { error: settingsError } = await supabase
     .from('user_settings')
     .update({
-      prior_knowledge: priorKnowledge,
-      preferred_study_time: 'anytime',
-      notifications_enabled: true,
       display_furigana: true
     })
     .eq('id', user.id);
@@ -47,24 +44,23 @@ export async function submitAssessment(user: User, answers: AssessmentAnswers) {
     throw settingsError;
   }
   
-  console.log('Creating study session...');
+  console.log('Creating kana learning session...');
   const now = new Date();
   const currentDate = now.toISOString();
   
   const { error: sessionError } = await supabase
-    .from('study_sessions')
+    .from('kana_learning_sessions')
     .insert({
       user_id: user.id,
-      module: 'assessment',
-      topics: ['initial-assessment'],
-      duration_minutes: 5,
-      session_date: currentDate,
+      kana_type: 'assessment',
       start_time: currentDate,
-      completed: true
+      end_time: currentDate,
+      completed: true,
+      accuracy: 100
     });
     
   if (sessionError) {
-    console.error('Study session creation error:', sessionError);
+    console.error('Kana learning session creation error:', sessionError);
     throw sessionError;
   }
   

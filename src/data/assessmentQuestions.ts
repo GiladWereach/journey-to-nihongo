@@ -7,6 +7,7 @@ export interface AssessmentQuestion {
     text: string;
     value: string;
   }[];
+  correctAnswer: string;
   category: 'level' | 'goal' | 'time' | 'knowledge';
 }
 
@@ -20,6 +21,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { id: 'level-3', text: 'Can have simple conversations', value: 'intermediate' },
       { id: 'level-4', text: 'Can read, write and speak with some fluency', value: 'advanced' }
     ],
+    correctAnswer: 'beginner',
     category: 'level'
   },
   {
@@ -32,6 +34,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { id: 'goal-4', text: 'Academic purposes or passing JLPT', value: 'academic' },
       { id: 'goal-5', text: 'General interest in the language', value: 'general' }
     ],
+    correctAnswer: 'general',
     category: 'goal'
   },
   {
@@ -43,6 +46,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { id: 'time-3', text: '30-60 minutes', value: '45' },
       { id: 'time-4', text: 'More than 60 minutes', value: '75' }
     ],
+    correctAnswer: '20',
     category: 'time'
   },
   {
@@ -54,6 +58,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { id: 'knowledge-3', text: 'I know hiragana and some katakana', value: 'hiragana_katakana' },
       { id: 'knowledge-4', text: 'I know hiragana, katakana and some kanji', value: 'basic_kanji' }
     ],
+    correctAnswer: 'none',
     category: 'knowledge'
   }
 ];

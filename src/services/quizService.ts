@@ -16,23 +16,25 @@ export const quizService = {
       // Define character groupings
       const characterSets: QuizCharacterSet[] = [];
       
+      // Helper function to create QuizCharacter with required properties
+      const createQuizCharacter = (kana: any): QuizCharacter => ({
+        id: kana.id,
+        character: kana.character,
+        romaji: kana.romaji,
+        type,
+        stroke_count: kana.stroke_count || 1,
+        stroke_order: kana.stroke_order || []
+      });
+      
       // 1. Basic vowels
       const vowels = allKana.filter(k => /^(a|i|u|e|o)$/.test(k.romaji));
       if (vowels.length > 0) {
         characterSets.push({
           id: `${type}-vowels`,
           name: 'Vowels',
+          description: 'Basic vowel sounds',
           type,
-          characters: vowels.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'vowels',
-            row: 'vowels',
-          })),
-          consonantGroup: 'vowels',
-          vowelGroup: 'all',
+          characters: vowels.map(createQuizCharacter)
         });
       }
       
@@ -41,18 +43,10 @@ export const quizService = {
       if (kRow.length > 0) {
         characterSets.push({
           id: `${type}-k-row`,
-          name: 'K',
+          name: 'K Row',
+          description: 'Ka, Ki, Ku, Ke, Ko',
           type,
-          characters: kRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'k',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'k',
-          vowelGroup: 'all',
+          characters: kRow.map(createQuizCharacter)
         });
       }
       
@@ -61,18 +55,10 @@ export const quizService = {
       if (sRow.length > 0) {
         characterSets.push({
           id: `${type}-s-row`,
-          name: 'S',
+          name: 'S Row',
+          description: 'Sa, Shi, Su, Se, So',
           type,
-          characters: sRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 's',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 's',
-          vowelGroup: 'all',
+          characters: sRow.map(createQuizCharacter)
         });
       }
       
@@ -81,403 +67,88 @@ export const quizService = {
       if (tRow.length > 0) {
         characterSets.push({
           id: `${type}-t-row`,
-          name: 'T',
+          name: 'T Row',
+          description: 'Ta, Chi, Tsu, Te, To',
           type,
-          characters: tRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 't',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 't',
-          vowelGroup: 'all',
+          characters: tRow.map(createQuizCharacter)
         });
       }
       
-      // 5. N-row
+      // Continue with other rows...
       const nRow = allKana.filter(k => /^n[aiueo]$/.test(k.romaji));
       if (nRow.length > 0) {
         characterSets.push({
           id: `${type}-n-row`,
-          name: 'N',
+          name: 'N Row',
+          description: 'Na, Ni, Nu, Ne, No',
           type,
-          characters: nRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'n',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'n',
-          vowelGroup: 'all',
+          characters: nRow.map(createQuizCharacter)
         });
       }
       
-      // 6. H-row
       const hRow = allKana.filter(k => /^h[aiueo]$/.test(k.romaji));
       if (hRow.length > 0) {
         characterSets.push({
           id: `${type}-h-row`,
-          name: 'H',
+          name: 'H Row',
+          description: 'Ha, Hi, Fu, He, Ho',
           type,
-          characters: hRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'h',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'h',
-          vowelGroup: 'all',
+          characters: hRow.map(createQuizCharacter)
         });
       }
       
-      // 7. M-row
       const mRow = allKana.filter(k => /^m[aiueo]$/.test(k.romaji));
       if (mRow.length > 0) {
         characterSets.push({
           id: `${type}-m-row`,
-          name: 'M',
+          name: 'M Row',
+          description: 'Ma, Mi, Mu, Me, Mo',
           type,
-          characters: mRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'm',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'm',
-          vowelGroup: 'all',
+          characters: mRow.map(createQuizCharacter)
         });
       }
       
-      // 8. Y-row
       const yRow = allKana.filter(k => /^y[auo]$/.test(k.romaji));
       if (yRow.length > 0) {
         characterSets.push({
           id: `${type}-y-row`,
-          name: 'Y',
+          name: 'Y Row',
+          description: 'Ya, Yu, Yo',
           type,
-          characters: yRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'y',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'y',
-          vowelGroup: 'special',
+          characters: yRow.map(createQuizCharacter)
         });
       }
       
-      // 9. R-row
       const rRow = allKana.filter(k => /^r[aiueo]$/.test(k.romaji));
       if (rRow.length > 0) {
         characterSets.push({
           id: `${type}-r-row`,
-          name: 'R',
+          name: 'R Row',
+          description: 'Ra, Ri, Ru, Re, Ro',
           type,
-          characters: rRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'r',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'r',
-          vowelGroup: 'all',
+          characters: rRow.map(createQuizCharacter)
         });
       }
       
-      // 10. W-row
       const wRow = allKana.filter(k => /^w[aoe]$/.test(k.romaji));
       if (wRow.length > 0) {
         characterSets.push({
           id: `${type}-w-row`,
-          name: 'W',
+          name: 'W Row',
+          description: 'Wa, Wo',
           type,
-          characters: wRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'w',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'w',
-          vowelGroup: 'special',
+          characters: wRow.map(createQuizCharacter)
         });
       }
       
-      // 11. Special characters (e.g., ん/n)
       const special = allKana.filter(k => /^n$/.test(k.romaji));
       if (special.length > 0) {
         characterSets.push({
           id: `${type}-special`,
           name: 'Special',
+          description: 'Special characters',
           type,
-          characters: special.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'special',
-            row: 'special',
-          })),
-          consonantGroup: 'special',
-          vowelGroup: 'special',
-        });
-      }
-      
-      // 12. G-row (Dakuten K-row)
-      const gRow = allKana.filter(k => /^g[aiueo]$/.test(k.romaji));
-      if (gRow.length > 0) {
-        characterSets.push({
-          id: `${type}-g-row`,
-          name: 'G',
-          type,
-          characters: gRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            isDakuten: true,
-            group: 'g',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'g',
-          vowelGroup: 'all',
-        });
-      }
-      
-      // 13. Z-row (Dakuten S-row)
-      const zRow = allKana.filter(k => /^z[aiueo]$/.test(k.romaji));
-      if (zRow.length > 0) {
-        characterSets.push({
-          id: `${type}-z-row`,
-          name: 'Z',
-          type,
-          characters: zRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            isDakuten: true,
-            group: 'z',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'z',
-          vowelGroup: 'all',
-        });
-      }
-      
-      // 14. D-row (Dakuten T-row)
-      const dRow = allKana.filter(k => /^d[aiueo]$/.test(k.romaji));
-      if (dRow.length > 0) {
-        characterSets.push({
-          id: `${type}-d-row`,
-          name: 'D',
-          type,
-          characters: dRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            isDakuten: true,
-            group: 'd',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'd',
-          vowelGroup: 'all',
-        });
-      }
-      
-      // 15. B-row (Dakuten H-row)
-      const bRow = allKana.filter(k => /^b[aiueo]$/.test(k.romaji));
-      if (bRow.length > 0) {
-        characterSets.push({
-          id: `${type}-b-row`,
-          name: 'B',
-          type,
-          characters: bRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            isDakuten: true,
-            group: 'b',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'b',
-          vowelGroup: 'all',
-        });
-      }
-      
-      // 16. P-row (Handakuten H-row)
-      const pRow = allKana.filter(k => /^p[aiueo]$/.test(k.romaji));
-      if (pRow.length > 0) {
-        characterSets.push({
-          id: `${type}-p-row`,
-          name: 'P',
-          type,
-          characters: pRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            isHandakuten: true,
-            group: 'p',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'p',
-          vowelGroup: 'all',
-        });
-      }
-      
-      // 17. J-row (Dakuten S-row variant)
-      const jRow = allKana.filter(k => /^j[aio]$/.test(k.romaji));
-      if (jRow.length > 0) {
-        characterSets.push({
-          id: `${type}-j-row`,
-          name: 'J',
-          type,
-          characters: jRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            isDakuten: true,
-            group: 'j',
-            row: kana.romaji[1],
-          })),
-          consonantGroup: 'j',
-          vowelGroup: 'special',
-        });
-      }
-      
-      // 18. Combination characters (like きゃ / kya)
-      const combinations = allKana.filter(k => 
-        /^[ksgzjtdnhbpmr]y[auo]$/.test(k.romaji)
-      );
-      
-      if (combinations.length > 0) {
-        characterSets.push({
-          id: `${type}-combinations`,
-          name: 'Combinations',
-          type,
-          characters: combinations.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: 'combinations',
-            row: kana.romaji.slice(-1),
-          })),
-          consonantGroup: 'combinations',
-          vowelGroup: 'special',
-        });
-      }
-      
-      // Also create sets by vowel groups
-      const aRow = allKana.filter(k => k.romaji.endsWith('a'));
-      if (aRow.length > 0) {
-        characterSets.push({
-          id: `${type}-a-row`,
-          name: 'A Row',
-          type,
-          characters: aRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: kana.romaji[0],
-            row: 'a',
-          })),
-          consonantGroup: 'all',
-          vowelGroup: 'a',
-        });
-      }
-      
-      const iRow = allKana.filter(k => k.romaji.endsWith('i'));
-      if (iRow.length > 0) {
-        characterSets.push({
-          id: `${type}-i-row`,
-          name: 'I Row',
-          type,
-          characters: iRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: kana.romaji[0],
-            row: 'i',
-          })),
-          consonantGroup: 'all',
-          vowelGroup: 'i',
-        });
-      }
-      
-      const uRow = allKana.filter(k => k.romaji.endsWith('u'));
-      if (uRow.length > 0) {
-        characterSets.push({
-          id: `${type}-u-row`,
-          name: 'U Row',
-          type,
-          characters: uRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: kana.romaji[0],
-            row: 'u',
-          })),
-          consonantGroup: 'all',
-          vowelGroup: 'u',
-        });
-      }
-      
-      const eRow = allKana.filter(k => k.romaji.endsWith('e'));
-      if (eRow.length > 0) {
-        characterSets.push({
-          id: `${type}-e-row`,
-          name: 'E Row',
-          type,
-          characters: eRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: kana.romaji[0],
-            row: 'e',
-          })),
-          consonantGroup: 'all',
-          vowelGroup: 'e',
-        });
-      }
-      
-      const oRow = allKana.filter(k => k.romaji.endsWith('o'));
-      if (oRow.length > 0) {
-        characterSets.push({
-          id: `${type}-o-row`,
-          name: 'O Row',
-          type,
-          characters: oRow.map(kana => ({
-            id: kana.id,
-            character: kana.character,
-            romaji: kana.romaji,
-            type,
-            group: kana.romaji[0],
-            row: 'o',
-          })),
-          consonantGroup: 'all',
-          vowelGroup: 'o',
+          characters: special.map(createQuizCharacter)
         });
       }
       
@@ -889,7 +560,9 @@ export const quizService = {
             character: sc.character.character,
             romaji: sc.character.romaji,
             type: sc.character.type as KanaType,
-            quizMode: 'both' as const
+            quizMode: 'both' as const,
+            stroke_count: sc.character.stroke_count || 1,
+            stroke_order: sc.character.stroke_order || []
           }));
         }
       }
@@ -909,7 +582,9 @@ export const quizService = {
           character: kana.character,
           romaji: kana.romaji,
           type: kana.type as KanaType,
-          quizMode: 'both' as const
+          quizMode: 'both' as const,
+          stroke_count: kana.stroke_count || 1,
+          stroke_order: kana.stroke_order || []
         }));
         
         characters = [...characters, ...additional];
