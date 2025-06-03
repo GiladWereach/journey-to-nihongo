@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,6 +79,18 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
     return progress ? progress.mastery_level : 0;
   };
   
+  const getMasteryStageColor = (masteryLevel: number): string => {
+    switch (masteryLevel) {
+      case 0: return 'bg-gradient-to-r from-green-200 to-green-300'; // Light green
+      case 1: return 'bg-gradient-to-r from-gray-300 to-gray-400'; // Greyish
+      case 2: return 'bg-gradient-to-r from-pink-200 to-pink-300'; // Pink
+      case 3: return 'bg-gradient-to-r from-blue-200 to-blue-300'; // Blueish
+      case 4: return 'bg-gradient-to-r from-amber-200 to-amber-300'; // Light brown
+      case 5: return 'bg-gradient-to-r from-gray-700 to-gray-800'; // Black
+      default: return 'bg-gradient-to-r from-green-200 to-green-300';
+    }
+  };
+  
   const getSortedGroups = (): string[] => {
     // Define order for consonant groups
     const order = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'special', 'combinations'];
@@ -139,7 +150,7 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
                       progress={getCharacterProgress(char.id)}
                       size="sm"
                       showPercentage={false}
-                      color={kanaType === 'hiragana' ? 'bg-matcha' : 'bg-vermilion'}
+                      color={getMasteryStageColor(getCharacterMasteryLevel(char.id))}
                       masteryLevel={getCharacterMasteryLevel(char.id)}
                       showMasteryBadge={getCharacterMasteryLevel(char.id) > 0}
                     />
@@ -235,7 +246,7 @@ const UserKanaProgress: React.FC = () => {
               <ProgressIndicator 
                 progress={(stats.hiragana.learned / Math.max(1, stats.hiragana.total)) * 100}
                 size="sm"
-                color="bg-matcha"
+                color="bg-gradient-to-r from-green-200 to-green-300"
               />
             </div>
             <div className="space-y-1">
@@ -247,7 +258,7 @@ const UserKanaProgress: React.FC = () => {
               <ProgressIndicator 
                 progress={(stats.katakana.learned / Math.max(1, stats.katakana.total)) * 100}
                 size="sm"
-                color="bg-vermilion"
+                color="bg-gradient-to-r from-pink-200 to-pink-300"
               />
             </div>
           </div>

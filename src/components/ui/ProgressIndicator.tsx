@@ -28,7 +28,7 @@ interface ProgressIndicatorProps {
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   progress,
   size = 'md',
-  color = 'bg-vermilion',
+  color = 'bg-gradient-to-r from-green-200 to-green-300',
   className,
   showPercentage = false,
   label,
@@ -58,13 +58,23 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
   // Get appropriate color based on proficiency level if not explicitly provided
   const getColorByProficiency = () => {
-    if (color !== 'bg-vermilion') return color;
+    if (color !== 'bg-gradient-to-r from-green-200 to-green-300') return color;
     
-    if (masteryLevel > 0) return 'bg-purple-500'; // Special color for mastered characters
-    if (proficiencyLevel === 'mastered' || normalizedProgress >= 90) return 'bg-green-500';
-    if (proficiencyLevel === 'advanced' || normalizedProgress >= 70) return 'bg-blue-500';
-    if (proficiencyLevel === 'intermediate' || normalizedProgress >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (masteryLevel > 0) {
+      switch (masteryLevel) {
+        case 1: return 'bg-gradient-to-r from-gray-300 to-gray-400'; // Learning
+        case 2: return 'bg-gradient-to-r from-pink-200 to-pink-300'; // Familiar
+        case 3: return 'bg-gradient-to-r from-blue-200 to-blue-300'; // Practiced
+        case 4: return 'bg-gradient-to-r from-amber-200 to-amber-300'; // Reliable
+        case 5: return 'bg-gradient-to-r from-gray-700 to-gray-800'; // Mastered
+        default: return 'bg-gradient-to-r from-green-200 to-green-300'; // New
+      }
+    }
+    
+    if (proficiencyLevel === 'mastered' || normalizedProgress >= 90) return 'bg-gradient-to-r from-gray-700 to-gray-800';
+    if (proficiencyLevel === 'advanced' || normalizedProgress >= 70) return 'bg-gradient-to-r from-blue-200 to-blue-300';
+    if (proficiencyLevel === 'intermediate' || normalizedProgress >= 40) return 'bg-gradient-to-r from-pink-200 to-pink-300';
+    return 'bg-gradient-to-r from-gray-300 to-gray-400';
   };
 
   const progressColor = proficiencyLevel || masteryLevel > 0 ? getColorByProficiency() : color;
@@ -142,11 +152,12 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             {showLabel && (proficiencyLevel || masteryLevel > 0) && (
               <span className={cn(
                 'text-xs px-2 py-0.5 rounded-full',
-                masteryLevel > 0 ? 'bg-purple-100 text-purple-800' :
-                level === 'mastered' ? 'bg-green-100 text-green-800' :
-                level === 'advanced' ? 'bg-blue-100 text-blue-800' :
-                level === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
+                masteryLevel === 5 ? 'bg-gray-800 text-white' :
+                masteryLevel === 4 ? 'bg-amber-100 text-amber-800' :
+                masteryLevel === 3 ? 'bg-blue-100 text-blue-800' :
+                masteryLevel === 2 ? 'bg-pink-100 text-pink-800' :
+                masteryLevel === 1 ? 'bg-gray-100 text-gray-800' :
+                'bg-green-100 text-green-800'
               )}>
                 {masteryLevel > 0 ? `Level ${masteryLevel}` : proficiencyLabels[level]}
               </span>
@@ -179,9 +190,11 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         <div className="text-xs text-center mt-1">
           <span className={cn(
             "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-            masteryLevel === 1 ? "bg-purple-100 text-purple-800" :
-            masteryLevel === 2 ? "bg-indigo-100 text-indigo-800" :
-            masteryLevel >= 3 ? "bg-blue-100 text-blue-800" : ""
+            masteryLevel === 1 ? "bg-gray-100 text-gray-800" :
+            masteryLevel === 2 ? "bg-pink-100 text-pink-800" :
+            masteryLevel === 3 ? "bg-blue-100 text-blue-800" :
+            masteryLevel === 4 ? "bg-amber-100 text-amber-800" :
+            masteryLevel >= 5 ? "bg-gray-800 text-white" : ""
           )}>
             {masteryLevel === 1 && "⭐"} 
             {masteryLevel === 2 && "⭐⭐"}
