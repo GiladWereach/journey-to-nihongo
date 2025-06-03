@@ -12,6 +12,7 @@ import { quizSessionService, QuizSession } from '@/services/quizSessionService';
 import { enhancedCharacterProgressService, PracticeMetrics } from '@/services/enhancedCharacterProgressService';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Clock, Target } from 'lucide-react';
 
 interface EnhancedQuizInterfaceProps {
   kanaType: KanaType;
@@ -27,6 +28,14 @@ interface CharacterWithMastery {
   confidenceScore: number;
 }
 
+interface SessionStats {
+  totalTime: number;
+  totalCharacters: number;
+  averageTimePerCharacter: number;
+  fastestResponse: number;
+  slowestResponse: number;
+}
+
 const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({ 
   kanaType, 
   onEndQuiz,
@@ -38,11 +47,19 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sessionStats, setSessionStats] = useState<SessionStats>({
+    totalTime: 0,
+    totalCharacters: 0,
+    averageTimePerCharacter: 0,
+    fastestResponse: Infinity,
+    slowestResponse: 0
+  });
   const [masteryStats, setMasteryStats] = useState({
     new: 0, learning: 0, familiar: 0, practiced: 0, reliable: 0, mastered: 0, total: 0, averageConfidence: 0
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number>(0);
+  const sessionStartRef = useRef<number>(Date.now());
 
   const characters = kanaType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
 
@@ -117,6 +134,21 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     }
   }, [currentCharacter]);
 
+  const updateSessionStats = (responseTime: number) => {
+    setSessionStats(prev => {
+      const totalTime = Date.now() - sessionStartRef.current;
+      const totalCharacters = prev.totalCharacters + 1;
+      
+      return {
+        totalTime,
+        totalCharacters,
+        averageTimePerCharacter: totalTime / totalCharacters,
+        fastestResponse: Math.min(prev.fastestResponse === Infinity ? responseTime : prev.fastestResponse, responseTime),
+        slowestResponse: Math.max(prev.slowestResponse, responseTime)
+      };
+    });
+  };
+
   const processAnswer = async (isCorrect: boolean, inputValue: string) => {
     if (isProcessing || !currentCharacter) return;
     
@@ -124,6 +156,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     
     const responseTime = Date.now() - startTimeRef.current;
+    updateSessionStats(responseTime);
     
     const newScore = {
       correct: score.correct + (isCorrect ? 1 : 0),
@@ -150,8 +183,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       await quizSessionService.updateSession(session.id, newScore.total, newScore.correct);
     }
 
-    // Auto-advance after showing feedback
-    const feedbackDuration = isCorrect ? 400 : 1000;
+    // Faster feedback - reduced timing
+    const feedbackDuration = isCorrect ? 200 : 600;
     
     setTimeout(async () => {
       await getNextCharacter();
@@ -197,14 +230,23 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     return colors[level] || 'bg-gray-500';
   };
 
+  const formatTime = (milliseconds: number): string => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    }
+    return `${seconds}s`;
+  };
+
   if (!currentCharacter) return null;
 
   const accuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Enhanced Stats Section */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+      {/* Enhanced Stats Section with Session Info */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
         <div>
           <div className="text-2xl font-bold text-indigo">{score.correct}</div>
           <div className="text-sm text-gray-600">Correct</div>
@@ -218,10 +260,46 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           <div className="text-sm text-gray-600">Accuracy</div>
         </div>
         <div>
-          <div className="text-2xl font-bold text-vermilion">{masteryStats.mastered}</div>
-          <div className="text-sm text-gray-600">Mastered</div>
+          <div className="text-lg font-bold text-blue-600 flex items-center justify-center gap-1">
+            <Clock className="h-4 w-4" />
+            {formatTime(sessionStats.totalTime)}
+          </div>
+          <div className="text-sm text-gray-600">Session Time</div>
+        </div>
+        <div>
+          <div className="text-lg font-bold text-purple-600 flex items-center justify-center gap-1">
+            <Target className="h-4 w-4" />
+            {sessionStats.totalCharacters}
+          </div>
+          <div className="text-sm text-gray-600">Characters</div>
         </div>
       </div>
+
+      {/* Session Performance Stats */}
+      {sessionStats.totalCharacters > 0 && (
+        <Card className="p-4">
+          <div className="grid grid-cols-3 gap-4 text-center text-sm">
+            <div>
+              <div className="font-semibold text-green-600">
+                {(sessionStats.averageTimePerCharacter / 1000).toFixed(1)}s
+              </div>
+              <div className="text-gray-600">Avg Time</div>
+            </div>
+            <div>
+              <div className="font-semibold text-blue-600">
+                {(sessionStats.fastestResponse / 1000).toFixed(1)}s
+              </div>
+              <div className="text-gray-600">Fastest</div>
+            </div>
+            <div>
+              <div className="font-semibold text-orange-600">
+                {(sessionStats.slowestResponse / 1000).toFixed(1)}s
+              </div>
+              <div className="text-gray-600">Slowest</div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Mastery Progress Overview */}
       <Card className="p-4">
@@ -324,7 +402,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
           {/* Enhanced Feedback */}
           {feedback && (
-            <div className={`p-4 rounded-lg transition-all duration-300 ${
+            <div className={`p-4 rounded-lg transition-all duration-200 ${
               feedback === 'correct' 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'

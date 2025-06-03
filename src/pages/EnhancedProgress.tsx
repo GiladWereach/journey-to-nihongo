@@ -20,10 +20,13 @@ import {
   BarChart3,
   Home,
   Play,
-  ArrowLeft
+  ArrowLeft,
+  Timer
 } from 'lucide-react';
 import { enhancedCharacterProgressService, EnhancedUserKanaProgress, MasteryStats } from '@/services/enhancedCharacterProgressService';
 import { kanaService } from '@/services/kanaService';
+import { hiraganaCharacters } from '@/data/hiraganaData';
+import { katakanaCharacters } from '@/data/katakanaData';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 
 const EnhancedProgress: React.FC = () => {
@@ -87,6 +90,10 @@ const EnhancedProgress: React.FC = () => {
     }
   };
 
+  const getCharacterProgress = (characterId: string): EnhancedUserKanaProgress | null => {
+    return progressData.find(p => p.character_id === characterId) || null;
+  };
+
   const getTopPerformers = (): EnhancedUserKanaProgress[] => {
     return [...progressData]
       .filter(p => p.confidence_score > 0)
@@ -105,6 +112,81 @@ const EnhancedProgress: React.FC = () => {
     return [...progressData]
       .sort((a, b) => new Date(b.last_practiced).getTime() - new Date(a.last_practiced).getTime())
       .slice(0, 8);
+  };
+
+  const calculateTotalTime = (): number => {
+    return progressData.reduce((total, progress) => {
+      return total + (progress.average_response_time * progress.total_practice_count);
+    }, 0);
+  };
+
+  const formatTime = (milliseconds: number): string => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    }
+    return `${seconds}s`;
+  };
+
+  const renderCharacterGrid = (characters: any[], type: 'hiragana' | 'katakana') => {
+    return (
+      <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+        {characters.map(character => {
+          const progress = getCharacterProgress(character.id);
+          const masteryLevel = progress?.mastery_level || 0;
+          const confidenceScore = progress?.confidence_score || 0;
+          const practiceCount = progress?.total_practice_count || 0;
+          
+          return (
+            <div key={character.id} className="group">
+              <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center relative">
+                <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
+                  {character.character}
+                </div>
+                <div className="text-xs text-gray-500 mb-2 text-center">
+                  {character.romaji}
+                </div>
+                
+                {/* Practice count indicator */}
+                {practiceCount > 0 && (
+                  <div className="absolute top-1 right-1 text-xs bg-blue-100 text-blue-600 rounded-full px-1">
+                    {practiceCount}
+                  </div>
+                )}
+                
+                <div className="w-full mb-1">
+                  <ProgressIndicator
+                    progress={confidenceScore}
+                    size="sm"
+                    color={getMasteryStageColor(masteryLevel)}
+                    showPercentage={false}
+                  />
+                </div>
+                
+                <Badge 
+                  variant="secondary" 
+                  className={`text-xs px-1 py-0 ${getMasteryStageColor(masteryLevel)} text-white`}
+                >
+                  {getMasteryStageLabel(masteryLevel)}
+                </Badge>
+                
+                {/* Confidence score */}
+                {confidenceScore > 0 && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {confidenceScore}%
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   if (!user) {
@@ -192,6 +274,9 @@ const EnhancedProgress: React.FC = () => {
     );
   }
 
+  const totalTime = calculateTotalTime();
+  const totalCharactersPracticed = progressData.filter(p => p.total_practice_count > 0).length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-softgray via-white to-indigo/5">
       {/* Navigation Bar */}
@@ -241,7 +326,7 @@ const EnhancedProgress: React.FC = () => {
 
           <TabsContent value="overview" className="space-y-8">
             {/* Quick Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -291,7 +376,45 @@ const EnhancedProgress: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-indigo-700">Total Time</p>
+                      <p className="text-2xl font-bold text-indigo-900">{formatTime(totalTime)}</p>
+                    </div>
+                    <Timer className="h-10 w-10 text-indigo-500" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+
+            {/* Session Summary */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <Clock className="h-6 w-6 text-indigo" />
+                  Practice Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">{totalCharactersPracticed}</div>
+                  <div className="text-sm text-gray-600">Characters Practiced</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">{formatTime(totalTime)}</div>
+                  <div className="text-sm text-gray-600">Total Practice Time</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">
+                    {totalCharactersPracticed > 0 ? formatTime(totalTime / totalCharactersPracticed) : '0s'}
+                  </div>
+                  <div className="text-sm text-gray-600">Average Time per Character</div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Mastery Distribution - Visual Progress Bar */}
             <Card className="bg-white shadow-sm">
@@ -333,7 +456,7 @@ const EnhancedProgress: React.FC = () => {
 
           <TabsContent value="hiragana" className="space-y-6">
             {/* Hiragana Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="bg-gradient-to-br from-matcha/10 to-matcha/20 border-matcha/30">
                 <CardContent className="p-6 text-center">
                   <h3 className="text-lg font-semibold mb-2 text-matcha">Progress</h3>
@@ -363,6 +486,19 @@ const EnhancedProgress: React.FC = () => {
                   <p className="text-sm text-blue-600">Average score</p>
                 </CardContent>
               </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-purple-700">Practice Time</h3>
+                  <div className="text-2xl font-bold text-purple-600 mb-2">
+                    {formatTime(progressData
+                      .filter(p => p.character_id.startsWith('hiragana'))
+                      .reduce((total, p) => total + (p.average_response_time * p.total_practice_count), 0)
+                    )}
+                  </div>
+                  <p className="text-sm text-purple-600">Time spent</p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Hiragana Character Grid */}
@@ -370,52 +506,18 @@ const EnhancedProgress: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <span className="text-2xl">あ</span>
-                  Hiragana Characters
+                  Hiragana Characters ({hiraganaCharacters.length} total)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
-                  {progressData
-                    .filter(p => p.character_id.startsWith('hiragana'))
-                    .map(progress => {
-                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                      if (!character) return null;
-                      
-                      return (
-                        <div key={progress.character_id} className="group">
-                          <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center">
-                            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
-                              {character.character}
-                            </div>
-                            <div className="text-xs text-gray-500 mb-2 text-center">
-                              {character.romaji}
-                            </div>
-                            <div className="w-full">
-                              <ProgressIndicator
-                                progress={progress.confidence_score}
-                                size="sm"
-                                color={getMasteryStageColor(progress.mastery_level)}
-                                showPercentage={false}
-                              />
-                            </div>
-                            <Badge 
-                              variant="secondary" 
-                              className="text-xs mt-1 px-1 py-0"
-                            >
-                              {getMasteryStageLabel(progress.mastery_level)}
-                            </Badge>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
+                {renderCharacterGrid(hiraganaCharacters, 'hiragana')}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="katakana" className="space-y-6">
             {/* Katakana Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="bg-gradient-to-br from-vermilion/10 to-vermilion/20 border-vermilion/30">
                 <CardContent className="p-6 text-center">
                   <h3 className="text-lg font-semibold mb-2 text-vermilion">Progress</h3>
@@ -445,6 +547,19 @@ const EnhancedProgress: React.FC = () => {
                   <p className="text-sm text-blue-600">Average score</p>
                 </CardContent>
               </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <CardContent className="p-6 text-center">
+                  <h3 className="text-lg font-semibold mb-2 text-purple-700">Practice Time</h3>
+                  <div className="text-2xl font-bold text-purple-600 mb-2">
+                    {formatTime(progressData
+                      .filter(p => p.character_id.startsWith('katakana'))
+                      .reduce((total, p) => total + (p.average_response_time * p.total_practice_count), 0)
+                    )}
+                  </div>
+                  <p className="text-sm text-purple-600">Time spent</p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Katakana Character Grid */}
@@ -452,45 +567,11 @@ const EnhancedProgress: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <span className="text-2xl">ア</span>
-                  Katakana Characters
+                  Katakana Characters ({katakanaCharacters.length} total)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
-                  {progressData
-                    .filter(p => p.character_id.startsWith('katakana'))
-                    .map(progress => {
-                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
-                      if (!character) return null;
-                      
-                      return (
-                        <div key={progress.character_id} className="group">
-                          <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center">
-                            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
-                              {character.character}
-                            </div>
-                            <div className="text-xs text-gray-500 mb-2 text-center">
-                              {character.romaji}
-                            </div>
-                            <div className="w-full">
-                              <ProgressIndicator
-                                progress={progress.confidence_score}
-                                size="sm"
-                                color={getMasteryStageColor(progress.mastery_level)}
-                                showPercentage={false}
-                              />
-                            </div>
-                            <Badge 
-                              variant="secondary" 
-                              className="text-xs mt-1 px-1 py-0"
-                            >
-                              {getMasteryStageLabel(progress.mastery_level)}
-                            </Badge>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
+                {renderCharacterGrid(katakanaCharacters, 'katakana')}
               </CardContent>
             </Card>
           </TabsContent>
@@ -508,7 +589,7 @@ const EnhancedProgress: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {getTopPerformers().map((progress, index) => {
-                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                      const character = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
                       if (!character) return null;
                       
                       return (
@@ -548,7 +629,7 @@ const EnhancedProgress: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {getChallengingCharacters().map((progress, index) => {
-                      const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                      const character = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
                       if (!character) return null;
                       
                       return (
@@ -589,7 +670,7 @@ const EnhancedProgress: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4">
                   {getRecentlyPracticed().map((progress, index) => {
-                    const character = kanaService.getAllKana().find(k => k.id === progress.character_id);
+                    const character = [...hiraganaCharacters, ...katakanaCharacters].find(k => k.id === progress.character_id);
                     if (!character) return null;
                     
                     return (
@@ -606,6 +687,9 @@ const EnhancedProgress: React.FC = () => {
                             color={getMasteryStageColor(progress.mastery_level)}
                             showPercentage={false}
                           />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {formatTime(progress.average_response_time)} avg
                         </div>
                       </div>
                     );
