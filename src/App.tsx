@@ -5,9 +5,13 @@ import { Toaster } from './components/ui/toaster';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 import RequireAuth from './components/auth/RequireAuth';
 
-// Pages
+// New simplified pages
 import Index from './pages/Index';
 import Auth from './pages/Auth';
+import Quiz from './pages/Quiz';
+import Profile from './pages/Profile';
+
+// Legacy pages (moved to /legacy routes)
 import Dashboard from './pages/Dashboard';
 import Learn from './pages/Learn';
 import Practice from './pages/Practice';
@@ -22,56 +26,20 @@ import QuickQuiz from './pages/QuickQuiz';
 import WritingPractice from './pages/WritingPractice'; 
 import TimedChallenge from './pages/TimedChallenge';
 
-// When adding routes, use this function to ensure we don't have conflicting routes
-const checkForConflictingRoutes = (routes: string[]) => {
-  const duplicates = routes.filter((item, index) => routes.indexOf(item) !== index);
-  if (duplicates.length > 0) {
-    console.error('WARNING: Duplicate routes detected:', duplicates);
-  }
-};
-
 function App() {
-  // Define all our routes for easy checking
-  const allRoutes = [
-    '/',
-    '/auth',
-    '/reset-password',
-    '/kana-learning',
-    '/quick-quiz',
-    '/writing-practice',
-    '/timed-challenge',
-    '/dashboard',
-    '/learn',
-    '/practice',
-    '/progress',
-    '/edit-profile',
-    '/assessment',
-    '/achievements',
-    '/courses',
-    '/resources'
-  ];
-  
-  // Check for any conflicting routes
-  checkForConflictingRoutes(allRoutes);
-  
   return (
     <DarkModeProvider>
       <AuthProvider>
         <Router>
           <Routes>
-            {/* Public routes */}
+            {/* New simplified app routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/quiz" element={<Quiz />} />
+            <Route path="/profile" element={<Profile />} />
             
-            {/* Learning routes (accessible for demo) */}
-            <Route path="/kana-learning" element={<KanaLearning />} />
-            <Route path="/quick-quiz" element={<QuickQuiz />} />
-            <Route path="/writing-practice" element={<WritingPractice />} />
-            <Route path="/timed-challenge" element={<TimedChallenge />} />
-            
-            {/* Protected routes */}
-            <Route path="/" element={<RequireAuth />}>
+            {/* Legacy routes - preserved for existing users */}
+            <Route path="/legacy" element={<RequireAuth />}>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="learn" element={<Learn />} />
               <Route path="practice" element={<Practice />} />
@@ -82,6 +50,24 @@ function App() {
               <Route path="courses" element={<div>Courses Page</div>} />
               <Route path="resources" element={<div>Resources Page</div>} />
             </Route>
+            
+            {/* Legacy public routes */}
+            <Route path="/legacy/auth" element={<Auth />} />
+            <Route path="/legacy/reset-password" element={<ResetPassword />} />
+            <Route path="/legacy/kana-learning" element={<KanaLearning />} />
+            <Route path="/legacy/quick-quiz" element={<QuickQuiz />} />
+            <Route path="/legacy/writing-practice" element={<WritingPractice />} />
+            <Route path="/legacy/timed-challenge" element={<TimedChallenge />} />
+            
+            {/* Redirect old routes to legacy */}
+            <Route path="/dashboard" element={<Navigate to="/legacy/dashboard" replace />} />
+            <Route path="/learn" element={<Navigate to="/legacy/learn" replace />} />
+            <Route path="/practice" element={<Navigate to="/legacy/practice" replace />} />
+            <Route path="/progress" element={<Navigate to="/legacy/progress" replace />} />
+            <Route path="/kana-learning" element={<Navigate to="/legacy/kana-learning" replace />} />
+            <Route path="/quick-quiz" element={<Navigate to="/legacy/quick-quiz" replace />} />
+            <Route path="/writing-practice" element={<Navigate to="/legacy/writing-practice" replace />} />
+            <Route path="/timed-challenge" element={<Navigate to="/legacy/timed-challenge" replace />} />
             
             {/* Fallback routes */}
             <Route path="/index.html" element={<Navigate to="/" replace />} />
