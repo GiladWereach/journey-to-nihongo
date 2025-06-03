@@ -143,15 +143,24 @@ export const enhancedCharacterProgressService = {
           Math.floor((currentAvg * (newTotalCount - 1) + metrics.responseTime) / newTotalCount);
 
         // Calculate new confidence score
-        const tempProgress = {
+        const tempProgress: EnhancedUserKanaProgress = {
           ...existing,
           proficiency: newProficiency,
           consecutive_correct: newConsecutiveCorrect,
           average_response_time: newAvgResponseTime,
           sessions_practiced: existing.sessions_practiced || 1,
           mistake_count: newMistakeCount,
-          total_practice_count: newTotalCount
-        } as EnhancedUserKanaProgress;
+          total_practice_count: newTotalCount,
+          confidence_score: existing.confidence_score || 0,
+          first_seen_at: new Date(existing.first_seen_at || existing.last_practiced),
+          graduation_date: existing.graduation_date ? new Date(existing.graduation_date) : null,
+          last_mistake_date: existing.last_mistake_date ? new Date(existing.last_mistake_date) : null,
+          similar_character_confusions: typeof existing.similar_character_confusions === 'object' 
+            ? existing.similar_character_confusions as Record<string, number>
+            : {},
+          last_practiced: new Date(existing.last_practiced),
+          review_due: new Date(existing.review_due)
+        };
 
         const newConfidenceScore = enhancedCharacterProgressService.calculateConfidenceScore(tempProgress);
         const newMasteryLevel = enhancedCharacterProgressService.calculateMasteryStage(tempProgress);
@@ -250,7 +259,23 @@ export const enhancedCharacterProgressService = {
           // New character - highest priority
           weight = enhancedCharacterProgressService.SELECTION_WEIGHTS.new;
         } else {
-          const masteryStage = enhancedCharacterProgressService.calculateMasteryStage(progress as EnhancedUserKanaProgress);
+          // Convert progress to enhanced format for calculation
+          const enhancedProgress: EnhancedUserKanaProgress = {
+            ...progress,
+            confidence_score: progress.confidence_score || 0,
+            average_response_time: progress.average_response_time || 0,
+            sessions_practiced: progress.sessions_practiced || 0,
+            first_seen_at: new Date(progress.first_seen_at || progress.last_practiced),
+            graduation_date: progress.graduation_date ? new Date(progress.graduation_date) : null,
+            last_mistake_date: progress.last_mistake_date ? new Date(progress.last_mistake_date) : null,
+            similar_character_confusions: typeof progress.similar_character_confusions === 'object' 
+              ? progress.similar_character_confusions as Record<string, number>
+              : {},
+            last_practiced: new Date(progress.last_practiced),
+            review_due: new Date(progress.review_due)
+          };
+
+          const masteryStage = enhancedCharacterProgressService.calculateMasteryStage(enhancedProgress);
           const confidenceScore = progress.confidence_score || 0;
           
           // Base weight on mastery stage
@@ -320,7 +345,7 @@ export const enhancedCharacterProgressService = {
 
       if (error) throw error;
 
-      return data.map(item => ({
+      return (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
         character_id: item.character_id,
@@ -337,7 +362,9 @@ export const enhancedCharacterProgressService = {
         graduation_date: item.graduation_date ? new Date(item.graduation_date) : null,
         last_mistake_date: item.last_mistake_date ? new Date(item.last_mistake_date) : null,
         review_due: new Date(item.review_due),
-        similar_character_confusions: item.similar_character_confusions || {},
+        similar_character_confusions: typeof item.similar_character_confusions === 'object' 
+          ? item.similar_character_confusions as Record<string, number>
+          : {},
         created_at: item.created_at,
         updated_at: item.updated_at
       }));
