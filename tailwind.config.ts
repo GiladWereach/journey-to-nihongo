@@ -69,11 +69,35 @@ export default {
 				matcha: '#8C9E5E',
 				softgray: '#F2F2F2',
 				gold: '#DAA520',
+				// Traditional Japanese colors
+				gion: {
+					night: '#1a1a1a',
+					twilight: '#2d2d2d',
+					shadow: '#1f1f1f',
+					deep: '#0f0f0f',
+				},
+				wood: {
+					light: '#c4a477',
+					medium: '#8b4513',
+					dark: '#654321',
+				},
+				paper: {
+					warm: '#f5f5f5',
+					aged: '#f0e6d2',
+					antique: '#e8dcc0',
+				},
+				lantern: {
+					glow: '#ffdc96',
+					warm: '#ffc864',
+					amber: '#ff8c42',
+				},
 			},
 			fontFamily: {
 				sans: ['Noto Sans', 'sans-serif'],
 				montserrat: ['Montserrat', 'sans-serif'],
 				japanese: ['Noto Sans JP', 'sans-serif'],
+				serif: ['Noto Serif JP', 'serif'],
+				traditional: ['Noto Serif JP', 'serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -163,6 +187,24 @@ export default {
 						transform: 'translateX(0)'
 					}
 				},
+				'lantern-glow': {
+					'0%': {
+						opacity: '0.6',
+						boxShadow: '0 0 15px rgba(255, 220, 150, 0.4)'
+					},
+					'100%': {
+						opacity: '1',
+						boxShadow: '0 0 25px rgba(255, 220, 150, 0.6)'
+					}
+				},
+				'progress-glow': {
+					'0%': { transform: 'translateX(-100%)' },
+					'100%': { transform: 'translateX(100%)' }
+				},
+				'light-sweep': {
+					'0%': { left: '-100%' },
+					'100%': { left: '100%' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -174,13 +216,26 @@ export default {
 				'writing': 'writing 2s linear forwards',
 				'slide-up': 'slide-up 0.6s ease-out',
 				'slide-right': 'slide-right 0.6s ease-out',
+				'lantern-glow': 'lantern-glow 8s ease-in-out infinite alternate',
+				'progress-glow': 'progress-glow 4s ease-in-out infinite',
+				'light-sweep': 'light-sweep 0.8s ease',
 			},
 			backgroundImage: {
 				'washi-pattern': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiNmOGY4ZjgiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')",
+				'traditional-wood': 'linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(139, 69, 19, 0.08) 50%, rgba(139, 69, 19, 0.05) 100%)',
+				'gion-night': 'linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 30%, #1f1f1f 70%, #0f0f0f 100%)',
+				'glass-wood': 'linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(40, 20, 15, 0.95) 50%, rgba(20, 20, 20, 0.95) 100%)',
+				'wood-grain': 'linear-gradient(135deg, rgba(60, 40, 30, 0.9) 0%, rgba(80, 50, 35, 0.9) 100%)',
 			},
 			boxShadow: {
 				'subtle': '0 2px 10px rgba(0, 0, 0, 0.05)',
 				'elevated': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+				'traditional': '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(139, 69, 19, 0.2)',
+				'lantern': '0 0 25px rgba(255, 220, 150, 0.6)',
+				'wood': '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(196, 164, 119, 0.2)',
+			},
+			backdropBlur: {
+				'traditional': '20px',
 			},
 		}
 	},
