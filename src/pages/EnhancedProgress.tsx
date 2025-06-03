@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +43,7 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
   className 
 }) => {
   const { user } = useAuth();
-  const [progressData, setProgressData] = useState<Map<string, EnhancedUserKanaProgress>>(new Map());
+  const [progressData, setProgressData] = useState<Map<string, any>>(new Map());
   const [kanaCharacters, setKanaCharacters] = useState<KanaCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupedCharacters, setGroupedCharacters] = useState<{[key: string]: KanaCharacter[]}>({});
@@ -62,23 +61,14 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         // Get progress data
         const rawProgress = await characterProgressService.getCharacterProgress(user.id);
         
-        // Transform to enhanced format
-        const enhancedProgress: EnhancedUserKanaProgress[] = rawProgress.map(p => ({
-          ...p,
-          confidence_score: p.confidence_score || 0,
-          correct_count: Math.floor(p.total_practice_count * 0.7),
-          mistake_count: Math.floor(p.total_practice_count * 0.3),
-          average_response_time: 2.5,
-          sessions_practiced: Math.floor(p.total_practice_count / 5),
-          first_seen_at: p.created_at || new Date().toISOString(),
-          last_seen_at: p.updated_at || new Date().toISOString(),
-          created_at: p.created_at || new Date().toISOString(),
-          updated_at: p.updated_at || new Date().toISOString(),
-        }));
-
         const progressMap = new Map();
-        enhancedProgress.forEach(p => {
-          progressMap.set(p.character_id, p);
+        rawProgress.forEach(p => {
+          progressMap.set(p.character_id, {
+            ...p,
+            confidence_score: p.confidence_score || 0,
+            average_response_time: p.average_response_time || 0,
+            sessions_practiced: p.sessions_practiced || 0
+          });
         });
         setProgressData(progressMap);
         
