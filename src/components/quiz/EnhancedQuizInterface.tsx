@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
@@ -258,115 +258,117 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Enhanced Stats Section with Session Info */}
+      {/* Enhanced Stats Section with Traditional Styling */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-        <div>
-          <div className="text-2xl font-bold text-indigo">{score.correct}</div>
-          <div className="text-sm text-gray-600">Correct</div>
+        <div className="bg-glass-wood backdrop-blur-traditional border border-wood-light/40 p-3 rounded-none">
+          <div className="text-2xl font-bold text-lantern-amber font-traditional">{score.correct}</div>
+          <div className="text-sm text-wood-light/80 font-traditional">Correct</div>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-gray-600">{score.total}</div>
-          <div className="text-sm text-gray-600">Total</div>
+        <div className="bg-glass-wood backdrop-blur-traditional border border-wood-light/40 p-3 rounded-none">
+          <div className="text-2xl font-bold text-wood-light font-traditional">{score.total}</div>
+          <div className="text-sm text-wood-light/80 font-traditional">Total</div>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-matcha">{accuracy}%</div>
-          <div className="text-sm text-gray-600">Accuracy</div>
+        <div className="bg-glass-wood backdrop-blur-traditional border border-wood-light/40 p-3 rounded-none">
+          <div className="text-2xl font-bold text-matcha font-traditional">{accuracy}%</div>
+          <div className="text-sm text-wood-light/80 font-traditional">Accuracy</div>
         </div>
-        <div>
-          <div className="text-lg font-bold text-blue-600 flex items-center justify-center gap-1">
+        <div className="bg-glass-wood backdrop-blur-traditional border border-wood-light/40 p-3 rounded-none">
+          <div className="text-lg font-bold text-lantern-warm flex items-center justify-center gap-1 font-traditional">
             <Clock className="h-4 w-4" />
             {formatTime(sessionStats.submittedAnswersTime)}
           </div>
-          <div className="text-sm text-gray-600">Active Time</div>
+          <div className="text-sm text-wood-light/80 font-traditional">Active Time</div>
         </div>
-        <div>
-          <div className="text-lg font-bold text-purple-600 flex items-center justify-center gap-1">
+        <div className="bg-glass-wood backdrop-blur-traditional border border-wood-light/40 p-3 rounded-none">
+          <div className="text-lg font-bold text-vermilion flex items-center justify-center gap-1 font-traditional">
             <Target className="h-4 w-4" />
             {sessionStats.totalSubmittedCharacters}
           </div>
-          <div className="text-sm text-gray-600">Submitted</div>
+          <div className="text-sm text-wood-light/80 font-traditional">Submitted</div>
         </div>
       </div>
 
       {/* Session Performance Stats */}
       {sessionStats.totalSubmittedCharacters > 0 && (
-        <Card className="p-4">
+        <TraditionalCard className="p-4">
           <div className="grid grid-cols-3 gap-4 text-center text-sm">
             <div>
-              <div className="font-semibold text-green-600">
+              <div className="font-semibold text-lantern-amber font-traditional">
                 {(sessionStats.averageTimePerCharacter / 1000).toFixed(1)}s
               </div>
-              <div className="text-gray-600">Avg Time</div>
+              <div className="text-wood-light/70 font-traditional">Avg Time</div>
             </div>
             <div>
-              <div className="font-semibold text-blue-600">
+              <div className="font-semibold text-lantern-warm font-traditional">
                 {(sessionStats.fastestResponse / 1000).toFixed(1)}s
               </div>
-              <div className="text-gray-600">Fastest</div>
+              <div className="text-wood-light/70 font-traditional">Fastest</div>
             </div>
             <div>
-              <div className="font-semibold text-orange-600">
+              <div className="font-semibold text-vermilion font-traditional">
                 {(sessionStats.slowestResponse / 1000).toFixed(1)}s
               </div>
-              <div className="text-gray-600">Slowest</div>
+              <div className="text-wood-light/70 font-traditional">Slowest</div>
             </div>
           </div>
-        </Card>
+        </TraditionalCard>
       )}
 
       {/* Mastery Progress Overview */}
-      <Card className="p-4">
+      <TraditionalCard className="p-4">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Overall Progress</span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm font-medium text-wood-light font-traditional">Overall Progress</span>
+            <span className="text-sm text-wood-light/70 font-traditional">
               {masteryStats.total > 0 ? Math.round((masteryStats.mastered / masteryStats.total) * 100) : 0}% Mastered
             </span>
           </div>
-          <Progress 
-            value={masteryStats.total > 0 ? (masteryStats.mastered / masteryStats.total) * 100 : 0} 
-            className="h-2"
-          />
+          <div className="bg-gion-night/60 border border-wood-light/30 h-2 rounded-none overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-wood-medium via-wood-light to-gold h-full transition-all duration-1000"
+              style={{ width: `${masteryStats.total > 0 ? (masteryStats.mastered / masteryStats.total) * 100 : 0}%` }}
+            />
+          </div>
           <div className="grid grid-cols-6 gap-1 text-xs">
             <div className="text-center">
-              <div className="text-green-600">{masteryStats.new}</div>
-              <div>New</div>
+              <div className="text-lantern-amber font-traditional">{masteryStats.new}</div>
+              <div className="text-wood-light/60 font-traditional">New</div>
             </div>
             <div className="text-center">
-              <div className="text-gray-500">{masteryStats.learning}</div>
-              <div>Learning</div>
+              <div className="text-wood-light/80 font-traditional">{masteryStats.learning}</div>
+              <div className="text-wood-light/60 font-traditional">Learning</div>
             </div>
             <div className="text-center">
-              <div className="text-pink-500">{masteryStats.familiar}</div>
-              <div>Familiar</div>
+              <div className="text-vermilion font-traditional">{masteryStats.familiar}</div>
+              <div className="text-wood-light/60 font-traditional">Familiar</div>
             </div>
             <div className="text-center">
-              <div className="text-blue-500">{masteryStats.practiced}</div>
-              <div>Practiced</div>
+              <div className="text-lantern-warm font-traditional">{masteryStats.practiced}</div>
+              <div className="text-wood-light/60 font-traditional">Practiced</div>
             </div>
             <div className="text-center">
-              <div className="text-amber-600">{masteryStats.reliable}</div>
-              <div>Reliable</div>
+              <div className="text-gold font-traditional">{masteryStats.reliable}</div>
+              <div className="text-wood-light/60 font-traditional">Reliable</div>
             </div>
             <div className="text-center">
-              <div className="text-gray-800">{masteryStats.mastered}</div>
-              <div>Mastered</div>
+              <div className="text-paper-warm font-traditional">{masteryStats.mastered}</div>
+              <div className="text-wood-light/60 font-traditional">Mastered</div>
             </div>
           </div>
         </div>
-      </Card>
+      </TraditionalCard>
 
       {/* Enhanced Quiz Card */}
-      <Card className="p-8">
-        <CardContent className="text-center space-y-8">
+      <TraditionalCard className="p-8">
+        <div className="text-center space-y-8">
           <div className="space-y-4">
             <div className="flex justify-center items-center gap-2">
-              <h3 className="text-lg font-medium text-gray-600">
+              <h3 className="text-lg font-medium text-wood-light font-traditional">
                 What is the romaji for this character?
               </h3>
               {user && (
                 <Badge 
-                  className={`${getMasteryLevelColor(currentCharacter.masteryLevel)} text-gray-800`}
+                  className={`${getMasteryLevelColor(currentCharacter.masteryLevel)} text-gion-night font-traditional`}
                   variant="secondary"
                 >
                   {getMasteryLevelName(currentCharacter.masteryLevel)}
@@ -383,7 +385,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               />
               {user && currentCharacter.confidenceScore > 0 && (
                 <div className="absolute bottom-0 right-1/2 transform translate-x-1/2">
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-wood-light/60 font-traditional">
                     Confidence: {currentCharacter.confidenceScore}%
                   </div>
                 </div>
@@ -397,7 +399,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               value={userInput}
               onChange={handleInputChange}
               placeholder="Type the romaji..."
-              className="text-center text-xl py-3"
+              className="text-center text-xl py-3 bg-glass-wood border-wood-light/40 text-paper-warm placeholder:text-wood-light/50 font-traditional"
               disabled={feedback !== null || isProcessing}
               autoFocus
             />
@@ -405,7 +407,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
             {feedback === null && !isProcessing && userInput.trim().length < (currentCharacter.romaji.length) && (
               <Button 
                 type="submit" 
-                className="w-full py-3 text-lg"
+                className="w-full py-3 text-lg bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night font-traditional"
                 disabled={!userInput.trim()}
               >
                 Submit
@@ -415,36 +417,41 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
           {/* Enhanced Feedback */}
           {feedback && (
-            <div className={`p-4 rounded-lg transition-all duration-200 ${
+            <div className={`p-4 rounded-none transition-all duration-200 border-2 ${
               feedback === 'correct' 
-                ? 'bg-green-50 text-green-800 border border-green-200' 
-                : 'bg-red-50 text-red-800 border border-red-200'
+                ? 'bg-glass-wood border-lantern-amber/60 text-lantern-warm' 
+                : 'bg-glass-wood border-vermilion/60 text-vermilion'
             }`}>
               {feedback === 'correct' ? (
                 <div className="space-y-2">
-                  <div className="text-lg font-semibold">✅ Correct!</div>
-                  <div>{currentCharacter.character} = {currentCharacter.romaji}</div>
+                  <div className="text-lg font-semibold font-traditional">✅ Correct!</div>
+                  <div className="font-traditional">{currentCharacter.character} = {currentCharacter.romaji}</div>
                   {user && (
-                    <div className="text-sm">
+                    <div className="text-sm font-traditional">
                       Response time: {((Date.now() - startTimeRef.current) / 1000).toFixed(1)}s
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="text-lg font-semibold">❌ Incorrect</div>
-                  <div>{currentCharacter.character} = {currentCharacter.romaji}</div>
-                  <div className="text-sm">You typed: {userInput}</div>
+                  <div className="text-lg font-semibold font-traditional">❌ Incorrect</div>
+                  <div className="font-traditional">{currentCharacter.character} = {currentCharacter.romaji}</div>
+                  <div className="text-sm font-traditional">You typed: {userInput}</div>
                 </div>
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </TraditionalCard>
 
       {/* End Quiz Button */}
       <div className="text-center">
-        <Button variant="outline" onClick={onEndQuiz} disabled={isProcessing}>
+        <Button 
+          variant="outline" 
+          onClick={onEndQuiz} 
+          disabled={isProcessing}
+          className="bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night font-traditional"
+        >
           End Quiz
         </Button>
       </div>
