@@ -12,8 +12,6 @@ import {
   Target, 
   Clock, 
   Brain, 
-  TrendingUp, 
-  Calendar,
   Star,
   Zap,
   Award,
@@ -158,54 +156,119 @@ const EnhancedProgress: React.FC = () => {
     return `${seconds}s`;
   };
 
+  const groupCharactersByType = (characters: any[], type: 'hiragana' | 'katakana') => {
+    const groups: {[key: string]: any[]} = {};
+    
+    characters.forEach(character => {
+      // Extract the group from the character ID
+      // Example: "hiragana-vowels-a" -> "vowels"
+      const parts = character.id.split('-');
+      const group = parts.length > 1 ? parts[1] : 'basic';
+      
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(character);
+    });
+    
+    return groups;
+  };
+
+  const getGroupDisplayName = (groupKey: string): string => {
+    const groupNames: {[key: string]: string} = {
+      'vowels': 'Vowels (あいうえお)',
+      'k': 'K-row (かきくけこ)',
+      's': 'S-row (さしすせそ)',
+      't': 'T-row (たちつてと)',
+      'n': 'N-row (なにぬねの)',
+      'h': 'H-row (はひふへほ)',
+      'm': 'M-row (まみむめも)',
+      'y': 'Y-row (やゆよ)',
+      'r': 'R-row (らりるれろ)',
+      'w': 'W-row (わを)',
+      'g': 'G-row (がぎぐげご)',
+      'z': 'Z-row (ざじずぜぞ)',
+      'd': 'D-row (だぢづでど)',
+      'b': 'B-row (ばびぶべぼ)',
+      'p': 'P-row (ぱぴぷぺぽ)',
+      'combinations': 'Combinations',
+      'basic': 'Basic Characters'
+    };
+    
+    return groupNames[groupKey] || groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
+  };
+
   const renderCharacterGrid = (characters: any[], type: 'hiragana' | 'katakana') => {
+    const groupedCharacters = groupCharactersByType(characters, type);
+    const groupOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'combinations', 'basic'];
+    
     return (
-      <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
-        {characters.map(character => {
-          const progress = getCharacterProgress(character.id);
-          const masteryLevel = progress?.mastery_level || 0;
-          const confidenceScore = progress?.confidence_score || 0;
-          const practiceCount = progress?.total_practice_count || 0;
+      <div className="space-y-8">
+        {groupOrder.map(groupKey => {
+          const groupCharacters = groupedCharacters[groupKey];
+          if (!groupCharacters || groupCharacters.length === 0) return null;
           
           return (
-            <div key={character.id} className="group">
-              <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center relative">
-                <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
-                  {character.character}
-                </div>
-                <div className="text-xs text-gray-500 mb-2 text-center">
-                  {character.romaji}
-                </div>
-                
-                {/* Practice count indicator */}
-                {practiceCount > 0 && (
-                  <div className="absolute top-1 right-1 text-xs bg-blue-100 text-blue-600 rounded-full px-1">
-                    {practiceCount}
-                  </div>
-                )}
-                
-                <div className="w-full mb-1">
-                  <ProgressIndicator
-                    progress={confidenceScore}
-                    size="sm"
-                    color={getMasteryStageColor(masteryLevel)}
-                    showPercentage={false}
-                  />
-                </div>
-                
-                <Badge 
-                  variant="secondary" 
-                  className={`text-xs px-1 py-0 ${getMasteryStageColor(masteryLevel)} ${getMasteryStageTextColor(masteryLevel)}`}
-                >
-                  {getMasteryStageLabel(masteryLevel)}
+            <div key={groupKey} className="space-y-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  {getGroupDisplayName(groupKey)}
+                </h3>
+                <Badge variant="secondary" className="text-xs">
+                  {groupCharacters.length} characters
                 </Badge>
-                
-                {/* Confidence score */}
-                {confidenceScore > 0 && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    {confidenceScore}%
-                  </div>
-                )}
+              </div>
+              
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+                {groupCharacters.map(character => {
+                  const progress = getCharacterProgress(character.id);
+                  const masteryLevel = progress?.mastery_level || 0;
+                  const confidenceScore = progress?.confidence_score || 0;
+                  const practiceCount = progress?.total_practice_count || 0;
+                  
+                  return (
+                    <div key={character.id} className="group">
+                      <div className="bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 cursor-pointer aspect-square flex flex-col items-center justify-center relative">
+                        <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
+                          {character.character}
+                        </div>
+                        <div className="text-xs text-gray-500 mb-2 text-center">
+                          {character.romaji}
+                        </div>
+                        
+                        {/* Practice count indicator */}
+                        {practiceCount > 0 && (
+                          <div className="absolute top-1 right-1 text-xs bg-blue-100 text-blue-600 rounded-full px-1">
+                            {practiceCount}
+                          </div>
+                        )}
+                        
+                        <div className="w-full mb-1">
+                          <ProgressIndicator
+                            progress={confidenceScore}
+                            size="sm"
+                            masteryLevel={masteryLevel}
+                            showPercentage={false}
+                          />
+                        </div>
+                        
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs px-1 py-0 ${getMasteryStageColor(masteryLevel)} ${getMasteryStageTextColor(masteryLevel)}`}
+                        >
+                          {getMasteryStageLabel(masteryLevel)}
+                        </Badge>
+                        
+                        {/* Confidence score */}
+                        {confidenceScore > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {confidenceScore}%
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -726,7 +789,7 @@ const EnhancedProgress: React.FC = () => {
                             <ProgressIndicator
                               progress={progress.confidence_score}
                               size="sm"
-                              color={getMasteryStageColor(progress.mastery_level)}
+                              masteryLevel={progress.mastery_level}
                               showPercentage={false}
                             />
                           </div>
