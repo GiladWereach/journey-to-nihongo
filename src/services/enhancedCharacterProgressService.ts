@@ -12,6 +12,17 @@ export interface EnhancedUserKanaProgress extends UserKanaProgress {
   similar_character_confusions: Record<string, number>;
 }
 
+export interface MasteryStats {
+  total: number;
+  new: number;
+  learning: number;
+  familiar: number;
+  practiced: number;
+  reliable: number;
+  mastered: number;
+  averageConfidence: number;
+}
+
 export interface CharacterSelectionWeights {
   new: number;
   learning: number;
@@ -375,16 +386,7 @@ export const enhancedCharacterProgressService = {
   },
 
   // Calculate overall mastery statistics
-  calculateMasteryStats: async (userId: string, kanaType?: 'hiragana' | 'katakana'): Promise<{
-    total: number;
-    new: number;
-    learning: number;
-    familiar: number;
-    practiced: number;
-    reliable: number;
-    mastered: number;
-    averageConfidence: number;
-  }> => {
+  calculateMasteryStats: async (userId: string, kanaType?: 'hiragana' | 'katakana'): Promise<MasteryStats> => {
     try {
       let query = supabase
         .from('user_kana_progress')
@@ -399,7 +401,7 @@ export const enhancedCharacterProgressService = {
 
       if (error) throw error;
 
-      const stats = {
+      const stats: MasteryStats = {
         total: data?.length || 0,
         new: 0,
         learning: 0,
