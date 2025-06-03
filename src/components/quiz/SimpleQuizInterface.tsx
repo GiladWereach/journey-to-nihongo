@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { KanaType } from '@/types/kana';
-import { hiraganaData } from '@/data/hiraganaData';
-import { katakanaData } from '@/data/katakanaData';
+import { hiraganaCharacters } from '@/data/hiraganaData';
+import { katakanaCharacters } from '@/data/katakanaData';
 
 interface SimpleQuizInterfaceProps {
   kanaType: KanaType;
@@ -22,7 +21,7 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
 
-  const characters = kanaType === 'hiragana' ? hiraganaData : katakanaData;
+  const characters = kanaType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
 
   const getRandomCharacter = () => {
     const randomIndex = Math.floor(Math.random() * characters.length);
