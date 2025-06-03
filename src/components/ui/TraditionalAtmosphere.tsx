@@ -6,12 +6,14 @@ interface PaperLanternProps {
   className?: string;
   delay?: number;
   size?: 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
 }
 
 export const PaperLantern: React.FC<PaperLanternProps> = ({ 
   className, 
   delay = 0,
-  size = 'md'
+  size = 'md',
+  style
 }) => {
   const sizeClasses = {
     sm: 'w-3 h-4',
@@ -31,7 +33,8 @@ export const PaperLantern: React.FC<PaperLanternProps> = ({
       style={{
         animationDelay: `${delay}s`,
         borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-        boxShadow: '0 0 15px rgba(255, 220, 150, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.2)'
+        boxShadow: '0 0 15px rgba(255, 220, 150, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.2)',
+        ...style
       }}
     >
       <div 

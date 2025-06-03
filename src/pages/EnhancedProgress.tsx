@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,7 +76,6 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
               character: dbChar.character,
               romaji: dbChar.romaji,
               type: dbChar.type as 'hiragana' | 'katakana',
-              group: dbChar.character_group || 'basic',
               strokeOrder: []
             });
             seenIds.add(dbChar.id);
@@ -98,6 +98,8 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         const enhancedProgress: EnhancedUserKanaProgress[] = rawProgress.map(p => ({
           ...p,
           confidence_score: 85, // Default value
+          correct_count: Math.floor(p.total_practice_count * 0.7), // Estimate
+          mistake_count: Math.floor(p.total_practice_count * 0.3), // Estimate
           average_response_time: 2.5, // Default value
           sessions_practiced: Math.floor(p.total_practice_count / 5), // Estimate
           first_seen_at: p.created_at,
@@ -110,15 +112,10 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         });
         setProgressData(progressMap);
         
-        // Group characters
-        const grouped: {[key: string]: KanaCharacter[]} = {};
-        mergedCharacters.forEach(char => {
-          const group = char.group || 'basic';
-          if (!grouped[group]) {
-            grouped[group] = [];
-          }
-          grouped[group].push(char);
-        });
+        // Group characters by type
+        const grouped: {[key: string]: KanaCharacter[]} = {
+          'basic': mergedCharacters
+        };
         
         setGroupedCharacters(grouped);
       } catch (error) {
@@ -141,37 +138,6 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
     return progress ? progress.mastery_level : 0;
   };
   
-  const getSortedGroups = (): string[] => {
-    const order = ['basic', 'vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'special', 'combinations'];
-    const availableGroups = Object.keys(groupedCharacters);
-    return order.filter(group => availableGroups.includes(group));
-  };
-  
-  const getGroupTitle = (group: string): string => {
-    const titles: {[key: string]: string} = {
-      'basic': '基本',
-      'vowels': '母音',
-      'k': 'か行',
-      's': 'さ行',
-      't': 'た行',
-      'n': 'な行',
-      'h': 'は行',
-      'm': 'ま行',
-      'y': 'や行',
-      'r': 'ら行',
-      'w': 'わ行',
-      'g': 'が行',
-      'z': 'ざ行',
-      'd': 'だ行',
-      'b': 'ば行',
-      'p': 'ぱ行',
-      'special': '特殊',
-      'combinations': '組合せ'
-    };
-    
-    return titles[group] || group;
-  };
-  
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -182,35 +148,28 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
   
   return (
     <div className={cn('space-y-8', className)}>
-      {getSortedGroups().map(group => (
-        <div key={group} className="space-y-4">
-          <h3 className="text-lg font-traditional text-wood-light border-b border-wood-light/30 pb-2">
-            {getGroupTitle(group)}
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {groupedCharacters[group]?.map(char => (
-              <TraditionalCard key={char.id} className="p-4">
-                <div className="flex flex-col items-center text-center">
-                  <div className="text-3xl font-traditional mb-2 text-wood-light">{char.character}</div>
-                  <div className="text-sm mb-3 text-paper-warm/80">{char.romaji}</div>
-                  <TraditionalProgressIndicator 
-                    progress={getCharacterProgress(char.id)}
-                    size="sm"
-                    showPercentage={false}
-                    masteryLevel={getCharacterMasteryLevel(char.id)}
-                    showMasteryBadge={getCharacterMasteryLevel(char.id) > 0}
-                    type={kanaType}
-                  />
-                </div>
-              </TraditionalCard>
-            ))}
-          </div>
-        </div>
-      ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-4">
+        {kanaCharacters.map(char => (
+          <TraditionalCard key={char.id} className="p-4">
+            <div className="flex flex-col items-center text-center">
+              <div className="text-3xl font-traditional mb-2 text-wood-light">{char.character}</div>
+              <div className="text-sm mb-3 text-paper-warm/80">{char.romaji}</div>
+              <TraditionalProgressIndicator 
+                progress={getCharacterProgress(char.id)}
+                size="sm"
+                showPercentage={false}
+                masteryLevel={getCharacterMasteryLevel(char.id)}
+                showMasteryBadge={getCharacterMasteryLevel(char.id) > 0}
+                type={kanaType}
+              />
+            </div>
+          </TraditionalCard>
+        ))}
+      </div>
       
       {kanaCharacters.length === 0 && (
-        <div className="text-center py-12 text-wood-light/60 font-traditional">
-          {kanaType}文字が見つかりません。
+        <div className="text-center py-12 text-wood-light/60">
+          No {kanaType} characters found.
         </div>
       )}
     </div>
@@ -293,38 +252,43 @@ const EnhancedProgress: React.FC = () => {
           showStats={true}
         />
         
-        <TraditionalCard className="p-8 mb-8">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <p className="text-xs text-wood-light/60 font-traditional">ひらがな進捗</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-wood-light font-traditional">
-                  {stats.hiragana.learned}
-                </span>
-                <span className="text-sm text-paper-warm/60">/ {stats.hiragana.total} 学習済み</span>
+        <Card className="bg-glass-wood backdrop-blur-traditional border-2 border-wood-light/40 shadow-traditional mb-8">
+          <CardHeader>
+            <CardTitle className="text-wood-light font-traditional">Learning Progress Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <p className="text-xs text-wood-light/60">Hiragana Progress</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-wood-light">
+                    {stats.hiragana.learned}
+                  </span>
+                  <span className="text-sm text-paper-warm/60">/ {stats.hiragana.total} learned</span>
+                </div>
+                <TraditionalProgressIndicator 
+                  progress={(stats.hiragana.learned / Math.max(1, stats.hiragana.total)) * 100}
+                  size="sm"
+                  type="hiragana"
+                />
               </div>
-              <TraditionalProgressIndicator 
-                progress={(stats.hiragana.learned / Math.max(1, stats.hiragana.total)) * 100}
-                size="sm"
-                type="hiragana"
-              />
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs text-wood-light/60 font-traditional">カタカナ進捗</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-wood-light font-traditional">
-                  {stats.katakana.learned}
-                </span>
-                <span className="text-sm text-paper-warm/60">/ {stats.katakana.total} 学習済み</span>
+              <div className="space-y-2">
+                <p className="text-xs text-wood-light/60">Katakana Progress</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-wood-light">
+                    {stats.katakana.learned}
+                  </span>
+                  <span className="text-sm text-paper-warm/60">/ {stats.katakana.total} learned</span>
+                </div>
+                <TraditionalProgressIndicator 
+                  progress={(stats.katakana.learned / Math.max(1, stats.katakana.total)) * 100}
+                  size="sm"
+                  type="katakana"
+                />
               </div>
-              <TraditionalProgressIndicator 
-                progress={(stats.katakana.learned / Math.max(1, stats.katakana.total)) * 100}
-                size="sm"
-                type="katakana"
-              />
             </div>
-          </div>
-        </TraditionalCard>
+          </CardContent>
+        </Card>
         
         <Tabs 
           defaultValue="hiragana" 
@@ -337,26 +301,30 @@ const EnhancedProgress: React.FC = () => {
               value="hiragana" 
               className="font-traditional data-[state=active]:bg-wood-light data-[state=active]:text-gion-night"
             >
-              ひらがな
+              Hiragana
             </TabsTrigger>
             <TabsTrigger 
               value="katakana" 
               className="font-traditional data-[state=active]:bg-wood-light data-[state=active]:text-gion-night"
             >
-              カタカナ
+              Katakana
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="hiragana" className="animate-fade-in">
-            <TraditionalCard className="p-8">
-              <EnhancedKanaProgressGrid kanaType="hiragana" />
-            </TraditionalCard>
+            <Card className="bg-glass-wood backdrop-blur-traditional border-2 border-wood-light/40 shadow-traditional">
+              <CardContent className="p-8">
+                <EnhancedKanaProgressGrid kanaType="hiragana" />
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="katakana" className="animate-fade-in">
-            <TraditionalCard className="p-8">
-              <EnhancedKanaProgressGrid kanaType="katakana" />
-            </TraditionalCard>
+            <Card className="bg-glass-wood backdrop-blur-traditional border-2 border-wood-light/40 shadow-traditional">
+              <CardContent className="p-8">
+                <EnhancedKanaProgressGrid kanaType="katakana" />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
