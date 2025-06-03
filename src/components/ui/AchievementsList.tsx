@@ -1,122 +1,60 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Award, Trophy, Medal, BadgeCheck, Star, Badge, ChevronRight } from 'lucide-react';
-import { Achievement, UserAchievement } from '@/types/achievements';
-import { achievementService } from '@/services/achievementService';
-import { Button } from '@/components/ui/button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-// Map of icon names to Lucide icon components
-const achievementIcons: Record<string, React.ReactNode> = {
-  'award': <Award className="h-5 w-5" />,
-  'trophy': <Trophy className="h-5 w-5" />,
-  'medal': <Medal className="h-5 w-5" />,
-  'badge': <Badge className="h-5 w-5" />,
-  'badge-check': <BadgeCheck className="h-5 w-5" />,
-  'star': <Star className="h-5 w-5" />,
-};
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Trophy, Star, Award } from 'lucide-react';
 
-interface AchievementsListProps {
-  limit?: number;
-  showViewAll?: boolean;
-}
+const AchievementsList = () => {
+  // Placeholder achievements for now
+  const achievements = [
+    {
+      id: '1',
+      title: 'First Steps',
+      description: 'Complete your first kana practice session',
+      icon: '🎯',
+      earned: false
+    },
+    {
+      id: '2', 
+      title: 'Streak Master',
+      description: 'Maintain a 7-day learning streak',
+      icon: '🔥',
+      earned: false
+    }
+  ];
 
-const AchievementsList = ({ limit = 3, showViewAll = true }: AchievementsListProps) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [recentAchievements, setRecentAchievements] = useState<UserAchievement[]>([]);
-  
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        const userAchievements = await achievementService.getUserAchievements(user.id);
-        
-        // Sort by earned_at (most recent first) and limit
-        const sorted = userAchievements
-          .filter(a => a.earned_at) // Only include achievements with earned_at property
-          .sort((a, b) => {
-            const dateA = a.earned_at ? new Date(a.earned_at).getTime() : 0;
-            const dateB = b.earned_at ? new Date(b.earned_at).getTime() : 0;
-            return dateB - dateA;
-          })
-          .slice(0, limit);
-          
-        setRecentAchievements(sorted as UserAchievement[]);
-      } catch (error) {
-        console.error('Error fetching recent achievements:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchAchievements();
-  }, [user, limit]);
-  
-  if (loading) {
-    return (
-      <div className="flex justify-center py-4">
-        <LoadingSpinner size="sm" color="text-indigo" />
-      </div>
-    );
-  }
-  
-  if (recentAchievements.length === 0) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-gray-500 mb-4">You haven't earned any achievements yet.</p>
-        <Button variant="outline" onClick={() => navigate('/achievements')}>
-          View Available Achievements
-        </Button>
-      </div>
-    );
-  }
-  
   return (
-    <div>
-      <ul className="space-y-3">
-        {recentAchievements.map((userAchievement) => (
-          <li 
-            key={userAchievement.id} 
-            className="bg-softgray/30 rounded-lg p-3 flex items-center justify-between"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-indigo/20 flex items-center justify-center text-indigo">
-                {userAchievement.achievement && achievementIcons[userAchievement.achievement.icon]}
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Trophy className="h-5 w-5" />
+          Achievements
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {achievements.map((achievement) => (
+            <div 
+              key={achievement.id}
+              className={`flex items-center gap-3 p-3 rounded-lg border ${
+                achievement.earned ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+              }`}
+            >
+              <span className="text-2xl">{achievement.icon}</span>
+              <div className="flex-1">
+                <h4 className="font-medium">{achievement.title}</h4>
+                <p className="text-sm text-muted-foreground">{achievement.description}</p>
               </div>
-              <div>
-                <h4 className="font-medium">{userAchievement.achievement?.title}</h4>
-                <p className="text-sm text-gray-600">
-                  {userAchievement.earned_at && (
-                    <>Earned on {new Date(userAchievement.earned_at).toLocaleDateString()}</>
-                  )}
-                </p>
-              </div>
+              {achievement.earned && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                  Earned
+                </Badge>
+              )}
             </div>
-            <div className="hidden sm:block text-sm text-gray-500">
-              {userAchievement.achievement?.points} points
-            </div>
-          </li>
-        ))}
-      </ul>
-      
-      {showViewAll && (
-        <div className="mt-4 text-center">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/achievements')}
-            className="text-indigo hover:text-indigo/80 hover:bg-indigo/10"
-          >
-            View All Achievements
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
+          ))}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,7 +54,7 @@ const Assessment = () => {
       let score = 0;
       answers.forEach((answer, index) => {
         const question = assessmentQuestions[index];
-        if (answer === question.correct) {
+        if (answer === question.correctAnswer) {
           score++;
         }
       });

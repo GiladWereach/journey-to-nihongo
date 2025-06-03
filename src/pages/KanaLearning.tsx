@@ -1,8 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { kanaService } from '@/services/kanaService';
+import { characterProgressService } from '@/services/characterProgressService';
+import { KanaType, UserKanaProgress, PracticeResult } from '@/types/kana';
+import KanaGrid from '@/components/kana/KanaGrid';
+import KanaPractice from '@/components/kana/KanaPractice';
+import KanaPracticeResults from '@/components/kana/KanaPracticeResults';
+import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import ProgressIndicator from '@/components/ui/ProgressIndicator';
+import { 
+  Book, 
+  PenTool, 
+  BookOpen, 
+  BarChart, 
+  GraduationCap, 
+  Bookmark, 
+  Zap,
+  ChevronLeft,
+  Award,
+  TrendingUp,
+  Clock,
+  Medal,
+  Layers
+} from 'lucide-react';
 
 const KanaLearning = () => {
   const { user } = useAuth();

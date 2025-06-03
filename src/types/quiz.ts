@@ -35,13 +35,27 @@ export interface QuizCharacterSet {
   type: KanaType;
 }
 
+export interface CharacterResult {
+  characterId: string;
+  character: string;
+  romaji: string;
+  isCorrect: boolean;
+  attemptCount: number;
+}
+
 export interface QuizSessionStats {
-  totalQuestions: number;
-  correctAnswers: number;
+  startTime: Date;
+  endTime?: Date;
+  totalAttempts: number;
+  correctCount: number;
+  incorrectCount: number;
+  currentStreak: number;
+  longestStreak: number;
   accuracy: number;
-  timeSpent: number;
+  durationSeconds?: number;
   characterResults: Array<{
     character: string;
+    romaji: string;
     correct: boolean;
     timeSpent: number;
   }>;

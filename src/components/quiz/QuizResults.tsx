@@ -31,8 +31,8 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   const seconds = (results.durationSeconds || 0) % 60;
   
   // Calculate statistics
-  const uniqueCharacters = [...new Set(results.characterResults.map(r => r.characterId))].length;
-  const incorrectCharacters = results.characterResults.filter(r => !r.isCorrect);
+  const uniqueCharacters = [...new Set(results.characterResults.map(r => r.character))].length;
+  const incorrectCharacters = results.characterResults.filter(r => !r.correct);
   
   return (
     <div className="max-w-3xl mx-auto">
@@ -109,7 +109,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {incorrectCharacters.map((result, index) => (
                   <div 
-                    key={`${result.characterId}-${index}`} 
+                    key={`${result.character}-${index}`} 
                     className="flex flex-col items-center p-3 border rounded-lg"
                   >
                     <div className="text-2xl mb-1">{result.character}</div>

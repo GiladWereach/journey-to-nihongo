@@ -25,7 +25,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onC
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [sessionStats, setSessionStats] = useState<QuizSessionStats>({
     startTime: new Date(),
-    endTime: null,
+    endTime: undefined,
     totalAttempts: 0,
     correctCount: 0,
     incorrectCount: 0,
@@ -45,7 +45,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onC
       character: char.character,
       romaji: char.romaji,
       type: kanaType,
-      quizMode: 'recognition' as const
+      stroke_count: char.stroke_count || 0,
+      stroke_order: char.stroke_order || []
     };
   }, [characters, kanaType]);
 
@@ -73,12 +74,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onC
     const correct = answer === currentCharacter.romaji;
     setIsCorrect(correct);
 
-    const newResult: CharacterResult = {
-      characterId: currentCharacter.id,
+    const newResult = {
       character: currentCharacter.character,
       romaji: currentCharacter.romaji,
-      isCorrect: correct,
-      attemptCount: 1
+      correct: correct,
+      timeSpent: 1
     };
 
     setSessionStats(prev => {
