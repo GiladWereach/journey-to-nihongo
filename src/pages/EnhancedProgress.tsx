@@ -160,10 +160,54 @@ const EnhancedProgress: React.FC = () => {
     const groups: {[key: string]: any[]} = {};
     
     characters.forEach(character => {
-      // Extract the group from the character ID
-      // Example: "hiragana-vowels-a" -> "vowels"
-      const parts = character.id.split('-');
-      const group = parts.length > 1 ? parts[1] : 'basic';
+      // Use a more reliable grouping based on the character structure
+      let group = 'basic';
+      
+      // Extract group from character ID if it follows the pattern
+      if (character.id && character.id.includes('-')) {
+        const parts = character.id.split('-');
+        if (parts.length >= 2) {
+          group = parts[1];
+        }
+      }
+      
+      // Fallback grouping based on romaji for better organization
+      if (group === 'basic' && character.romaji) {
+        const romaji = character.romaji.toLowerCase();
+        if (['a', 'i', 'u', 'e', 'o'].includes(romaji)) {
+          group = 'vowels';
+        } else if (romaji.startsWith('k')) {
+          group = 'k';
+        } else if (romaji.startsWith('s')) {
+          group = 's';
+        } else if (romaji.startsWith('t')) {
+          group = 't';
+        } else if (romaji.startsWith('n')) {
+          group = 'n';
+        } else if (romaji.startsWith('h')) {
+          group = 'h';
+        } else if (romaji.startsWith('m')) {
+          group = 'm';
+        } else if (romaji.startsWith('y')) {
+          group = 'y';
+        } else if (romaji.startsWith('r')) {
+          group = 'r';
+        } else if (romaji.startsWith('w')) {
+          group = 'w';
+        } else if (romaji.startsWith('g')) {
+          group = 'g';
+        } else if (romaji.startsWith('z')) {
+          group = 'z';
+        } else if (romaji.startsWith('d')) {
+          group = 'd';
+        } else if (romaji.startsWith('b')) {
+          group = 'b';
+        } else if (romaji.startsWith('p')) {
+          group = 'p';
+        } else if (romaji.length > 2) {
+          group = 'combinations';
+        }
+      }
       
       if (!groups[group]) {
         groups[group] = [];
@@ -202,11 +246,15 @@ const EnhancedProgress: React.FC = () => {
     const groupedCharacters = groupCharactersByType(characters, type);
     const groupOrder = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'combinations', 'basic'];
     
+    // Filter out groups that have no characters
+    const availableGroups = groupOrder.filter(groupKey => 
+      groupedCharacters[groupKey] && groupedCharacters[groupKey].length > 0
+    );
+    
     return (
       <div className="space-y-8">
-        {groupOrder.map(groupKey => {
+        {availableGroups.map(groupKey => {
           const groupCharacters = groupedCharacters[groupKey];
-          if (!groupCharacters || groupCharacters.length === 0) return null;
           
           return (
             <div key={groupKey} className="space-y-4">
