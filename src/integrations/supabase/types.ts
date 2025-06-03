@@ -202,43 +202,64 @@ export type Database = {
       }
       user_kana_progress: {
         Row: {
+          average_response_time: number | null
           character_id: string
+          confidence_score: number | null
           consecutive_correct: number
           created_at: string | null
+          first_seen_at: string | null
+          graduation_date: string | null
           id: string
+          last_mistake_date: string | null
           last_practiced: string | null
           mastery_level: number
           mistake_count: number
           proficiency: number
           review_due: string | null
+          sessions_practiced: number | null
+          similar_character_confusions: Json | null
           total_practice_count: number
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          average_response_time?: number | null
           character_id: string
+          confidence_score?: number | null
           consecutive_correct?: number
           created_at?: string | null
+          first_seen_at?: string | null
+          graduation_date?: string | null
           id?: string
+          last_mistake_date?: string | null
           last_practiced?: string | null
           mastery_level?: number
           mistake_count?: number
           proficiency?: number
           review_due?: string | null
+          sessions_practiced?: number | null
+          similar_character_confusions?: Json | null
           total_practice_count?: number
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          average_response_time?: number | null
           character_id?: string
+          confidence_score?: number | null
           consecutive_correct?: number
           created_at?: string | null
+          first_seen_at?: string | null
+          graduation_date?: string | null
           id?: string
+          last_mistake_date?: string | null
           last_practiced?: string | null
           mastery_level?: number
           mistake_count?: number
           proficiency?: number
           review_due?: string | null
+          sessions_practiced?: number | null
+          similar_character_confusions?: Json | null
           total_practice_count?: number
           updated_at?: string | null
           user_id?: string

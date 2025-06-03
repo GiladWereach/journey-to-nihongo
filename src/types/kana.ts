@@ -1,4 +1,3 @@
-
 // Add or update types as needed to align with the database schema
 
 export interface KanaCharacter {
@@ -62,6 +61,48 @@ export interface UserKanaProgress {
   mastery_level: number; // 0=learning, 1=first disappearance, 2=second disappearance, etc.
   created_at?: string;
   updated_at?: string;
+}
+
+// Enhanced interface with new tracking fields
+export interface EnhancedUserKanaProgress extends UserKanaProgress {
+  confidence_score: number;
+  average_response_time: number;
+  sessions_practiced: number;
+  first_seen_at: Date;
+  graduation_date: Date | null;
+  last_mistake_date: Date | null;
+  similar_character_confusions: Record<string, number>;
+}
+
+// Mastery stage definitions
+export enum MasteryStage {
+  NEW = 0,
+  LEARNING = 1,
+  FAMILIAR = 2,
+  PRACTICED = 3,
+  RELIABLE = 4,
+  MASTERED = 5
+}
+
+// Practice metrics for enhanced tracking
+export interface PracticeMetrics {
+  responseTime: number;
+  isCorrect: boolean;
+  sessionId: string;
+  characterId: string;
+  timestamp: Date;
+}
+
+// Mastery statistics
+export interface MasteryStats {
+  total: number;
+  new: number;
+  learning: number;
+  familiar: number;
+  practiced: number;
+  reliable: number;
+  mastered: number;
+  averageConfidence: number;
 }
 
 export interface Profile {
