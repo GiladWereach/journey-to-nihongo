@@ -10,6 +10,7 @@ import Index from './pages/Index';
 import Auth from './pages/Auth';
 import Quiz from './pages/Quiz';
 import Profile from './pages/Profile';
+import EnhancedProgress from './pages/EnhancedProgress';
 
 // Legacy pages (moved to /legacy routes)
 import Dashboard from './pages/Dashboard';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/progress" element={<EnhancedProgress />} />
             
             {/* Legacy routes - preserved for existing users */}
             <Route path="/legacy" element={<RequireAuth />}>
@@ -59,11 +61,10 @@ function App() {
             <Route path="/legacy/writing-practice" element={<WritingPractice />} />
             <Route path="/legacy/timed-challenge" element={<TimedChallenge />} />
             
-            {/* Redirect old routes to legacy */}
+            {/* Redirect old legacy progress to new enhanced progress */}
             <Route path="/dashboard" element={<Navigate to="/legacy/dashboard" replace />} />
             <Route path="/learn" element={<Navigate to="/legacy/learn" replace />} />
             <Route path="/practice" element={<Navigate to="/legacy/practice" replace />} />
-            <Route path="/progress" element={<Navigate to="/legacy/progress" replace />} />
             <Route path="/kana-learning" element={<Navigate to="/legacy/kana-learning" replace />} />
             <Route path="/quick-quiz" element={<Navigate to="/legacy/quick-quiz" replace />} />
             <Route path="/writing-practice" element={<Navigate to="/legacy/writing-practice" replace />} />
