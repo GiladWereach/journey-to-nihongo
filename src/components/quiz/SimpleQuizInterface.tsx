@@ -58,8 +58,8 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
       await characterProgressService.updateCharacterProgress(user.id, currentCharacter.id, isCorrect);
     }
 
-    // Auto-advance after showing feedback (0.5 seconds for correct, 1.5 seconds for incorrect)
-    const feedbackDuration = isCorrect ? 500 : 1500;
+    // Auto-advance after showing feedback (300ms for correct, 800ms for incorrect)
+    const feedbackDuration = isCorrect ? 300 : 800;
     
     setTimeout(() => {
       setCurrentCharacter(getRandomCharacter());
