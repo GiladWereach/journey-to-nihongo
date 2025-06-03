@@ -133,10 +133,10 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
   // Focus input whenever currentCharacter changes
   useEffect(() => {
-    if (currentCharacter && inputRef.current) {
+    if (currentCharacter && inputRef.current && feedback === null) {
       inputRef.current.focus();
     }
-  }, [currentCharacter]);
+  }, [currentCharacter, feedback]);
 
   const updateSessionStats = (responseTime: number) => {
     setSessionStats(prev => {
@@ -297,55 +297,58 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               </div>
             </div>
 
-            {/* Input Section */}
-            <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
-              <Input
-                ref={inputRef}
-                value={userInput}
-                onChange={handleInputChange}
-                placeholder="Type the romaji..."
-                className="text-center text-xl lg:text-2xl py-4 bg-glass-wood border-wood-light/40 text-paper-warm placeholder:text-wood-light/50 font-traditional"
-                disabled={feedback !== null || isProcessing}
-                autoFocus
-              />
-              
-              {feedback === null && !isProcessing && userInput.trim().length < (currentCharacter.romaji.length) && (
-                <Button 
-                  type="submit" 
-                  className="w-full py-4 text-lg bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night font-traditional"
-                  disabled={!userInput.trim()}
-                >
-                  Submit
-                </Button>
+            {/* Fixed Height Input/Feedback Section */}
+            <div className="h-[140px] flex flex-col justify-center space-y-4 max-w-md mx-auto">
+              {feedback === null ? (
+                /* Input Section */
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
+                    ref={inputRef}
+                    value={userInput}
+                    onChange={handleInputChange}
+                    placeholder="Type the romaji..."
+                    className="text-center text-xl lg:text-2xl py-4 bg-glass-wood border-wood-light/40 text-paper-warm placeholder:text-wood-light/50 font-traditional"
+                    disabled={isProcessing}
+                    autoFocus
+                  />
+                  
+                  {!isProcessing && userInput.trim().length < (currentCharacter.romaji.length) && (
+                    <Button 
+                      type="submit" 
+                      className="w-full py-4 text-lg bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night font-traditional"
+                      disabled={!userInput.trim()}
+                    >
+                      Submit
+                    </Button>
+                  )}
+                </form>
+              ) : (
+                /* Feedback Section */
+                <div className={`p-4 lg:p-6 transition-all duration-200 border-2 ${
+                  feedback === 'correct' 
+                    ? 'bg-glass-wood border-lantern-amber/60 text-lantern-warm' 
+                    : 'bg-glass-wood border-vermilion/60 text-vermilion'
+                }`}>
+                  {feedback === 'correct' ? (
+                    <div className="space-y-2">
+                      <div className="text-lg font-semibold font-traditional">✅ Correct!</div>
+                      <div className="font-traditional text-lg">{currentCharacter.character} = {currentCharacter.romaji}</div>
+                      {user && (
+                        <div className="text-sm font-traditional">
+                          Response time: {((Date.now() - startTimeRef.current) / 1000).toFixed(1)}s
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-lg font-semibold font-traditional">❌ Incorrect</div>
+                      <div className="font-traditional text-lg">{currentCharacter.character} = {currentCharacter.romaji}</div>
+                      <div className="text-sm font-traditional">You typed: {userInput}</div>
+                    </div>
+                  )}
+                </div>
               )}
-            </form>
-
-            {/* Feedback Section */}
-            {feedback && (
-              <div className={`p-4 lg:p-6 transition-all duration-200 border-2 max-w-md mx-auto ${
-                feedback === 'correct' 
-                  ? 'bg-glass-wood border-lantern-amber/60 text-lantern-warm' 
-                  : 'bg-glass-wood border-vermilion/60 text-vermilion'
-              }`}>
-                {feedback === 'correct' ? (
-                  <div className="space-y-2">
-                    <div className="text-lg font-semibold font-traditional">✅ Correct!</div>
-                    <div className="font-traditional text-lg">{currentCharacter.character} = {currentCharacter.romaji}</div>
-                    {user && (
-                      <div className="text-sm font-traditional">
-                        Response time: {((Date.now() - startTimeRef.current) / 1000).toFixed(1)}s
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="text-lg font-semibold font-traditional">❌ Incorrect</div>
-                    <div className="font-traditional text-lg">{currentCharacter.character} = {currentCharacter.romaji}</div>
-                    <div className="text-sm font-traditional">You typed: {userInput}</div>
-                  </div>
-                )}
-              </div>
-            )}
+            </div>
           </div>
         </TraditionalCard>
       </div>
@@ -353,7 +356,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       {/* Sidebar with Stats and Progress */}
       <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 space-y-4">
         {/* Quick Stats */}
-        <TraditionalCard className="p-4">
+        <TraditionalCard className="p-6">
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-wood-light font-traditional flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
@@ -371,7 +374,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 px-2">
               <div className="flex justify-between text-sm">
                 <span className="text-wood-light/70 font-traditional">Total Answered</span>
                 <span className="text-wood-light font-traditional">{score.total}</span>
@@ -418,18 +421,18 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center">
-                  <div className="text-lantern-amber font-traditional font-semibold">{masteryStats.new}</div>
-                  <div className="text-wood-light/60 font-traditional">New</div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-xl font-bold text-lantern-amber font-traditional">{masteryStats.new}</div>
+                  <div className="text-xs text-wood-light/60 font-traditional">New</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-vermilion font-traditional font-semibold">{masteryStats.learning + masteryStats.familiar}</div>
-                  <div className="text-wood-light/60 font-traditional">Learning</div>
+                <div>
+                  <div className="text-xl font-bold text-vermilion font-traditional">{masteryStats.learning + masteryStats.familiar}</div>
+                  <div className="text-xs text-wood-light/60 font-traditional">Learning</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-gold font-traditional font-semibold">{masteryStats.mastered}</div>
-                  <div className="text-wood-light/60 font-traditional">Mastered</div>
+                <div>
+                  <div className="text-xl font-bold text-gold font-traditional">{masteryStats.mastered}</div>
+                  <div className="text-xs text-wood-light/60 font-traditional">Mastered</div>
                 </div>
               </div>
             </div>
