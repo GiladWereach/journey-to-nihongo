@@ -1,146 +1,113 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TraditionalProgressIndicatorProps {
-  progress: number; // 0 to 100
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-  showPercentage?: boolean;
-  label?: string;
-  showLabel?: boolean;
-  animated?: boolean;
+  progress: number;
   masteryLevel?: number;
+  size?: 'sm' | 'md' | 'lg';
+  showPercentage?: boolean;
   showMasteryBadge?: boolean;
-  characterDisplay?: string;
-  showCharacter?: boolean;
-  type?: 'hiragana' | 'katakana' | 'kanji' | 'default';
+  type?: 'hiragana' | 'katakana';
+  className?: string;
 }
 
 const TraditionalProgressIndicator: React.FC<TraditionalProgressIndicatorProps> = ({
   progress,
-  size = 'md',
-  className,
-  showPercentage = false,
-  label,
-  showLabel = true,
-  animated = false,
   masteryLevel = 0,
+  size = 'md',
+  showPercentage = true,
   showMasteryBadge = false,
-  characterDisplay,
-  showCharacter = false,
-  type = 'default'
+  type = 'hiragana',
+  className
 }) => {
-  const normalizedProgress = Math.min(100, Math.max(0, progress));
-  
+  const getMasteryLevelName = (level: number): string => {
+    const levels = ['New', 'Learning', 'Familiar', 'Practiced', 'Reliable', 'Mastered'];
+    return levels[level] || 'Unknown';
+  };
+
+  const getMasteryLevelColor = (level: number): string => {
+    const colors = [
+      'bg-green-100 text-gion-night',     // New - light green
+      'bg-gray-200 text-gion-night',      // Learning - greyish  
+      'bg-pink-100 text-gion-night',      // Familiar - pink
+      'bg-blue-100 text-gion-night',      // Practiced - blueish
+      'bg-amber-100 text-gion-night',     // Reliable - light brown
+      'bg-gray-800 text-paper-warm'       // Mastered - black
+    ];
+    return colors[level] || 'bg-gray-200 text-gion-night';
+  };
+
+  const getMasteryDescription = (level: number): string => {
+    const descriptions = [
+      'Just starting to learn this character',
+      'Beginning to recognize the character',
+      'Becoming familiar with the character',
+      'Practiced and getting confident',
+      'Reliable recognition most of the time',
+      'Fully mastered this character'
+    ];
+    return descriptions[level] || 'Unknown mastery level';
+  };
+
+  const getProgressBarColor = (): string => {
+    if (type === 'hiragana') {
+      return 'bg-gradient-to-r from-matcha to-matcha/80';
+    } else if (type === 'katakana') {
+      return 'bg-gradient-to-r from-vermilion to-vermilion/80';
+    }
+    return 'bg-gradient-to-r from-wood-medium to-wood-light';
+  };
+
   const sizeClasses = {
     sm: 'h-2',
     md: 'h-3',
-    lg: 'h-4',
-  };
-
-  const getProgressColor = () => {
-    if (masteryLevel > 0) {
-      switch (masteryLevel) {
-        case 1: return 'from-wood-medium to-wood-light';
-        case 2: return 'from-wood-light to-lantern-warm';
-        case 3: return 'from-lantern-warm to-lantern-glow';
-        case 4: return 'from-lantern-glow to-gold';
-        case 5: return 'from-gold to-yellow-400';
-        default: return 'from-wood-medium to-wood-light';
-      }
-    }
-    
-    switch (type) {
-      case 'hiragana': return 'from-wood-medium to-wood-light';
-      case 'katakana': return 'from-lantern-warm to-lantern-glow';
-      case 'kanji': return 'from-gold to-yellow-400';
-      default: return 'from-wood-medium via-wood-light to-gold';
-    }
-  };
-
-  const getMasteryLabel = () => {
-    if (masteryLevel === 0) return null;
-    
-    const labels = {
-      1: '学習中', // Learning
-      2: '慣れ親しむ', // Familiar
-      3: '練習済み', // Practiced
-      4: '信頼できる', // Reliable
-      5: '習得済み' // Mastered
-    };
-    
-    return labels[masteryLevel as keyof typeof labels] || '学習中';
+    lg: 'h-4'
   };
 
   return (
-    <div className={cn('w-full space-y-2', className)}>
-      {(label || showPercentage || showLabel || showCharacter) && (
-        <div className="flex justify-between items-center text-sm">
-          <div className="flex items-center gap-2">
-            {showCharacter && characterDisplay && (
-              <span className="text-lg font-traditional text-wood-light">{characterDisplay}</span>
-            )}
-            {label && <span className="font-medium text-wood-light">{label}</span>}
-          </div>
-          <div className="flex items-center gap-2">
-            {showLabel && masteryLevel > 0 && (
-              <span className="text-xs px-2 py-1 bg-wood-grain text-wood-light rounded-none border border-wood-light/30">
-                {getMasteryLabel()}
-              </span>
-            )}
-            {showPercentage && (
-              <span className="text-sm text-wood-light/80 font-traditional">
-                {normalizedProgress}%
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-      
-      <div className={cn(
-        'w-full bg-black/60 border border-wood-light/30 overflow-hidden relative',
-        sizeClasses[size]
-      )}>
-        {/* Inner shadow */}
-        <div className="absolute inset-0 shadow-inner bg-gradient-to-b from-black/20 to-transparent" />
-        
-        {/* Progress fill */}
-        <div 
-          className={cn(
-            'h-full transition-all duration-1000 relative',
-            `bg-gradient-to-r ${getProgressColor()}`,
-            animated && 'animate-pulse'
-          )}
-          style={{ width: `${normalizedProgress}%` }}
-        >
-          {/* Glow effect */}
+    <div className={cn('space-y-2', className)}>
+      {/* Progress Bar */}
+      <div className="space-y-1">
+        <div className={cn(
+          'bg-wood-grain border border-wood-light/30 rounded-none overflow-hidden',
+          sizeClasses[size]
+        )}>
           <div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-progress-glow"
-            style={{ 
-              animation: normalizedProgress > 0 ? 'progress-glow 4s ease-in-out infinite' : 'none'
-            }}
+            className={cn(
+              'h-full transition-all duration-500 ease-out',
+              getProgressBarColor()
+            )}
+            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
-          
-          {/* Inner highlight */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
         </div>
+        
+        {showPercentage && (
+          <div className="text-xs text-wood-light/60 text-center font-traditional">
+            {Math.round(progress)}%
+          </div>
+        )}
       </div>
-      
-      {/* Mastery badge */}
-      {showMasteryBadge && masteryLevel > 0 && (
-        <div className="text-xs text-center mt-2">
-          <span className="inline-flex items-center px-3 py-1 bg-wood-grain text-wood-light border border-wood-light/30 font-traditional">
-            {'★'.repeat(Math.min(masteryLevel, 5))} {getMasteryLabel()}
-          </span>
-        </div>
-      )}
-      
-      {/* Completion celebration */}
-      {normalizedProgress >= 100 && (
-        <div className="text-xs text-center text-gold animate-bounce mt-1 font-traditional">
-          ✨ 完了! ✨
-        </div>
+
+      {/* Mastery Badge with Tooltip */}
+      {showMasteryBadge && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn(
+                'inline-flex items-center px-2 py-1 text-xs font-traditional border border-wood-light/40',
+                getMasteryLevelColor(masteryLevel),
+                'cursor-help'
+              )}>
+                {getMasteryLevelName(masteryLevel)}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="bg-wood-grain border-wood-light/40 text-paper-warm font-traditional">
+              <p className="max-w-48">{getMasteryDescription(masteryLevel)}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );

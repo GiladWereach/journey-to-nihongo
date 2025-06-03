@@ -1,15 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import ProgressIndicator from '@/components/ui/ProgressIndicator';
+import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { KanaCharacter } from '@/types/kana';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
-import { supabase } from '@/integrations/supabase/client';
 
-// Import the type with a different name to avoid naming conflict
 import type { UserKanaProgress as UserKanaProgressType } from '@/types/kana';
 
 interface KanaProgressGridProps {
@@ -33,7 +32,6 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
       
       setLoading(true);
       try {
-        // Fetch user progress data using the new service
         const progress = await characterProgressService.getCharacterProgress(user.id);
         const progressMap = new Map();
         progress.forEach(p => {
@@ -41,15 +39,12 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         });
         setProgressData(progressMap);
         
-        // Get kana characters by type
         const characters = kanaService.getKanaByType(kanaType);
         setKanaCharacters(characters);
         
         // Group characters by consonant group
         const grouped: {[key: string]: KanaCharacter[]} = {};
         characters.forEach(char => {
-          // Extract the consonant group from the character ID
-          // Example: "hiragana-k-a" -> "k" is the consonant group
           const parts = char.id.split('-');
           const group = parts.length > 1 ? parts[1] : 'special';
           if (!grouped[group]) {
@@ -79,26 +74,9 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
     return progress ? progress.mastery_level : 0;
   };
   
-  const getMasteryStageColor = (masteryLevel: number): string => {
-    switch (masteryLevel) {
-      case 0: return 'bg-gradient-to-r from-green-200 to-green-300'; // Light green
-      case 1: return 'bg-gradient-to-r from-gray-300 to-gray-400'; // Greyish
-      case 2: return 'bg-gradient-to-r from-pink-200 to-pink-300'; // Pink
-      case 3: return 'bg-gradient-to-r from-blue-200 to-blue-300'; // Blueish
-      case 4: return 'bg-gradient-to-r from-amber-200 to-amber-300'; // Light brown
-      case 5: return 'bg-gradient-to-r from-gray-700 to-gray-800'; // Black
-      default: return 'bg-gradient-to-r from-green-200 to-green-300';
-    }
-  };
-  
   const getSortedGroups = (): string[] => {
-    // Define order for consonant groups
     const order = ['vowels', 'k', 's', 't', 'n', 'h', 'm', 'y', 'r', 'w', 'g', 'z', 'd', 'b', 'p', 'special', 'combinations'];
-    
-    // Get all groups that exist in our data
     const availableGroups = Object.keys(groupedCharacters);
-    
-    // Sort based on predefined order
     return order.filter(group => availableGroups.includes(group));
   };
   
@@ -141,22 +119,35 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
           <h3 className="text-sm font-medium text-indigo">{getGroupTitle(group)}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {groupedCharacters[group]?.map(char => (
-              <Card key={char.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex flex-col items-center">
-                    <div className="text-2xl font-japanese mb-2">{char.character}</div>
-                    <div className="text-sm mb-3 text-muted-foreground">{char.romaji}</div>
-                    <ProgressIndicator 
-                      progress={getCharacterProgress(char.id)}
-                      size="sm"
-                      showPercentage={false}
-                      color={getMasteryStageColor(getCharacterMasteryLevel(char.id))}
-                      masteryLevel={getCharacterMasteryLevel(char.id)}
-                      showMasteryBadge={getCharacterMasteryLevel(char.id) > 0}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <TooltipProvider key={char.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card className="overflow-hidden cursor-help hover:bg-muted/50 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col items-center">
+                          <div className="text-2xl font-japanese mb-2">{char.character}</div>
+                          <div className="text-sm mb-3 text-muted-foreground">{char.romaji}</div>
+                          <TraditionalProgressIndicator 
+                            progress={getCharacterProgress(char.id)}
+                            size="sm"
+                            showPercentage={false}
+                            masteryLevel={getCharacterMasteryLevel(char.id)}
+                            showMasteryBadge={getCharacterMasteryLevel(char.id) > 0}
+                            type={kanaType}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="space-y-1">
+                      <p className="font-semibold">{char.character} ({char.romaji})</p>
+                      <p>Progress: {getCharacterProgress(char.id)}%</p>
+                      <p>Practice count: {progressData.get(char.id)?.total_practice_count || 0}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ))}
           </div>
         </div>
@@ -187,14 +178,10 @@ const UserKanaProgress: React.FC = () => {
       if (!user) return;
       
       try {
-        // Get all character progress
         const allProgress = await characterProgressService.getCharacterProgress(user.id);
-        
-        // Get all characters
         const hiraganaChars = kanaService.getKanaByType('hiragana');
         const katakanaChars = kanaService.getKanaByType('katakana');
         
-        // Calculate hiragana stats
         const hiraganaProgress = allProgress.filter(p => 
           hiraganaChars.some(c => c.id === p.character_id)
         );
@@ -203,7 +190,6 @@ const UserKanaProgress: React.FC = () => {
           ? hiraganaProgress.reduce((sum, p) => sum + p.proficiency, 0) / hiraganaProgress.length 
           : 0;
         
-        // Calculate katakana stats
         const katakanaProgress = allProgress.filter(p => 
           katakanaChars.some(c => c.id === p.character_id)
         );
@@ -243,10 +229,10 @@ const UserKanaProgress: React.FC = () => {
                 <span className="text-xl font-semibold text-indigo">{stats.hiragana.learned}</span>
                 <span className="text-sm text-muted-foreground">/ {stats.hiragana.total} learned</span>
               </div>
-              <ProgressIndicator 
+              <TraditionalProgressIndicator 
                 progress={(stats.hiragana.learned / Math.max(1, stats.hiragana.total)) * 100}
                 size="sm"
-                color="bg-gradient-to-r from-green-200 to-green-300"
+                type="hiragana"
               />
             </div>
             <div className="space-y-1">
@@ -255,10 +241,10 @@ const UserKanaProgress: React.FC = () => {
                 <span className="text-xl font-semibold text-vermilion">{stats.katakana.learned}</span>
                 <span className="text-sm text-muted-foreground">/ {stats.katakana.total} learned</span>
               </div>
-              <ProgressIndicator 
+              <TraditionalProgressIndicator 
                 progress={(stats.katakana.learned / Math.max(1, stats.katakana.total)) * 100}
                 size="sm"
-                color="bg-gradient-to-r from-pink-200 to-pink-300"
+                type="katakana"
               />
             </div>
           </div>

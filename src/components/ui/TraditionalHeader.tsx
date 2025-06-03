@@ -95,11 +95,6 @@ const TraditionalHeader: React.FC<TraditionalHeaderProps> = ({
           </div>
         )}
       </div>
-
-      {/* Decorative notification */}
-      <div className="absolute top-4 right-4 bg-wood-grain text-wood-light px-3 py-2 text-xs border border-wood-light/40 backdrop-blur-md">
-        🏮 Learning Session
-      </div>
     </header>
   );
 };
