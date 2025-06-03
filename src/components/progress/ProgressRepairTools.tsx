@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, Wrench, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabaseClient } from '@/lib/supabase';
-import { kanaLearningService } from '@/services/kanaModules';
+import { supabase } from '@/integrations/supabase/client';
 import { kanaService } from '@/services/kanaService';
+import { characterProgressService } from '@/services/characterProgressService';
 
 interface ProgressRepairToolsProps {
   onRepairComplete?: () => void;
@@ -31,9 +31,9 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
       addRepairDetail('Starting progress data repair...');
       
       // 1. Check for kana_learning_sessions
-      const { data: sessions, error: sessionError } = await supabaseClient
+      const { data: sessions, error: sessionError } = await supabase
         .from('kana_learning_sessions')
-        .select('id, completed, characters_studied')
+        .select('id, completed')
         .eq('user_id', user.id);
         
       if (sessionError) {
@@ -50,7 +50,7 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
           
           for (const session of incompleteSessions) {
             // Complete any incomplete sessions
-            await supabaseClient
+            await supabase
               .from('kana_learning_sessions')
               .update({ 
                 completed: true,
@@ -64,7 +64,7 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
       }
       
       // 2. Check for user_kana_progress entries
-      const { data: progressEntries, error: progressError } = await supabaseClient
+      const { data: progressEntries, error: progressError } = await supabase
         .from('user_kana_progress')
         .select('id, proficiency, character_id')
         .eq('user_id', user.id);
@@ -74,122 +74,23 @@ const ProgressRepairTools: React.FC<ProgressRepairToolsProps> = ({ onRepairCompl
       } else {
         addRepairDetail(`Found ${progressEntries.length} progress entries`);
         
-        // Verify that all kana characters have progress entries
-        addRepairDetail('Verifying all characters have progress entries...');
-        const verifyResult = await kanaLearningService.verifyAllProgressEntries(user.id);
+        // Create missing progress entries for all characters
+        const allCharacters = kanaService.getAllKana();
+        let missingCount = 0;
         
-        if (verifyResult) {
-          addRepairDetail('✅ All characters now have progress entries');
-        } else {
-          addRepairDetail('⚠️ Error creating missing progress entries');
-        }
-      }
-      
-      // 3. Recalculate proficiency values
-      addRepairDetail('Recalculating proficiency values...');
-      
-      // Since kanaService.recalculateAllProgress doesn't exist yet, we'll implement a basic version
-      const allCharacters = kanaService.getAllKana();
-      let recalculateSuccess = true;
-      
-      for (const character of allCharacters) {
-        try {
-          // Get the latest progress for this character
-          const { data: progress, error: progressError } = await supabaseClient
-            .from('user_kana_progress')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('character_id', character.id)
-            .single();
-            
-          if (progressError && progressError.code !== 'PGRST116') {
-            console.error(`Error fetching progress for ${character.id}:`, progressError);
-            recalculateSuccess = false;
-            continue;
-          }
+        for (const character of allCharacters) {
+          const hasProgress = progressEntries.some(p => p.character_id === character.id);
           
-          if (progress) {
-            // Update the proficiency value based on correct/incorrect counts
-            const newProficiency = kanaService.calculateProficiency(progress);
-            
-            await supabaseClient
-              .from('user_kana_progress')
-              .update({ proficiency: newProficiency })
-              .eq('id', progress.id);
-          }
-        } catch (err) {
-          console.error(`Error recalculating proficiency for ${character.id}:`, err);
-          recalculateSuccess = false;
-        }
-      }
-      
-      if (recalculateSuccess) {
-        addRepairDetail('✅ Proficiency values recalculated successfully');
-      } else {
-        addRepairDetail('⚠️ Error recalculating some proficiency values');
-      }
-      
-      // 4. Update learning streak if needed
-      addRepairDetail('Checking learning streak...');
-      const { data: streakData, error: streakError } = await supabaseClient
-        .from('user_learning_streaks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-        
-      if (streakError) {
-        addRepairDetail('⚠️ Error checking learning streak: ' + streakError.message);
-      } else {
-        addRepairDetail(`Found ${streakData.length} streak records`);
-        
-        if (streakData.length === 0) {
-          // Create an initial streak record
-          const { error: createStreakError } = await supabaseClient
-            .from('user_learning_streaks')
-            .insert({
-              user_id: user.id,
-              date: new Date().toISOString().split('T')[0],
-              activity_count: 1
-            });
-            
-          if (createStreakError) {
-            addRepairDetail('⚠️ Error creating streak record: ' + createStreakError.message);
-          } else {
-            addRepairDetail('✅ Created initial streak record');
+          if (!hasProgress) {
+            await characterProgressService.updateCharacterProgress(user.id, character.id, false);
+            missingCount++;
           }
         }
-      }
-      
-      // 5. Create a dummy study session if none exist
-      const { data: studySessions, error: studySessionError } = await supabaseClient
-        .from('study_sessions')
-        .select('id')
-        .eq('user_id', user.id);
         
-      if (studySessionError) {
-        addRepairDetail('⚠️ Error checking study sessions: ' + studySessionError.message);
-      } else {
-        addRepairDetail(`Found ${studySessions.length} study sessions`);
-        
-        if (studySessions.length === 0) {
-          // Create a sample study session
-          const { error: createSessionError } = await supabaseClient
-            .from('study_sessions')
-            .insert({
-              user_id: user.id,
-              session_date: new Date().toISOString(),
-              duration_minutes: 10,
-              module: 'kana_introduction',
-              topics: ['hiragana', 'introduction'],
-              completed: true,
-              performance_score: 90
-            });
-            
-          if (createSessionError) {
-            addRepairDetail('⚠️ Error creating study session: ' + createSessionError.message);
-          } else {
-            addRepairDetail('✅ Created sample study session');
-          }
+        if (missingCount > 0) {
+          addRepairDetail(`✅ Created ${missingCount} missing progress entries`);
+        } else {
+          addRepairDetail('✅ All characters already have progress entries');
         }
       }
       

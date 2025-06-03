@@ -1,196 +1,264 @@
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import Navbar from '@/components/layout/Navbar';
-import { Profile, UserSettings } from '@/types/kana';
-import { kanaProgressService } from '@/services/kanaProgressService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { BookOpen, Target, TrendingUp, Calendar, Play, BarChart3 } from 'lucide-react';
 import { useUserProgress } from '@/hooks/useUserProgress';
-import { StudySession, ContinueLearningData } from '@/types/dashboard';
+import { characterProgressService } from '@/services/characterProgressService';
+import { quizSessionService } from '@/services/quizSessionService';
+import { supabase } from '@/integrations/supabase/client';
 
-// Import dashboard components
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
-import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
+interface DashboardStats {
+  totalCharactersLearned: number;
+  currentStreak: number;
+  totalSessions: number;
+  averageAccuracy: number;
+}
 
-// Import utility functions
-import { 
-  calculateStreak, 
-  calculateTotalStudyTimeInPastWeek,
-  determineRecommendedNextModule,
-  findLastActiveModule
-} from '@/utils/dashboardUtils';
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const { progress, loading } = useUserProgress();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalCharactersLearned: 0,
+    currentStreak: 0,
+    totalSessions: 0,
+    averageAccuracy: 0
+  });
+  const [recentSessions, setRecentSessions] = useState<any[]>([]);
 
-const Dashboard = () => {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hiraganaStats, setHiraganaStats] = useState({ learned: 0, total: 0, avgProficiency: 0 });
-  const [katakanaStats, setKatakanaStats] = useState({ learned: 0, total: 0, avgProficiency: 0 });
-  const { toast } = useToast();
-  const { progress: userProgress, loading: progressLoading } = useUserProgress();
-  
-  const totalStudyTime = calculateTotalStudyTimeInPastWeek(studySessions);
-  
-  // Check if we have assessment completion in study sessions even if userProgress doesn't reflect it
-  const [assessmentCompleted, setAssessmentCompleted] = useState<boolean>(false);
-  
   useEffect(() => {
-    // Update from userProgress when available
-    if (userProgress) {
-      setAssessmentCompleted(userProgress.assessment_completed);
-    }
-  }, [userProgress]);
-  
-  const handleModuleNavigation = (path: string, isReady: boolean = true) => {
-    if (!assessmentCompleted && path !== '/assessment') {
-      toast({
-        title: "Assessment Required",
-        description: "Please complete the assessment first to personalize your learning journey.",
-        variant: "default",
-      });
-      navigate('/assessment');
-      return;
-    }
-    
-    if (isReady) {
-      navigate(path);
-    } else {
-      toast({
-        title: "Coming Soon",
-        description: "This learning module will be available soon!",
-        variant: "default",
-      });
-    }
-  };
-  
-  useEffect(() => {
-    const getProfile = async () => {
+    const fetchDashboardData = async () => {
       if (!user) return;
-      
+
       try {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileError) throw profileError;
-        setProfile(profileData as Profile);
-        
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('user_settings')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        if (settingsError) throw settingsError;
-        setSettings(settingsData as UserSettings);
-        
-        // Fetch study sessions
-        const { data: sessionsData, error: sessionsError } = await supabase
-          .from('study_sessions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-          
-        if (sessionsError) throw sessionsError;
-        setStudySessions(sessionsData || []);
-        
-        // Check if there's an assessment session that's completed
-        if (sessionsData && sessionsData.length > 0) {
-          const hasCompletedAssessment = sessionsData.some(
-            session => session.module === 'assessment' && session.completed === true
-          );
-          
-          if (hasCompletedAssessment) {
-            setAssessmentCompleted(true);
-          }
-        }
-        
-        // Get kana progress statistics
-        if (user.id) {
-          const hiraganaProgressStats = await kanaProgressService.getKanaProficiencyStats(
-            user.id,
-            'hiragana'
-          );
-          setHiraganaStats(hiraganaProgressStats);
-          
-          const katakanaProgressStats = await kanaProgressService.getKanaProficiencyStats(
-            user.id,
-            'katakana'
-          );
-          setKatakanaStats(katakanaProgressStats);
-        }
-      } catch (error: any) {
-        console.error('Error fetching profile:', error.message);
-        toast({
-          title: 'Error fetching profile',
-          description: error.message,
-          variant: 'destructive',
+        // Get user progress data
+        const progressData = await characterProgressService.getCharacterProgress(user.id);
+        const charactersLearned = progressData.filter(p => p.proficiency > 0).length;
+
+        // Get recent quiz sessions
+        const sessions = await quizSessionService.getUserSessions(user.id, 5);
+        setRecentSessions(sessions);
+
+        // Calculate average accuracy
+        const completedSessions = sessions.filter(s => s.completed);
+        const avgAccuracy = completedSessions.length > 0
+          ? completedSessions.reduce((sum, s) => sum + s.accuracy, 0) / completedSessions.length
+          : 0;
+
+        setStats({
+          totalCharactersLearned: charactersLearned,
+          currentStreak: 0, // We'll implement streak tracking later
+          totalSessions: sessions.length,
+          averageAccuracy: Math.round(avgAccuracy)
         });
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
       }
     };
-    
-    getProfile();
-  }, [user, toast]);
-  
-  if (loading || progressLoading) {
-    return <DashboardSkeleton />;
+
+    fetchDashboardData();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-softgray">
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
-  
-  // Update to use our assessmentCompleted state which considers both sources
-  const showAssessmentPrompt = !assessmentCompleted;
-  
-  // Calculate recommended next module based on progress
-  const recommendedNextModule = determineRecommendedNextModule(
-    profile, 
-    settings,
-    hiraganaStats,
-    katakanaStats,
-    showAssessmentPrompt
-  );
-  
-  // Find last active module for continue learning
-  const continueLearning = findLastActiveModule(
-    studySessions,
-    hiraganaStats,
-    katakanaStats
-  );
-  
+
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen pt-24 px-4 bg-softgray/30">
-        <div className="max-w-7xl mx-auto">
-          <DashboardHeader />
-          
-          {profile && (
-            <DashboardMainContent
-              profile={profile}
-              settings={settings}
-              studySessions={studySessions}
-              showAssessmentPrompt={showAssessmentPrompt}
-              continueLearning={continueLearning}
-              hiraganaStats={hiraganaStats}
-              katakanaStats={katakanaStats}
-              signOut={signOut}
-              handleModuleNavigation={handleModuleNavigation}
-              recommendedNextModule={recommendedNextModule}
-              calculateStreak={() => calculateStreak(studySessions)}
-              totalStudyTime={totalStudyTime}
-            />
+    <div className="min-h-screen bg-gradient-to-b from-white to-softgray">
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
+          {/* Welcome Header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-indigo">Welcome back!</h1>
+            <p className="text-gray-600">Continue your Japanese learning journey</p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <BookOpen className="h-8 w-8 text-matcha" />
+                  <div>
+                    <div className="text-2xl font-bold">{stats.totalCharactersLearned}</div>
+                    <div className="text-sm text-gray-500">Characters Learned</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-8 w-8 text-vermilion" />
+                  <div>
+                    <div className="text-2xl font-bold">{stats.currentStreak}</div>
+                    <div className="text-sm text-gray-500">Day Streak</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <Target className="h-8 w-8 text-indigo" />
+                  <div>
+                    <div className="text-2xl font-bold">{stats.totalSessions}</div>
+                    <div className="text-sm text-gray-500">Quiz Sessions</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <TrendingUp className="h-8 w-8 text-amber-500" />
+                  <div>
+                    <div className="text-2xl font-bold">{stats.averageAccuracy}%</div>
+                    <div className="text-sm text-gray-500">Average Accuracy</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Play className="h-5 w-5 text-matcha" />
+                  Start Quiz
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Practice Hiragana and Katakana with our endless quiz system</p>
+                <Button asChild className="w-full">
+                  <Link to="/quiz">Start Quiz</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-vermilion" />
+                  Kana Learning
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Learn Japanese characters with structured lessons</p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/kana-learning">Learn Kana</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-indigo" />
+                  View Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Track your learning progress and achievements</p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/progress">View Progress</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Sessions */}
+          {recentSessions.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Quiz Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {recentSessions.map((session) => (
+                    <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={session.kana_type === 'hiragana' ? 'default' : 'secondary'}>
+                          {session.kana_type}
+                        </Badge>
+                        <div>
+                          <div className="font-medium">
+                            {session.correct_answers}/{session.questions_answered} correct
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(session.start_time).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline">{session.accuracy}% accuracy</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Progress Overview */}
+          {progress && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Learning Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Hiragana</span>
+                      <span>{progress.hiragana_learned}/46</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full">
+                      <div 
+                        className="h-2 bg-matcha rounded-full transition-all duration-300"
+                        style={{ width: `${(progress.hiragana_learned / 46) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Katakana</span>
+                      <span>{progress.katakana_learned}/46</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full">
+                      <div 
+                        className="h-2 bg-vermilion rounded-full transition-all duration-300"
+                        style={{ width: `${(progress.katakana_learned / 46) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

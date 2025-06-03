@@ -4,16 +4,13 @@ import { Button } from '@/components/ui/button';
 import { kanaService } from '@/services/kanaService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabaseClient } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { calculateNextReviewDate } from '@/lib/utils';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
-import { 
-  kanaLearningService, 
-  updateKanaCharacterProgress, 
-  completeKanaLearningSession 
-} from '@/services/kanaModules';
+import { characterProgressService } from '@/services/characterProgressService';
+import { quizSessionService } from '@/services/quizSessionService';
 
 export interface PracticeResult {
   correct: number;
@@ -78,18 +75,8 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       setIsLoading(true);
       try {
         if (user) {
-          const { data, error } = await supabaseClient
-            .from('user_kana_progress')
-            .select('*')
-            .eq('user_id', user.id);
-          
-          if (error) {
-            throw error;
-          }
-          
-          if (data) {
-            setUserProgress(data);
-          }
+          const progress = await characterProgressService.getCharacterProgress(user.id);
+          setUserProgress(progress);
         }
       } catch (error) {
         console.error('Error fetching user progress:', error);
@@ -273,22 +260,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       `Think of the shape as ${kanaItem.character} for "${kanaItem.romaji}"`;
   };
 
-  const calculateNextReviewInterval = (masteryLevel: number) => {
-    let intervalDays = INITIAL_INTERVAL_DAYS;
-    
-    if (masteryLevel > 0) {
-      for (let i = 1; i < masteryLevel; i++) {
-        intervalDays *= INTERVAL_MULTIPLIER;
-      }
-    }
-    
-    const now = new Date();
-    const nextReview = new Date(now);
-    nextReview.setDate(now.getDate() + Math.round(intervalDays));
-    
-    return nextReview;
-  };
-
   const handleAnswer = async (selectedRomaji: string) => {
     const kanaItem = kanaList[currentKanaIndex];
     const isCorrectSelection = selectedRomaji === kanaItem.romaji;
@@ -347,47 +318,6 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
       const incorrect = incorrectCount;
       const accuracy = total > 0 ? (correct / total) * 100 : 0;
       
-      // Record the completed practice session
-      if (user) {
-        try {
-          // Create a completed kana learning session
-          const sessionId = `session-${Date.now()}`;
-          const characterIdsStudied = characterResults.map(result => result.character);
-          const progressUpdates = characterResults.map(result => ({
-            characterId: kanaList.find(k => k.character === result.character)?.id || '',
-            isCorrect: result.correct
-          })).filter(update => update.characterId !== '');
-          
-          // Record using the imported completeKanaLearningSession function
-          completeKanaLearningSession(
-            user.id,
-            sessionId,
-            {
-              accuracy,
-              charactersStudied: characterIdsStudied,
-              progressUpdates
-            }
-          );
-          
-          // Also record as a general study session
-          kanaLearningService.recordStudyActivity(
-            user.id,
-            kanaType === 'hiragana' ? 'hiragana_practice' : 'katakana_practice',
-            ['recognition', 'kana'],
-            Math.max(5, Math.round(total * 0.5)), // Estimate practice time
-            accuracy
-          );
-          
-          console.log("Practice session recorded:", {
-            accuracy,
-            charactersStudied: characterIdsStudied.length,
-            correctAnswers: correct
-          });
-        } catch (error) {
-          console.error("Error recording practice session:", error);
-        }
-      }
-      
       const results: PracticeResult = {
         correct,
         incorrect,
@@ -407,8 +337,7 @@ const KanaPractice: React.FC<KanaPracticeProps> = ({ kanaType, practiceType, onC
     if (!user) return;
     
     try {
-      // Use the imported updateKanaCharacterProgress function
-      await updateKanaCharacterProgress(
+      await characterProgressService.updateCharacterProgress(
         user.id,
         kanaItem.id,
         isCorrect

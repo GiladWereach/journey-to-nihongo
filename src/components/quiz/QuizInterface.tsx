@@ -1,42 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Check, X, Pause, Play, SkipForward, AlertTriangle } from 'lucide-react';
-import { KanaType, QuizCharacterSet, QuizSettings, QuizCharacter, QuizSessionStats, CharacterResult } from '@/types/quiz';
-import { quizService } from '@/services/quizService';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { KanaType, QuizCharacter, CharacterResult, QuizSessionStats } from '@/types/quiz';
+import { kanaService } from '@/services/kanaService';
+import { hiraganaCharacters } from '@/data/hiraganaData';
+import { katakanaCharacters } from '@/data/katakanaData';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileOptimizedInput } from '@/components/ui/MobileOptimizedInput';
+import { cn } from '@/lib/utils';
 
 interface QuizInterfaceProps {
   kanaType: KanaType;
-  characterSets: QuizCharacterSet[];
-  settings: QuizSettings;
-  onEndQuiz: (results: QuizSessionStats) => void;
+  onComplete: (stats: QuizSessionStats) => void;
+  onCancel: () => void;
 }
 
-const QuizInterface: React.FC<QuizInterfaceProps> = ({ 
-  kanaType, 
-  characterSets,
-  settings,
-  onEndQuiz 
-}) => {
-  const { user } = useAuth();
-  const isMobile = useIsMobile();
-  const [quizCharacters, setQuizCharacters] = useState<QuizCharacter[]>([]);
-  const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
-  const [input, setInput] = useState('');
-  const [feedback, setFeedback] = useState<'none' | 'correct' | 'incorrect'>('none');
-  const [showHint, setShowHint] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  const [transitionState, setTransitionState] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle');
-  const [visibleCharacterIndex, setVisibleCharacterIndex] = useState(0);
-  
+const QuizInterface: React.FC<QuizInterfaceProps> = ({ kanaType, onComplete, onCancel }) => {
+  const [currentCharacter, setCurrentCharacter] = useState<QuizCharacter | null>(null);
+  const [options, setOptions] = useState<string[]>([]);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [sessionStats, setSessionStats] = useState<QuizSessionStats>({
     startTime: new Date(),
     endTime: null,
@@ -46,771 +32,189 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     currentStreak: 0,
     longestStreak: 0,
     accuracy: 0,
-    characterResults: [],
+    characterResults: []
   });
-  
-  const [pendingProgressUpdates, setPendingProgressUpdates] = useState<Array<{
-    characterId: string;
-    isCorrect: boolean;
-  }>>([]);
-  
-  const inputRef = useRef<HTMLInputElement>(null);
-  const correctAudioRef = useRef<HTMLAudioElement>(null);
-  const incorrectAudioRef = useRef<HTMLAudioElement>(null);
-  
-  const updateTimerRef = useRef<number | null>(null);
-  const focusTimerRef = useRef<number | null>(null);
-  
-  const maintainInputFocus = () => {
-    if (inputRef.current && !isPaused && !isTransitioning) {
-      inputRef.current.focus();
-    }
-  };
-  
-  const handleCardTouch = () => {
-    if (!isPaused && !isTransitioning && inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
-  
-  useEffect(() => {
-    const initializeQuiz = async () => {
-      try {
-        const allCharacters = characterSets.flatMap(set => set.characters);
-        
-        let filteredCharacters = [...allCharacters];
-        
-        if (settings.showBasicOnly) {
-          filteredCharacters = filteredCharacters.filter(char => !char.isDakuten && !char.isHandakuten);
-        }
-        
-        if (user) {
-          const userProgress = await quizService.getUserKanaProgress(user.id, kanaType);
-          
-          if (!settings.showPreviouslyLearned) {
-            filteredCharacters = filteredCharacters.filter(char => {
-              const progress = userProgress.find(p => p.character_id === char.id);
-              return !progress || progress.total_practice_count === 0;
-            });
-          }
-          
-          if (settings.showTroubleCharacters) {
-            filteredCharacters.sort((a, b) => {
-              const progressA = userProgress.find(p => p.character_id === a.id);
-              const progressB = userProgress.find(p => p.character_id === b.id);
-              
-              const accuracyA = progressA ? progressA.proficiency : 100;
-              const accuracyB = progressB ? progressB.proficiency : 100;
-              
-              return accuracyA - accuracyB;
-            });
-          }
-        }
-        
-        if (filteredCharacters.length === 0) {
-          filteredCharacters = allCharacters;
-        }
-        
-        for (let i = filteredCharacters.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [filteredCharacters[i], filteredCharacters[j]] = [filteredCharacters[j], filteredCharacters[i]];
-        }
-        
-        setQuizCharacters(filteredCharacters);
-        
-        setSessionStats({
-          startTime: new Date(),
-          endTime: null,
-          totalAttempts: 0,
-          correctCount: 0,
-          incorrectCount: 0,
-          currentStreak: 0,
-          longestStreak: 0,
-          accuracy: 0,
-          characterResults: [],
-        });
-        
-        setVisibleCharacterIndex(0);
-        
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      } catch (error) {
-        console.error('Error initializing quiz:', error);
-      }
+
+  const characters = kanaType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
+
+  const getRandomCharacter = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    const char = characters[randomIndex];
+    return {
+      id: char.id,
+      character: char.character,
+      romaji: char.romaji,
+      type: kanaType,
+      quizMode: 'recognition' as const
     };
+  }, [characters, kanaType]);
+
+  const generateOptions = useCallback((correctRomaji: string) => {
+    const allRomaji = [...new Set(characters.map(c => c.romaji))];
+    const incorrectOptions = allRomaji.filter(r => r !== correctRomaji);
     
-    initializeQuiz();
+    const shuffledIncorrect = incorrectOptions.sort(() => Math.random() - 0.5);
+    const selectedIncorrect = shuffledIncorrect.slice(0, 3);
     
-    if (user) {
-      const batchUpdateProgress = async () => {
-        if (pendingProgressUpdates.length > 0) {
-          console.log(`Batch updating ${pendingProgressUpdates.length} progress items`);
-          
-          const updates = [...pendingProgressUpdates];
-          setPendingProgressUpdates([]);
-          
-          try {
-            await Promise.all(updates.map(update => 
-              quizService.updateKanaProgress(user.id, update.characterId, update.isCorrect)
-            ));
-          } catch (error) {
-            console.error('Error batch updating progress:', error);
-            setPendingProgressUpdates(prev => [...prev, ...updates]);
-          }
-        }
-      };
-      
-      updateTimerRef.current = window.setInterval(batchUpdateProgress, 5000);
-      
-      return () => {
-        if (updateTimerRef.current) {
-          clearInterval(updateTimerRef.current);
-        }
-        
-        batchUpdateProgress();
-      };
-    }
-  }, [kanaType, characterSets, settings, user]);
-  
+    const allOptions = [correctRomaji, ...selectedIncorrect];
+    return allOptions.sort(() => Math.random() - 0.5);
+  }, [characters]);
+
   useEffect(() => {
-    maintainInputFocus();
-    
-    if (isMobile) {
-      focusTimerRef.current = window.setInterval(() => {
-        maintainInputFocus();
-      }, 300);
-    }
-    
-    const handleClick = () => maintainInputFocus();
-    const handleFocus = () => maintainInputFocus();
-    const handleTouchStart = () => maintainInputFocus();
-    
-    document.addEventListener('click', handleClick);
-    window.addEventListener('focus', handleFocus);
-    
-    if (isMobile) {
-      document.addEventListener('touchstart', handleTouchStart);
-      document.addEventListener('touchend', maintainInputFocus);
-    }
-    
-    return () => {
-      document.removeEventListener('click', handleClick);
-      window.removeEventListener('focus', handleFocus);
-      
-      if (isMobile) {
-        document.removeEventListener('touchstart', handleTouchStart);
-        document.addEventListener('touchend', maintainInputFocus);
-      }
-      
-      if (focusTimerRef.current) {
-        clearInterval(focusTimerRef.current);
-      }
-      
-      if (updateTimerRef.current) {
-        clearInterval(updateTimerRef.current);
-      }
-      
-      if (user && pendingProgressUpdates.length > 0) {
-        Promise.all(pendingProgressUpdates.map(update => 
-          quizService.updateKanaProgress(user.id, update.characterId, update.isCorrect)
-        )).catch(error => {
-          console.error('Error batch updating progress:', error);
-        });
-      }
-    };
-  }, [isPaused, isTransitioning, user, pendingProgressUpdates, isMobile]);
-  
-  useEffect(() => {
-    if (currentCharacterIndex !== visibleCharacterIndex && quizCharacters.length > 0) {
-      if (transitionState === 'idle') {
-        setIsTransitioning(true);
-        
-        setTransitionState('fadeOut');
-        
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-        
-        setTimeout(() => {
-          setVisibleCharacterIndex(currentCharacterIndex);
-          setTransitionState('fadeIn');
-          
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-          
-          setTimeout(() => {
-            setTransitionState('idle');
-            setIsTransitioning(false);
-            
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          }, 300);
-        }, 300);
-      }
-    }
-  }, [currentCharacterIndex, quizCharacters, transitionState, visibleCharacterIndex]);
-  
-  useEffect(() => {
-    if (!isPaused && !isTransitioning) {
-      setTimeout(maintainInputFocus, 50);
-    }
-  }, [currentCharacterIndex, feedback, isPaused, isTransitioning]);
-  
-  useEffect(() => {
-    if (isMobile && inputRef.current && !isPaused && !isTransitioning) {
-      const mobileFocusInterval = setInterval(() => {
-        if (document.activeElement !== inputRef.current) {
-          inputRef.current.focus();
-          if (isMobile && inputRef.current) {
-            inputRef.current.click();
-          }
-        }
-      }, 500);
-      
-      return () => clearInterval(mobileFocusInterval);
-    }
-  }, [isMobile, isPaused, isTransitioning]);
-  
-  const currentCharacter = quizCharacters[visibleCharacterIndex];
-  
-  const moveToNextCharacter = () => {
-    if (currentCharacterIndex >= quizCharacters.length - 1) {
-      handleEndQuiz();
-      return;
-    }
-    
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-    
-    setIsTransitioning(true);
-    
-    setInput('');
-    setFeedback('none');
-    setShowHint(false);
-    setAttemptCount(0);
-    
-    requestAnimationFrame(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    });
-    
-    setTimeout(() => {
-      setCurrentCharacterIndex(prevIndex => prevIndex + 1);
-    }, 100);
-  };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isTransitioning || isPaused) return;
-    
-    const newInput = e.target.value;
-    setInput(newInput);
-    
-    if (settings.speedMode && currentCharacter && !isPaused && !isTransitioning) {
-      const userAnswer = newInput.trim().toLowerCase();
-      const correctAnswer = currentCharacter.romaji.toLowerCase();
-      
-      if (userAnswer === correctAnswer) {
-        handleCorrectAnswer();
-        return;
-      }
-      
-      if (userAnswer.length === correctAnswer.length && userAnswer !== correctAnswer) {
-        handleWrongAnswer();
-        return;
-      }
-      
-      if (userAnswer.length > correctAnswer.length) {
-        handleWrongAnswer();
-        return;
-      }
-      
-      if (userAnswer.length >= 2 && !correctAnswer.startsWith(userAnswer)) {
-        handleWrongAnswer();
-        return;
-      }
-    }
-  };
-  
-  const handleCorrectAnswer = () => {
-    if (!currentCharacter || isPaused || isTransitioning) return;
-    
-    setIsTransitioning(true);
-    
-    const newAttemptCount = attemptCount + 1;
-    setAttemptCount(newAttemptCount);
-    
-    const newStats = { ...sessionStats };
-    newStats.totalAttempts++;
-    newStats.correctCount++;
-    newStats.currentStreak++;
-    
-    if (newStats.currentStreak > newStats.longestStreak) {
-      newStats.longestStreak = newStats.currentStreak;
-    }
-    
-    if (settings.audioFeedback && correctAudioRef.current) {
-      correctAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
-    }
-    
+    const char = getRandomCharacter();
+    setCurrentCharacter(char);
+    setOptions(generateOptions(char.romaji));
+  }, [getRandomCharacter, generateOptions]);
+
+  const handleAnswer = (answer: string) => {
+    if (!currentCharacter || selectedAnswer) return;
+
+    setSelectedAnswer(answer);
+    const correct = answer === currentCharacter.romaji;
+    setIsCorrect(correct);
+
     const newResult: CharacterResult = {
       characterId: currentCharacter.id,
       character: currentCharacter.character,
       romaji: currentCharacter.romaji,
-      isCorrect: true,
-      attemptCount: newAttemptCount,
+      isCorrect: correct,
+      attemptCount: 1
     };
-    
-    newStats.characterResults = [...newStats.characterResults, newResult];
-    
-    if (user) {
-      setPendingProgressUpdates(prev => [...prev, {
-        characterId: currentCharacter.id,
-        isCorrect: true
-      }]);
-    }
-    
-    newStats.accuracy = Math.round((newStats.correctCount / Math.max(newStats.correctCount + newStats.incorrectCount, 1)) * 100);
-    setSessionStats(newStats);
-    setFeedback('correct');
-    
+
+    setSessionStats(prev => {
+      const newStreak = correct ? prev.currentStreak + 1 : 0;
+      const newStats = {
+        ...prev,
+        totalAttempts: prev.totalAttempts + 1,
+        correctCount: correct ? prev.correctCount + 1 : prev.correctCount,
+        incorrectCount: correct ? prev.incorrectCount : prev.incorrectCount + 1,
+        currentStreak: newStreak,
+        longestStreak: Math.max(prev.longestStreak, newStreak),
+        characterResults: [...prev.characterResults, newResult]
+      };
+      
+      newStats.accuracy = newStats.totalAttempts > 0 
+        ? Math.round((newStats.correctCount / newStats.totalAttempts) * 100)
+        : 0;
+
+      return newStats;
+    });
+
+    // Auto-advance after 1.5 seconds
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-      
-      if (currentCharacterIndex >= quizCharacters.length - 1) {
-        handleEndQuiz();
-      } else {
-        moveToNextCharacter();
-      }
-    }, 800);
+      const nextChar = getRandomCharacter();
+      setCurrentCharacter(nextChar);
+      setOptions(generateOptions(nextChar.romaji));
+      setSelectedAnswer(null);
+      setIsCorrect(null);
+    }, 1500);
   };
-  
-  const handleWrongAnswer = () => {
-    if (!currentCharacter || isPaused || isTransitioning) return;
-    
-    setIsTransitioning(true);
-    
-    const newAttemptCount = attemptCount + 1;
-    setAttemptCount(newAttemptCount);
-    
-    const newStats = { ...sessionStats };
-    newStats.totalAttempts++;
-    newStats.incorrectCount++;
-    newStats.currentStreak = 0;
-    
-    if (settings.audioFeedback && incorrectAudioRef.current) {
-      incorrectAudioRef.current.play().catch(err => console.error('Failed to play audio:', err));
-    }
-    
-    setFeedback('incorrect');
-    
-    if (settings.speedMode && newAttemptCount >= 3) {
-      setShowHint(true);
-      
-      const newResult: CharacterResult = {
-        characterId: currentCharacter.id,
-        character: currentCharacter.character,
-        romaji: currentCharacter.romaji,
-        isCorrect: false,
-        attemptCount: newAttemptCount,
-      };
-      
-      newStats.characterResults = [...newStats.characterResults, newResult];
-      
-      if (user) {
-        setPendingProgressUpdates(prev => [...prev, {
-          characterId: currentCharacter.id,
-          isCorrect: false
-        }]);
-      }
-      
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-        
-        if (currentCharacterIndex >= quizCharacters.length - 1) {
-          handleEndQuiz();
-        } else {
-          moveToNextCharacter();
-        }
-      }, 3000);
-    } else if (!settings.speedMode && newAttemptCount >= 3) {
-      setShowHint(true);
-      
-      const newResult: CharacterResult = {
-        characterId: currentCharacter.id,
-        character: currentCharacter.character,
-        romaji: currentCharacter.romaji,
-        isCorrect: false,
-        attemptCount: newAttemptCount,
-      };
-      
-      newStats.characterResults = [...newStats.characterResults, newResult];
-      
-      if (user) {
-        setPendingProgressUpdates(prev => [...prev, {
-          characterId: currentCharacter.id,
-          isCorrect: false
-        }]);
-      }
-      
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-        
-        if (currentCharacterIndex >= quizCharacters.length - 1) {
-          handleEndQuiz();
-        } else {
-          moveToNextCharacter();
-        }
-      }, 3000);
-    } else {
-      setTimeout(() => {
-        setInput('');
-        setFeedback('none');
-        setIsTransitioning(false);
-        
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 800);
-    }
-    
-    newStats.accuracy = Math.round((newStats.correctCount / Math.max(newStats.correctCount + newStats.incorrectCount, 1)) * 100);
-    setSessionStats(newStats);
-  };
-  
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    if (!currentCharacter || input.trim() === '' || isPaused || isTransitioning) return;
-    
-    const userAnswer = input.trim().toLowerCase();
-    const correctAnswer = currentCharacter.romaji.toLowerCase();
-    const isCorrect = userAnswer === correctAnswer;
-    
-    if (isCorrect) {
-      handleCorrectAnswer();
-    } else {
-      handleWrongAnswer();
-    }
-  };
-  
-  const handleEndQuiz = async () => {
-    setIsTransitioning(true);
-    
-    const endTime = new Date();
+
+  const handleEndQuiz = () => {
     const finalStats = {
       ...sessionStats,
-      endTime,
-      durationSeconds: Math.round((endTime.getTime() - sessionStats.startTime.getTime()) / 1000),
+      endTime: new Date(),
+      durationSeconds: Math.round((new Date().getTime() - sessionStats.startTime.getTime()) / 1000)
     };
-    
-    finalStats.accuracy = Math.round((finalStats.correctCount / Math.max(finalStats.correctCount + finalStats.incorrectCount, 1)) * 100);
-    
-    if (user && pendingProgressUpdates.length > 0) {
-      try {
-        await Promise.all(pendingProgressUpdates.map(update => 
-          quizService.updateKanaProgress(user.id, update.characterId, update.isCorrect)
-        ));
-        
-        setPendingProgressUpdates([]);
-      } catch (error) {
-        console.error('Error updating progress before ending quiz:', error);
-      }
-    }
-    
-    if (updateTimerRef.current) {
-      clearInterval(updateTimerRef.current);
-    }
-    
-    if (user) {
-      try {
-        await quizService.recordQuizSession(user.id, {
-          kanaType,
-          characterIds: quizCharacters.map(char => char.id),
-          startTime: sessionStats.startTime,
-          endTime,
-          correctCount: finalStats.correctCount,
-          totalAttempts: finalStats.totalAttempts,
-          streak: finalStats.longestStreak
-        });
-      } catch (error) {
-        console.error('Error recording quiz session:', error);
-      }
-    }
-    
-    console.log("Ending quiz with results:", finalStats);
-    onEndQuiz(finalStats);
+    onComplete(finalStats);
   };
-  
-  const togglePause = () => {
-    setIsPaused(!isPaused);
-    
-    if (isPaused && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
-    }
-  };
-  
-  const characterSizeMap = {
-    small: 'md',
-    medium: 'lg',
-    large: 'xl',
-  } as const;
-  
-  const getSimilarCharacters = () => {
-    if (!currentCharacter) return [];
-    
-    return quizCharacters
-      .filter(char => 
-        char.id !== currentCharacter.id && 
-        (char.romaji[0] === currentCharacter.romaji[0] || 
-         Math.abs(char.romaji.length - currentCharacter.romaji.length) <= 1)
-      )
-      .slice(0, 3);
-  };
-  
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!isPaused && !isTransitioning) {
-      const refocusDelay = isMobile ? 20 : 50;
-      setTimeout(maintainInputFocus, refocusDelay);
-      
-      if (isMobile && inputRef.current) {
-        inputRef.current.click();
-      }
-    }
-  };
-  
-  if (!currentCharacter || quizCharacters.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
-      </div>
-    );
-  }
-  
+
+  if (!currentCharacter) return null;
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={togglePause}
-            className="text-xs sm:text-sm"
-          >
-            {isPaused ? <Play size={16} /> : <Pause size={16} />}
-            {isPaused ? 'Resume' : 'Pause'}
-          </Button>
-        </div>
-        
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {sessionStats.correctCount} / {quizCharacters.length}
-            </span>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Progress Header */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">
+              {kanaType === 'hiragana' ? 'Hiragana' : 'Katakana'} Quiz
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={handleEndQuiz}>
+              End Quiz
+            </Button>
           </div>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleEndQuiz}
-          className="text-vermilion text-xs sm:text-sm border-vermilion/50 hover:bg-vermilion/10"
-        >
-          End Quiz
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{sessionStats.correctCount}</div>
+              <div className="text-xs text-muted-foreground">Correct</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-red-600">{sessionStats.incorrectCount}</div>
+              <div className="text-xs text-muted-foreground">Incorrect</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-600">{sessionStats.accuracy}%</div>
+              <div className="text-xs text-muted-foreground">Accuracy</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-orange-600">{sessionStats.currentStreak}</div>
+              <div className="text-xs text-muted-foreground">Streak</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Question Card */}
+      <Card>
+        <CardContent className="text-center py-8 space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-lg text-muted-foreground">What is the romaji for:</h3>
+            <JapaneseCharacter 
+              character={currentCharacter.character}
+              size="xl"
+              color={kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'}
+              className="text-6xl"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+            {options.map((option) => (
+              <Button
+                key={option}
+                variant="outline"
+                className={cn(
+                  "h-12 text-lg transition-all duration-200",
+                  selectedAnswer === option && isCorrect === true && "bg-green-100 border-green-400 text-green-700",
+                  selectedAnswer === option && isCorrect === false && "bg-red-100 border-red-400 text-red-700",
+                  selectedAnswer && option === currentCharacter.romaji && selectedAnswer !== option && "bg-green-100 border-green-400 text-green-700"
+                )}
+                onClick={() => handleAnswer(option)}
+                disabled={selectedAnswer !== null}
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+
+          {/* Feedback */}
+          {selectedAnswer && (
+            <div className={cn(
+              "p-4 rounded-lg animate-fade-in",
+              isCorrect ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+            )}>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-lg font-semibold">
+                  {isCorrect ? "✅ Correct!" : "❌ Incorrect"}
+                </span>
+              </div>
+              <div className="text-sm mt-1">
+                {currentCharacter.character} = {currentCharacter.romaji}
+                {!isCorrect && ` (You selected: ${selectedAnswer})`}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Cancel Button */}
+      <div className="text-center">
+        <Button variant="ghost" onClick={onCancel} className="text-muted-foreground">
+          Back to Setup
         </Button>
       </div>
-      
-      <div className="grid grid-cols-1 gap-4">
-        <Card 
-          className={`overflow-hidden border-2 transition-colors duration-150 ${
-            feedback === 'correct' ? 'border-matcha bg-matcha/5' : 
-            feedback === 'incorrect' ? 'border-vermilion bg-vermilion/5' : 
-            kanaType === 'hiragana' ? 'border-matcha/40' : 'border-vermilion/40'
-          }`}
-          onClick={handleCardTouch}
-          onTouchStart={handleCardTouch}
-        >
-          <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
-            <div className="flex flex-col items-center">
-              <div className="flex justify-center items-center mb-4 sm:mb-6 relative">
-                <div className="absolute top-0 -mt-8 sm:-mt-10 w-full max-w-xs">
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-indigo">{sessionStats.correctCount} correct</span>
-                    <span className="text-muted-foreground">{Math.round((sessionStats.correctCount / Math.max(sessionStats.correctCount + sessionStats.incorrectCount, 1)) * 100)}% accuracy</span>
-                  </div>
-                  <Progress 
-                    value={(sessionStats.currentStreak / 10) * 100} 
-                    className={`h-1 bg-gray-100 ${kanaType === 'hiragana' ? 'bg-matcha' : 'bg-vermilion'}`}
-                  />
-                </div>
-                
-                <div className={`flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 rounded-full transition-all duration-300 ${
-                  feedback === 'correct' ? 'bg-matcha/10' : 
-                  feedback === 'incorrect' ? 'bg-vermilion/10' : 
-                  kanaType === 'hiragana' ? 'bg-matcha/5' : 'bg-vermilion/5'
-                } ${
-                  transitionState === 'fadeOut' ? 'opacity-0 scale-95' :
-                  transitionState === 'fadeIn' ? 'opacity-100 scale-100' : ''
-                }`}>
-                  <JapaneseCharacter 
-                    character={currentCharacter.character} 
-                    size={characterSizeMap[settings.characterSize] || 'xl'} 
-                    color={feedback === 'correct' ? 'text-matcha' : 
-                           feedback === 'incorrect' ? 'text-vermilion' : 
-                           kanaType === 'hiragana' ? 'text-matcha' : 'text-vermilion'}
-                    animated={transitionState === 'fadeIn'}
-                  />
-                </div>
-                
-                {feedback !== 'none' && (
-                  <div className="absolute top-0 right-0 -mt-4 -mr-4 animate-fade-in">
-                    {feedback === 'correct' ? (
-                      <div className="bg-matcha text-white rounded-full p-1 sm:p-2">
-                        <Check size={16} className="sm:w-5 sm:h-5" />
-                      </div>
-                    ) : (
-                      <div className="bg-vermilion text-white rounded-full p-1 sm:p-2">
-                        <X size={16} className="sm:w-5 sm:h-5" />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              {sessionStats.currentStreak > 0 && (
-                <div className="mb-3 sm:mb-4">
-                  <span className="text-xs sm:text-sm font-medium text-indigo">
-                    Streak: {sessionStats.currentStreak}
-                    {sessionStats.currentStreak >= 5 && ' 🔥'}
-                  </span>
-                </div>
-              )}
-              
-              {showHint && (
-                <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-indigo/5 border border-indigo/20 rounded-md w-full max-w-md animate-fade-in">
-                  <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-                    <AlertTriangle size={14} className="text-indigo sm:w-4 sm:h-4" />
-                    <span className="text-xs sm:text-sm font-medium">The correct answer is:</span>
-                  </div>
-                  <div className="flex justify-center items-center gap-2 sm:gap-4">
-                    <span className="text-base sm:text-lg font-bold japanese-text">{currentCharacter.character}</span>
-                    <span className="text-base sm:text-lg">=</span>
-                    <span className="text-base sm:text-lg font-bold">{currentCharacter.romaji}</span>
-                  </div>
-                  
-                  {getSimilarCharacters().length > 0 && (
-                    <div className="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-indigo/10">
-                      <span className="text-2xs sm:text-xs text-muted-foreground">Similar characters:</span>
-                      <div className="flex justify-center gap-3 sm:gap-4 mt-1">
-                        {getSimilarCharacters().map(char => (
-                          <div key={char.id} className="text-center">
-                            <div className="text-sm sm:text-md japanese-text">{char.character}</div>
-                            <div className="text-2xs sm:text-xs">{char.romaji}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <form onSubmit={handleSubmit} className="w-full max-w-md">
-                <div className="flex items-center gap-2">
-                  <MobileOptimizedInput
-                    ref={inputRef}
-                    type="text"
-                    placeholder="Enter romaji..."
-                    value={input}
-                    onChange={handleInputChange}
-                    onBlur={handleInputBlur}
-                    className={`text-center text-base sm:text-lg ${isPaused || isTransitioning ? 'bg-gray-100' : ''} 
-                      border-2 ${kanaType === 'hiragana' ? 'focus:border-matcha' : 'focus:border-vermilion'}`}
-                    disabled={isPaused || showHint}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    autoFocus={true}
-                    maintainFocus={true}
-                    inputMode="text"
-                    style={{ fontSize: '16px' }}
-                  />
-                  
-                  {!settings.speedMode && (
-                    <Button 
-                      type="submit" 
-                      disabled={isPaused || showHint || input.trim() === '' || isTransitioning}
-                      className={kanaType === 'hiragana' ? 'bg-matcha hover:bg-matcha/90' : 'bg-vermilion hover:bg-vermilion/90'}
-                    >
-                      Check
-                    </Button>
-                  )}
-                </div>
-              </form>
-              
-              {!settings.speedMode && attemptCount > 0 && attemptCount < 3 && feedback === 'none' && (
-                <div className="mt-2">
-                  <span className="text-xs sm:text-sm text-muted-foreground">
-                    Attempt {attemptCount + 1} of 3
-                  </span>
-                </div>
-              )}
-              
-              <div className="mt-3 sm:mt-4 flex justify-center gap-4">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (isTransitioning) return;
-                    setIsTransitioning(true);
-                    setInput('');
-                    setFeedback('none');
-                    setShowHint(false);
-                    setAttemptCount(0);
-                    
-                    requestAnimationFrame(() => {
-                      if (inputRef.current) {
-                        inputRef.current.focus();
-                      }
-                    });
-                    
-                    setTimeout(() => {
-                      moveToNextCharacter();
-                    }, 100);
-                  }}
-                  disabled={isPaused || isTransitioning}
-                  className="text-xs sm:text-sm border-indigo/30 hover:bg-indigo/5"
-                >
-                  <SkipForward size={14} className="mr-1 sm:w-4 sm:h-4" />
-                  Skip
-                </Button>
-              </div>
-              
-              {settings.speedMode && (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Speed Mode: Type the correct romaji to advance automatically
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <audio ref={correctAudioRef} src="/sounds/correct.mp3" className="hidden" />
-      <audio ref={incorrectAudioRef} src="/sounds/incorrect.mp3" className="hidden" />
     </div>
   );
 };

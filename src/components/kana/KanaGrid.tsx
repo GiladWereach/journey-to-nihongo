@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { KanaCharacter, UserKanaProgress } from '@/types/kana';
-import { kanaService } from '@/services/kanaModules';
+import { kanaService } from '@/services/kanaService';
 import JapaneseCharacter from '../ui/JapaneseCharacter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '@/lib/utils';

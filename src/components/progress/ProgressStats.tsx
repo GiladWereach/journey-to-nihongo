@@ -36,7 +36,7 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
       try {
         const { data, error } = await supabase
           .from('user_settings')
-          .select('daily_goal_minutes, weekly_goal_days')
+          .select('quiz_auto_advance, show_stroke_order')
           .eq('id', user.id)
           .single();
           
@@ -45,15 +45,10 @@ const ProgressStats: React.FC<ProgressStatsProps> = ({
           return;
         }
         
-        if (data) {
-          // Extract user's goal settings
-          const extractedDailyGoal = data.daily_goal_minutes || 15;
-          const extractedWeeklyDays = data.weekly_goal_days || 7;
-          
-          setDailyGoalMinutes(extractedDailyGoal);
-          setWeeklyGoalDays(extractedWeeklyDays);
-          setWeeklyGoalMinutes(extractedDailyGoal * extractedWeeklyDays);
-        }
+        // Use default values since the goal columns were removed
+        setDailyGoalMinutes(15);
+        setWeeklyGoalDays(7);
+        setWeeklyGoalMinutes(15 * 7);
       } catch (error) {
         console.error('Error in fetchUserSettings:', error);
       } finally {

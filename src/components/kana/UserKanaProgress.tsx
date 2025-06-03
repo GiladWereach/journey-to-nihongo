@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,8 +6,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { KanaCharacter } from '@/types/kana';
-import { kanaProgressService } from '@/services/kanaProgressService';
+import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
+import { supabase } from '@/integrations/supabase/client';
 
 // Import the type with a different name to avoid naming conflict
 import type { UserKanaProgress as UserKanaProgressType } from '@/types/kana';
@@ -32,9 +34,13 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
       
       setLoading(true);
       try {
-        // Fetch user progress data
-        const progress = await kanaProgressService.getUserProgressAll(user.id);
-        setProgressData(progress);
+        // Fetch user progress data using the new service
+        const progress = await characterProgressService.getCharacterProgress(user.id);
+        const progressMap = new Map();
+        progress.forEach(p => {
+          progressMap.set(p.character_id, p);
+        });
+        setProgressData(progressMap);
         
         // Get kana characters by type
         const characters = kanaService.getKanaByType(kanaType);
@@ -170,19 +176,41 @@ const UserKanaProgress: React.FC = () => {
       if (!user) return;
       
       try {
-        const hiraganaStats = await kanaProgressService.getKanaProficiencyStats(user.id, 'hiragana');
-        const katakanaStats = await kanaProgressService.getKanaProficiencyStats(user.id, 'katakana');
+        // Get all character progress
+        const allProgress = await characterProgressService.getCharacterProgress(user.id);
+        
+        // Get all characters
+        const hiraganaChars = kanaService.getKanaByType('hiragana');
+        const katakanaChars = kanaService.getKanaByType('katakana');
+        
+        // Calculate hiragana stats
+        const hiraganaProgress = allProgress.filter(p => 
+          hiraganaChars.some(c => c.id === p.character_id)
+        );
+        const hiraganaLearned = hiraganaProgress.filter(p => p.proficiency > 0).length;
+        const hiraganaAvg = hiraganaProgress.length > 0 
+          ? hiraganaProgress.reduce((sum, p) => sum + p.proficiency, 0) / hiraganaProgress.length 
+          : 0;
+        
+        // Calculate katakana stats
+        const katakanaProgress = allProgress.filter(p => 
+          katakanaChars.some(c => c.id === p.character_id)
+        );
+        const katakanaLearned = katakanaProgress.filter(p => p.proficiency > 0).length;
+        const katakanaAvg = katakanaProgress.length > 0 
+          ? katakanaProgress.reduce((sum, p) => sum + p.proficiency, 0) / katakanaProgress.length 
+          : 0;
         
         setStats({
           hiragana: { 
-            learned: hiraganaStats.learned, 
-            total: hiraganaStats.total, 
-            avgProficiency: hiraganaStats.avgProficiency 
+            learned: hiraganaLearned, 
+            total: hiraganaChars.length, 
+            avgProficiency: hiraganaAvg 
           },
           katakana: { 
-            learned: katakanaStats.learned, 
-            total: katakanaStats.total, 
-            avgProficiency: katakanaStats.avgProficiency 
+            learned: katakanaLearned, 
+            total: katakanaChars.length, 
+            avgProficiency: katakanaAvg 
           }
         });
       } catch (error) {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { KanaCharacter } from '@/types/kana';
 import KanaCanvas from './KanaCanvas';
@@ -8,12 +9,9 @@ import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabaseClient } from '@/lib/supabase';
-import { 
-  kanaLearningService, 
-  updateKanaCharacterProgress, 
-  completeKanaLearningSession 
-} from '@/services/kanaModules';
+import { supabase } from '@/integrations/supabase/client';
+import { characterProgressService } from '@/services/characterProgressService';
+import { quizSessionService } from '@/services/quizSessionService';
 
 interface WritingPracticeExerciseProps {
   kanaList: KanaCharacter[];
@@ -43,12 +41,7 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
       const createSession = async () => {
         try {
           console.log("Creating writing practice session for:", kanaType);
-          const characterIds = kanaList.map(k => k.id);
-          const session = await kanaLearningService.startKanaLearningSession(
-            user.id, 
-            kanaType, 
-            characterIds
-          );
+          const session = await quizSessionService.startSession(user.id, kanaType);
           
           if (session) {
             console.log("Created writing practice session:", session.id);
@@ -75,82 +68,10 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     try {
       console.log("Updating progress for character:", currentKana.id);
       
-      const { data: existingProgress, error: progressError } = await supabaseClient
-        .from('user_kana_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('character_id', currentKana.id)
-        .single();
-      
-      if (progressError && progressError.code !== 'PGRST116') {
-        console.error('Error checking for existing progress:', progressError);
-      }
-      
-      if (existingProgress) {
-        const newProficiency = Math.min(existingProgress.proficiency + 5, 100);
-        const newTotalPractice = existingProgress.total_practice_count + 1;
-        const newConsecutiveCorrect = existingProgress.consecutive_correct + 1;
-        let newMasteryLevel = existingProgress.mastery_level || 0;
-        
-        if (newConsecutiveCorrect >= 5 && newMasteryLevel < 3) {
-          newMasteryLevel = Math.min(3, newMasteryLevel + 1);
-        }
-        
-        console.log("Updating existing progress:", {
-          id: existingProgress.id,
-          new_proficiency: newProficiency,
-          new_total_practice: newTotalPractice,
-          new_mastery_level: newMasteryLevel,
-          new_consecutive_correct: newConsecutiveCorrect
-        });
-        
-        const { error: updateError } = await supabaseClient
-          .from('user_kana_progress')
-          .update({
-            proficiency: newProficiency,
-            total_practice_count: newTotalPractice,
-            consecutive_correct: newConsecutiveCorrect,
-            mastery_level: newMasteryLevel,
-            last_practiced: new Date().toISOString(),
-            review_due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-          })
-          .eq('id', existingProgress.id);
-          
-        if (updateError) {
-          console.error('Error updating progress:', updateError);
-          throw updateError;
-        }
-      } else {
-        console.log("Creating new progress for character:", currentKana.id);
-        
-        const { error: insertError } = await supabaseClient
-          .from('user_kana_progress')
-          .insert({
-            user_id: user.id,
-            character_id: currentKana.id,
-            proficiency: 20,
-            total_practice_count: 1,
-            consecutive_correct: 1,
-            mastery_level: 0,
-            last_practiced: new Date().toISOString(),
-            review_due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-            mistake_count: 0
-          });
-          
-        if (insertError) {
-          console.error('Error creating progress:', insertError);
-          throw insertError;
-        }
-      }
+      await characterProgressService.updateCharacterProgress(user.id, currentKana.id, true);
       
       if (!charactersCompleted.includes(currentKana.id)) {
         setCharactersCompleted([...charactersCompleted, currentKana.id]);
-      }
-      
-      try {
-        await updateKanaCharacterProgress(user.id, currentKana.id, true);
-      } catch (error) {
-        console.error("Error updating kana character progress:", error);
       }
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -182,7 +103,7 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     if (currentIndex < kanaList.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      if (user && charactersCompleted.length > 0) {
+      if (user && charactersCompleted.length > 0 && sessionId) {
         completeSession();
       }
       
@@ -200,45 +121,10 @@ const WritingPracticeExercise: React.FC<WritingPracticeExerciseProps> = ({
     if (!user || !sessionId) return;
     
     try {
-      console.log("Completing writing practice session with characters:", charactersCompleted);
+      console.log("Completing writing practice session");
       
-      const endTime = new Date();
-      const durationMinutes = Math.round((endTime.getTime() - sessionStartTime.getTime()) / 60000);
-      
-      const { error } = await supabaseClient
-        .from('kana_learning_sessions')
-        .update({
-          user_id: user.id,
-          kana_type: kanaType,
-          characters_studied: charactersCompleted,
-          completed: true,
-          end_time: endTime.toISOString(),
-          accuracy: 100
-        })
-        .eq('id', sessionId);
-        
-      if (error) {
-        console.error('Error completing writing practice session:', error);
-        throw error;
-      }
-      
-      await kanaLearningService.recordStudyActivity(
-        user.id,
-        `${kanaType}_writing`,
-        charactersCompleted.map(id => id.split(':')[1]),
-        durationMinutes,
-        100
-      );
-      
-      await completeKanaLearningSession(
-        user.id,
-        sessionId,
-        {
-          accuracy: 100,
-          charactersStudied: charactersCompleted,
-          progressUpdates: charactersCompleted.map(id => ({ characterId: id, isCorrect: true }))
-        }
-      );
+      await quizSessionService.updateSession(sessionId, charactersCompleted.length, charactersCompleted.length);
+      await quizSessionService.endSession(sessionId);
       
       console.log("Successfully completed writing practice session");
     } catch (error) {
