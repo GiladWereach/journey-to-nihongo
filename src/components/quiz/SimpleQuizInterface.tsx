@@ -27,6 +27,7 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const characters = kanaType === 'hiragana' ? hiraganaCharacters : katakanaCharacters;
 
@@ -39,12 +40,10 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
     setCurrentCharacter(getRandomCharacter());
   }, [kanaType]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const processAnswer = async (isCorrect: boolean, inputValue: string) => {
+    if (isProcessing) return;
     
-    if (!currentCharacter || !userInput.trim()) return;
-
-    const isCorrect = userInput.trim().toLowerCase() === currentCharacter.romaji.toLowerCase();
+    setIsProcessing(true);
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     
     const newScore = {
@@ -59,12 +58,34 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
       await characterProgressService.updateCharacterProgress(user.id, currentCharacter.id, isCorrect);
     }
 
-    // Auto-advance after showing feedback
+    // Auto-advance after showing feedback (0.5 seconds for correct, 1.5 seconds for incorrect)
+    const feedbackDuration = isCorrect ? 500 : 1500;
+    
     setTimeout(() => {
       setCurrentCharacter(getRandomCharacter());
       setUserInput('');
       setFeedback(null);
-    }, 1500);
+      setIsProcessing(false);
+    }, feedbackDuration);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUserInput(value);
+
+    // Check if the input matches the correct answer (case insensitive)
+    if (currentCharacter && value.trim().toLowerCase() === currentCharacter.romaji.toLowerCase()) {
+      processAnswer(true, value);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentCharacter || !userInput.trim() || isProcessing) return;
+
+    const isCorrect = userInput.trim().toLowerCase() === currentCharacter.romaji.toLowerCase();
+    processAnswer(isCorrect, userInput);
   };
 
   if (!currentCharacter) return null;
@@ -110,14 +131,14 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Type the romaji..."
               className="text-center text-xl py-3"
-              disabled={feedback !== null}
+              disabled={feedback !== null || isProcessing}
               autoFocus
             />
             
-            {feedback === null && (
+            {feedback === null && !isProcessing && (
               <Button 
                 type="submit" 
                 className="w-full py-3 text-lg"
@@ -130,7 +151,7 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
 
           {/* Feedback */}
           {feedback && (
-            <div className={`p-4 rounded-lg ${
+            <div className={`p-4 rounded-lg transition-all duration-300 ${
               feedback === 'correct' 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'
@@ -154,7 +175,7 @@ const SimpleQuizInterface: React.FC<SimpleQuizInterfaceProps> = ({
 
       {/* End Quiz Button */}
       <div className="text-center">
-        <Button variant="outline" onClick={onEndQuiz}>
+        <Button variant="outline" onClick={onEndQuiz} disabled={isProcessing}>
           End Quiz
         </Button>
       </div>
