@@ -16,6 +16,8 @@ import ProgressStatsTab from '@/components/progress/tabs/ProgressStatsTab';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { KanaType, PracticeResult, UserKanaProgress } from '@/types/kana';
+import { hiraganaCharacters } from '@/data/hiraganaData';
+import { katakanaCharacters } from '@/data/katakanaData';
 import { cn } from '@/lib/utils';
 
 const KanaLearning = () => {
@@ -219,7 +221,11 @@ const KanaLearning = () => {
           </TabsList>
 
           <TabsContent value="intro" className="space-y-6">
-            <IntroTab />
+            <IntroTab 
+              user={user}
+              setActiveTab={setActiveTab}
+              renderProgressIndicator={renderProgressIndicator}
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -298,12 +304,18 @@ const KanaLearning = () => {
           </TabsContent>
 
           <TabsContent value="learn" className="space-y-6">
-            <KanaGrid />
+            <KanaGrid 
+              kanaList={[...hiraganaCharacters, ...katakanaCharacters]}
+              userProgress={userProgress}
+            />
           </TabsContent>
 
           <TabsContent value="practice" className="space-y-6">
             {practiceMode === 'selection' ? (
-              <PracticeSelectionTab onPracticeStart={handlePracticeStart} />
+              <PracticeSelectionTab 
+                onPracticeStart={handlePracticeStart}
+                onQuickQuizStart={handleQuickQuizStart}
+              />
             ) : (
               <PracticeSessionTab
                 practiceMode={practiceMode}
@@ -321,6 +333,7 @@ const KanaLearning = () => {
 
           <TabsContent value="stats" className={cn("space-y-6")}>
             <ProgressStatsTab
+              user={user}
               userProgress={userProgress}
               overallProgress={overallProgress}
               isLoadingProgress={isLoadingProgress}
@@ -329,6 +342,10 @@ const KanaLearning = () => {
               getMostRecentlyPracticed={getMostRecentlyPracticed}
               calculateProficiencyLevel={calculateProficiencyLevel}
               calculateMasteryPercentage={calculateMasteryPercentage}
+              hiragana={hiraganaCharacters}
+              katakana={katakanaCharacters}
+              allKana={[...hiraganaCharacters, ...katakanaCharacters]}
+              setActiveTab={setActiveTab}
             />
           </TabsContent>
         </Tabs>

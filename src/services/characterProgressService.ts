@@ -1,28 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-export interface CharacterProgress {
-  id: string;
-  user_id: string;
-  character_id: string;
-  proficiency: number;
-  mistake_count: number;
-  total_practice_count: number;
-  consecutive_correct: number;
-  last_practiced: string;
-  review_due: string;
-  mastery_level: number;
-}
+import { UserKanaProgress } from '@/types/kana';
 
 export const characterProgressService = {
-  // Update character progress when user answers
-  updateCharacterProgress: async (
-    userId: string, 
-    characterId: string, 
-    isCorrect: boolean
-  ): Promise<boolean> => {
+  // Update character progress
+  updateCharacterProgress: async (userId: string, characterId: string, isCorrect: boolean): Promise<boolean> => {
     try {
-      // Get existing progress or create new
       const { data: existing, error: fetchError } = await supabase
         .from('user_kana_progress')
         .select('*')
@@ -33,44 +16,36 @@ export const characterProgressService = {
       if (fetchError) throw fetchError;
 
       const now = new Date().toISOString();
-      const reviewDue = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
 
       if (existing) {
-        // Update existing progress
-        const newConsecutiveCorrect = isCorrect ? existing.consecutive_correct + 1 : 0;
-        const newProficiency = Math.min(100, Math.max(0, 
-          existing.proficiency + (isCorrect ? 5 : -3)
-        ));
+        const proficiencyChange = isCorrect ? 10 : -5;
+        const newProficiency = Math.min(Math.max((existing.proficiency || 0) + proficiencyChange, 0), 100);
 
         const { error: updateError } = await supabase
           .from('user_kana_progress')
           .update({
             proficiency: newProficiency,
+            total_practice_count: (existing.total_practice_count || 0) + 1,
             mistake_count: existing.mistake_count + (isCorrect ? 0 : 1),
-            total_practice_count: existing.total_practice_count + 1,
-            consecutive_correct: newConsecutiveCorrect,
+            consecutive_correct: isCorrect ? (existing.consecutive_correct || 0) + 1 : 0,
             last_practiced: now,
-            review_due: reviewDue,
-            mastery_level: Math.floor(newConsecutiveCorrect / 5) // Level up every 5 consecutive correct
+            updated_at: now
           })
           .eq('id', existing.id);
 
         if (updateError) throw updateError;
       } else {
-        // Create new progress entry
         const { error: insertError } = await supabase
           .from('user_kana_progress')
-          .insert([{
+          .insert({
             user_id: userId,
             character_id: characterId,
-            proficiency: isCorrect ? 5 : 0,
-            mistake_count: isCorrect ? 0 : 1,
+            proficiency: isCorrect ? 15 : 5,
             total_practice_count: 1,
+            mistake_count: isCorrect ? 0 : 1,
             consecutive_correct: isCorrect ? 1 : 0,
-            last_practiced: now,
-            review_due: reviewDue,
-            mastery_level: 0
-          }]);
+            last_practiced: now
+          });
 
         if (insertError) throw insertError;
       }
@@ -82,44 +57,109 @@ export const characterProgressService = {
     }
   },
 
-  // Get user's progress for specific characters
-  getCharacterProgress: async (userId: string, characterIds?: string[]): Promise<CharacterProgress[]> => {
+  // Get user progress for specific characters
+  getCharacterProgress: async (userId: string, characterIds?: string[]): Promise<UserKanaProgress[]> => {
     try {
       let query = supabase
         .from('user_kana_progress')
         .select('*')
         .eq('user_id', userId);
 
-      if (characterIds) {
+      if (characterIds && characterIds.length > 0) {
         query = query.in('character_id', characterIds);
       }
 
       const { data, error } = await query;
+
       if (error) throw error;
 
-      return data as CharacterProgress[] || [];
+      return data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        character_id: item.character_id,
+        proficiency: item.proficiency,
+        mistake_count: item.mistake_count,
+        total_practice_count: item.total_practice_count,
+        consecutive_correct: item.consecutive_correct,
+        mastery_level: item.mastery_level,
+        last_practiced: new Date(item.last_practiced),
+        review_due: new Date(item.review_due),
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
     } catch (error) {
       console.error('Error fetching character progress:', error);
       return [];
     }
   },
 
-  // Get characters that need review
-  getCharactersForReview: async (userId: string, limit: number = 10): Promise<CharacterProgress[]> => {
+  // Get all user progress
+  getUserProgress: async (userId: string): Promise<UserKanaProgress[]> => {
+    return characterProgressService.getCharacterProgress(userId);
+  },
+
+  // Get characters due for review
+  getCharactersForReview: async (userId: string, limit: number = 20): Promise<UserKanaProgress[]> => {
     try {
+      const now = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('user_kana_progress')
         .select('*')
         .eq('user_id', userId)
-        .lte('review_due', new Date().toISOString())
+        .lte('review_due', now)
         .order('review_due', { ascending: true })
         .limit(limit);
 
       if (error) throw error;
-      return data as CharacterProgress[] || [];
+
+      return data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        character_id: item.character_id,
+        proficiency: item.proficiency,
+        mistake_count: item.mistake_count,
+        total_practice_count: item.total_practice_count,
+        consecutive_correct: item.consecutive_correct,
+        mastery_level: item.mastery_level,
+        last_practiced: new Date(item.last_practiced),
+        review_due: new Date(item.review_due),
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
     } catch (error) {
       console.error('Error fetching characters for review:', error);
       return [];
     }
+  },
+
+  // Calculate overall proficiency for a kana type
+  calculateOverallProficiency: async (userId: string, kanaType: 'hiragana' | 'katakana' | 'all'): Promise<number> => {
+    try {
+      let query = supabase
+        .from('user_kana_progress')
+        .select('proficiency')
+        .eq('user_id', userId);
+
+      if (kanaType !== 'all') {
+        query = query.ilike('character_id', `${kanaType}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      if (!data || data.length === 0) return 0;
+
+      const totalProficiency = data.reduce((sum, item) => sum + (item.proficiency || 0), 0);
+      return Math.round(totalProficiency / data.length);
+    } catch (error) {
+      console.error('Error calculating overall proficiency:', error);
+      return 0;
+    }
+  },
+
+  // Update progress (alias for updateCharacterProgress)
+  updateProgress: async (userId: string, characterId: string, isCorrect: boolean): Promise<boolean> => {
+    return characterProgressService.updateCharacterProgress(userId, characterId, isCorrect);
   }
 };

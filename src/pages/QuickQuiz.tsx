@@ -8,7 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Home, RotateCcw } from 'lucide-react';
 import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
-import { KanaType, QuizSettings } from '@/types/quiz';
+import { KanaType } from '@/types/quiz';
+import { quizSessionService, QuizSession } from '@/services/quizSessionService';
 
 const QuickQuiz = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const QuickQuiz = () => {
 
   const [quizStarted, setQuizStarted] = useState(false);
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
+  const [session, setSession] = useState<QuizSession | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -30,21 +32,34 @@ const QuickQuiz = () => {
     }
   }, [user, navigate, location.state]);
 
-  const handleStartQuiz = (type: KanaType) => {
+  const handleStartQuiz = async (type: KanaType) => {
+    if (user) {
+      const newSession = await quizSessionService.startSession(user.id, type);
+      setSession(newSession);
+    }
+    
     setKanaType(type);
     setQuizStarted(true);
   };
 
-  const handleEndQuiz = () => {
+  const handleEndQuiz = async () => {
+    if (session) {
+      await quizSessionService.endSession(session.id);
+    }
     setQuizStarted(false);
+    setSession(null);
   };
 
   const handleGoHome = () => {
     navigate('/dashboard');
   };
 
-  const handleRestartQuiz = () => {
+  const handleRestartQuiz = async () => {
+    if (session) {
+      await quizSessionService.endSession(session.id);
+    }
     setQuizStarted(false);
+    setSession(null);
   };
 
   return (
@@ -71,6 +86,7 @@ const QuickQuiz = () => {
             <SimpleQuizInterface
               kanaType={kanaType}
               onEndQuiz={handleEndQuiz}
+              session={session}
             />
           )}
         </CardContent>
