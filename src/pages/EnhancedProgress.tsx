@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { KanaCharacter } from '@/types/kana';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
-import { enhancedCharacterProgressService, MasteryStats } from '@/services/enhancedCharacterProgressService';
+import { enhancedCharacterProgressService, MasteryStats, EnhancedUserKanaProgress } from '@/services/enhancedCharacterProgressService';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import TraditionalHeader from '@/components/ui/TraditionalHeader';
 import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
@@ -14,24 +15,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Target, Clock, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface EnhancedUserKanaProgress {
-  id: string;
-  user_id: string;
-  character_id: string;
-  proficiency: number;
-  mastery_level: number;
-  confidence_score: number;
-  total_practice_count: number;
-  correct_count: number;
-  mistake_count: number;
-  average_response_time: number;
-  sessions_practiced: number;
-  first_seen_at: string;
-  last_seen_at: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface KanaProgressGridProps {
   kanaType: 'hiragana' | 'katakana';
@@ -43,7 +26,7 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
   className 
 }) => {
   const { user } = useAuth();
-  const [progressData, setProgressData] = useState<Map<string, any>>(new Map());
+  const [progressData, setProgressData] = useState<Map<string, EnhancedUserKanaProgress>>(new Map());
   const [kanaCharacters, setKanaCharacters] = useState<KanaCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupedCharacters, setGroupedCharacters] = useState<{[key: string]: KanaCharacter[]}>({});
@@ -58,17 +41,12 @@ const EnhancedKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
         const localCharacters = kanaService.getKanaByType(kanaType);
         setKanaCharacters(localCharacters);
         
-        // Get progress data
-        const rawProgress = await characterProgressService.getCharacterProgress(user.id);
+        // Get enhanced progress data
+        const enhancedProgress = await enhancedCharacterProgressService.getEnhancedCharacterProgress(user.id);
         
         const progressMap = new Map();
-        rawProgress.forEach(p => {
-          progressMap.set(p.character_id, {
-            ...p,
-            confidence_score: p.confidence_score || 0,
-            average_response_time: p.average_response_time || 0,
-            sessions_practiced: p.sessions_practiced || 0
-          });
+        enhancedProgress.forEach(p => {
+          progressMap.set(p.character_id, p);
         });
         setProgressData(progressMap);
         
@@ -311,7 +289,7 @@ const EnhancedProgress: React.FC = () => {
       if (!user) return;
       
       try {
-        const allProgress = await characterProgressService.getCharacterProgress(user.id);
+        const allProgress = await enhancedCharacterProgressService.getEnhancedCharacterProgress(user.id);
         const hiraganaChars = kanaService.getKanaByType('hiragana');
         const katakanaChars = kanaService.getKanaByType('katakana');
         
