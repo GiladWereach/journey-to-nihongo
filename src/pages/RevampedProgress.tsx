@@ -212,8 +212,8 @@ const RevampedProgress: React.FC = () => {
 
   return (
     <TraditionalBackground>
-      <div className="min-h-screen p-4">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto px-4">
           {/* Traditional Header */}
           <TraditionalHeader 
             showStats={true}
