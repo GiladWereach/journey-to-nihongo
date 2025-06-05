@@ -13,7 +13,7 @@ interface MobileMenuProps {
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, setIsOpen, user, navigate }) => {
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -67,7 +67,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, setIsOpen, user, naviga
                 variant="ghost" 
                 className="w-full justify-start text-red-600"
                 onClick={() => {
-                  logout();
+                  signOut();
                   setIsOpen(false);
                 }}
               >
