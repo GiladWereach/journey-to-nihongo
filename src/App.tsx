@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DarkModeProvider } from '@/contexts/DarkModeContext';
@@ -31,71 +31,90 @@ import './App.css';
 
 const queryClient = new QueryClient();
 
+// Component to conditionally render navbar and layout
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  
+  // Pages that should not have the navbar and legacy layout
+  const noNavbarPages = ['/progress'];
+  const shouldHideNavbar = noNavbarPages.includes(location.pathname);
+  
+  if (shouldHideNavbar) {
+    return <>{children}</>;
+  }
+  
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <main className="flex-1">
+        {children}
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <DarkModeProvider>
           <Router>
-            <div className="min-h-screen bg-background text-foreground">
-              <Navbar />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/dashboard" element={
-                    <RequireAuth>
-                      <Dashboard />
-                    </RequireAuth>
-                  } />
-                  <Route path="/progress" element={
-                    <RequireAuth>
-                      <RevampedProgress />
-                    </RequireAuth>
-                  } />
-                  <Route path="/progress/legacy" element={
-                    <RequireAuth>
-                      <Progress />
-                    </RequireAuth>
-                  } />
-                  <Route path="/progress/enhanced" element={
-                    <RequireAuth>
-                      <EnhancedProgress />
-                    </RequireAuth>
-                  } />
-                  <Route path="/learn" element={<Learn />} />
-                  <Route path="/practice" element={<Practice />} />
-                  <Route path="/quiz" element={<Quiz />} />
-                  <Route path="/quick-quiz" element={<QuickQuiz />} />
-                  <Route path="/timed-challenge" element={<TimedChallenge />} />
-                  <Route path="/writing-practice" element={<WritingPractice />} />
-                  <Route path="/assessment" element={
-                    <RequireAuth>
-                      <Assessment />
-                    </RequireAuth>
-                  } />
-                  <Route path="/profile" element={
-                    <RequireAuth>
-                      <Profile />
-                    </RequireAuth>
-                  } />
-                  <Route path="/edit-profile" element={
-                    <RequireAuth>
-                      <EditProfile />
-                    </RequireAuth>
-                  } />
-                  <Route path="/achievements" element={
-                    <RequireAuth>
-                      <Achievements />
-                    </RequireAuth>
-                  } />
-                  <Route path="/kana-learning" element={<KanaLearning />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/dashboard" element={
+                  <RequireAuth>
+                    <Dashboard />
+                  </RequireAuth>
+                } />
+                <Route path="/progress" element={
+                  <RequireAuth>
+                    <RevampedProgress />
+                  </RequireAuth>
+                } />
+                <Route path="/progress/legacy" element={
+                  <RequireAuth>
+                    <Progress />
+                  </RequireAuth>
+                } />
+                <Route path="/progress/enhanced" element={
+                  <RequireAuth>
+                    <EnhancedProgress />
+                  </RequireAuth>
+                } />
+                <Route path="/learn" element={<Learn />} />
+                <Route path="/practice" element={<Practice />} />
+                <Route path="/quiz" element={<Quiz />} />
+                <Route path="/quick-quiz" element={<QuickQuiz />} />
+                <Route path="/timed-challenge" element={<TimedChallenge />} />
+                <Route path="/writing-practice" element={<WritingPractice />} />
+                <Route path="/assessment" element={
+                  <RequireAuth>
+                    <Assessment />
+                  </RequireAuth>
+                } />
+                <Route path="/profile" element={
+                  <RequireAuth>
+                    <Profile />
+                  </RequireAuth>
+                } />
+                <Route path="/edit-profile" element={
+                  <RequireAuth>
+                    <EditProfile />
+                  </RequireAuth>
+                } />
+                <Route path="/achievements" element={
+                  <RequireAuth>
+                    <Achievements />
+                  </RequireAuth>
+                } />
+                <Route path="/kana-learning" element={<KanaLearning />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppLayout>
             <Toaster />
           </Router>
         </DarkModeProvider>
