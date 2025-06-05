@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -13,7 +12,6 @@ import {
   TrendingUp, 
   Calendar,
   Award,
-  ChevronDown,
   ChevronUp,
   Target,
   BarChart3
@@ -21,6 +19,9 @@ import {
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
 import { cn } from '@/lib/utils';
+import { TraditionalBackground, TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
+import TraditionalHeader from '@/components/ui/TraditionalHeader';
+import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
 
 interface CharacterProgress {
   character: string;
@@ -148,72 +149,87 @@ const RevampedProgress: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'new': return 'bg-red-100 text-red-700 border-red-200';
-      case 'learning': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'learned': return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'new': return 'border-lantern-amber text-lantern-amber';
+      case 'learning': return 'border-lantern-warm text-lantern-warm';
+      case 'learned': return 'border-wood-light text-wood-light';
+      default: return 'border-paper-warm/40 text-paper-warm/60';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'new': return '🔴';
-      case 'learning': return '🟡';
-      case 'learned': return '🟢';
-      default: return '⚪';
+      case 'new': return '○';
+      case 'learning': return '◐';
+      case 'learned': return '●';
+      default: return '○';
     }
   };
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'Beginner': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Intermediate': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'Advanced': return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Beginner': return 'bg-lantern-amber/20 text-lantern-amber border-lantern-amber/40';
+      case 'Intermediate': return 'bg-lantern-warm/20 text-lantern-warm border-lantern-warm/40';
+      case 'Advanced': return 'bg-wood-light/20 text-wood-light border-wood-light/40';
+      default: return 'bg-paper-warm/10 text-paper-warm/60 border-paper-warm/20';
     }
   };
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center">
-            <BookOpen className="mx-auto h-12 w-12 text-indigo-400 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Track Your Progress</h2>
-            <p className="text-gray-600 mb-6">Sign in to see your Japanese learning journey</p>
-            <Button onClick={() => navigate('/auth')} className="w-full">
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <TraditionalBackground>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <TraditionalCard className="max-w-md w-full p-8">
+            <div className="text-center">
+              <BookOpen className="mx-auto h-12 w-12 text-wood-light mb-4" />
+              <h2 className="text-2xl font-traditional font-bold text-paper-warm mb-2">
+                Track Your Progress
+              </h2>
+              <p className="text-paper-warm/70 mb-6 font-traditional">
+                Sign in to see your Japanese learning journey
+              </p>
+              <Button 
+                onClick={() => navigate('/auth')} 
+                className="w-full traditional-button"
+              >
+                Sign In
+              </Button>
+            </div>
+          </TraditionalCard>
+        </div>
+      </TraditionalBackground>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <TraditionalBackground>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-wood-light border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </TraditionalBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Japanese Journey</h1>
-          <p className="text-gray-600">Keep building your skills one character at a time</p>
-        </div>
+    <TraditionalBackground>
+      <div className="min-h-screen p-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Traditional Header */}
+          <TraditionalHeader 
+            showStats={true}
+            stats={{
+              streak: stats.streak,
+              mastered: stats.totalLearned,
+              proficiency: stats.accuracy
+            }}
+          />
 
-        {/* Three-Column Hero Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Left Column: Learning Path */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <Target className="mr-2 h-5 w-5 text-indigo-600" />
+          {/* Three-Column Hero Dashboard */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Left Column: Learning Path */}
+            <TraditionalCard className="p-6">
+              <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
+                <Target className="mr-2 h-5 w-5 text-wood-light" />
                 Your Learning Path
               </h2>
               
@@ -221,76 +237,50 @@ const RevampedProgress: React.FC = () => {
                 {/* Hiragana Progress */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-700">Hiragana</span>
-                    <span className="text-sm text-gray-500">{hiraganaProgress}%</span>
+                    <span className="font-traditional font-medium text-paper-warm">ひらがな Hiragana</span>
+                    <span className="text-sm text-paper-warm/70 font-traditional">{hiraganaProgress}%</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4].map((step) => (
-                        <div
-                          key={step}
-                          className={cn(
-                            "w-3 h-3 rounded-full",
-                            step <= Math.ceil(hiraganaProgress / 25) 
-                              ? "bg-indigo-600" 
-                              : "bg-gray-200"
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <Progress value={hiraganaProgress} className="flex-1 h-2" />
-                  </div>
+                  <TraditionalProgressIndicator 
+                    progress={hiraganaProgress}
+                    type="hiragana"
+                    size="md"
+                  />
                 </div>
 
                 {/* Katakana Progress */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-700">Katakana</span>
-                    <span className="text-sm text-gray-500">{katakanaProgress}%</span>
+                    <span className="font-traditional font-medium text-paper-warm">カタカナ Katakana</span>
+                    <span className="text-sm text-paper-warm/70 font-traditional">{katakanaProgress}%</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4].map((step) => (
-                        <div
-                          key={step}
-                          className={cn(
-                            "w-3 h-3 rounded-full",
-                            step <= Math.ceil(katakanaProgress / 25) 
-                              ? "bg-indigo-600" 
-                              : "bg-gray-200"
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <Progress value={katakanaProgress} className="flex-1 h-2" />
-                  </div>
+                  <TraditionalProgressIndicator 
+                    progress={katakanaProgress}
+                    type="katakana"
+                    size="md"
+                  />
                 </div>
 
                 {/* Basic Kanji (Future) */}
                 <div className="opacity-50">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-700">Basic Kanji</span>
-                    <span className="text-sm text-gray-500">0%</span>
+                    <span className="font-traditional font-medium text-paper-warm">漢字 Basic Kanji</span>
+                    <span className="text-sm text-paper-warm/70 font-traditional">0%</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4].map((step) => (
-                        <div key={step} className="w-3 h-3 rounded-full bg-gray-200" />
-                      ))}
-                    </div>
-                    <Progress value={0} className="flex-1 h-2" />
-                  </div>
+                  <TraditionalProgressIndicator 
+                    progress={0}
+                    size="md"
+                  />
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-indigo-50 rounded-lg">
+              <div className="mt-6 p-4 bg-wood-grain/50 backdrop-blur-md border border-wood-light/40">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Current Level</span>
+                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Current Level</span>
                   <Badge className={getLevelColor(stats.currentLevel)}>
                     {stats.currentLevel}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-paper-warm/60 font-traditional">
                   {stats.currentLevel === 'Beginner' && "Just getting started! Focus on basic characters."}
                   {stats.currentLevel === 'Intermediate' && "Making good progress! Keep practicing regularly."}
                   {stats.currentLevel === 'Advanced' && "Excellent work! You're mastering the fundamentals."}
@@ -299,19 +289,17 @@ const RevampedProgress: React.FC = () => {
 
               <Button 
                 onClick={() => navigate('/practice')} 
-                className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700"
+                className="w-full mt-6 traditional-button"
               >
                 <Play className="mr-2 h-4 w-4" />
                 Continue Learning
               </Button>
-            </CardContent>
-          </Card>
+            </TraditionalCard>
 
-          {/* Center Column: Today's Focus */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <BookOpen className="mr-2 h-5 w-5 text-indigo-600" />
+            {/* Center Column: Today's Focus */}
+            <TraditionalCard className="p-6">
+              <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
+                <BookOpen className="mr-2 h-5 w-5 text-wood-light" />
                 Today's Practice
               </h2>
 
@@ -319,30 +307,32 @@ const RevampedProgress: React.FC = () => {
                 {nextCharacters.map((char, index) => (
                   <div
                     key={char.id}
-                    className="aspect-square bg-white rounded-lg border-2 border-gray-100 flex flex-col items-center justify-center p-2 hover:border-indigo-200 transition-colors cursor-pointer"
+                    className="aspect-square bg-wood-grain/30 backdrop-blur-sm border-2 border-wood-light/20 flex flex-col items-center justify-center p-2 hover:border-wood-light/40 transition-all cursor-pointer"
                   >
-                    <div className="text-2xl font-bold mb-1">{char.character}</div>
-                    <div className="text-xs text-gray-500 mb-1">{char.romaji}</div>
-                    <div className="text-xs">{getStatusIcon(char.status)}</div>
+                    <div className="text-2xl font-traditional font-bold text-paper-warm mb-1">{char.character}</div>
+                    <div className="text-xs text-paper-warm/60 mb-1 font-traditional">{char.romaji}</div>
+                    <div className={cn("text-xs font-traditional", getStatusColor(char.status))}>
+                      {getStatusIcon(char.status)}
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">Next Focus</span>
-                  <span className="text-sm text-blue-600">Practice basic characters</span>
+                <div className="flex items-center justify-between p-3 bg-wood-grain/30 backdrop-blur-sm border border-wood-light/20">
+                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Next Focus</span>
+                  <span className="text-sm text-wood-light font-traditional">Practice basic characters</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">Daily Goal</span>
-                  <span className="text-sm text-green-600">15 minutes</span>
+                <div className="flex items-center justify-between p-3 bg-wood-grain/30 backdrop-blur-sm border border-wood-light/20">
+                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Daily Goal</span>
+                  <span className="text-sm text-lantern-warm font-traditional">15 minutes</span>
                 </div>
               </div>
 
               <Button 
                 onClick={() => navigate('/quiz')} 
-                className="w-full mt-6 bg-green-600 hover:bg-green-700"
+                className="w-full mt-6 traditional-button"
               >
                 <Play className="mr-2 h-4 w-4" />
                 Start Practice Session
@@ -350,66 +340,62 @@ const RevampedProgress: React.FC = () => {
 
               <Button 
                 onClick={() => navigate('/quick-quiz')} 
-                variant="outline" 
-                className="w-full mt-3"
+                className="w-full mt-3 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
               >
                 Quick 5-Minute Review
               </Button>
-            </CardContent>
-          </Card>
+            </TraditionalCard>
 
-          {/* Right Column: Quick Stats */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <BarChart3 className="mr-2 h-5 w-5 text-indigo-600" />
+            {/* Right Column: Quick Stats */}
+            <TraditionalCard className="p-6">
+              <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
+                <BarChart3 className="mr-2 h-5 w-5 text-wood-light" />
                 Quick Stats
               </h2>
 
               <div className="space-y-6">
                 {/* Streak */}
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-center p-4 bg-wood-grain/30 backdrop-blur-sm border border-lantern-amber/40">
                   <div className="text-3xl mb-2">🔥</div>
-                  <div className="text-2xl font-bold text-orange-600">{stats.streak} days</div>
-                  <div className="text-sm text-gray-600">Current Streak</div>
+                  <div className="text-2xl font-traditional font-bold text-lantern-amber">{stats.streak} days</div>
+                  <div className="text-sm text-paper-warm/60 font-traditional">Current Streak</div>
                 </div>
 
                 {/* Progress Summary */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Characters Learned</span>
-                    <span className="font-semibold">{stats.totalLearned}/{stats.totalCharacters}</span>
+                    <span className="text-sm text-paper-warm/70 font-traditional">Characters Learned</span>
+                    <span className="font-traditional font-semibold text-paper-warm">{stats.totalLearned}/{stats.totalCharacters}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Average Accuracy</span>
-                    <span className="font-semibold">{stats.accuracy}%</span>
+                    <span className="text-sm text-paper-warm/70 font-traditional">Average Accuracy</span>
+                    <span className="font-traditional font-semibold text-paper-warm">{stats.accuracy}%</span>
                   </div>
                 </div>
 
                 {/* Weekly Progress */}
                 <div>
-                  <div className="text-sm text-gray-600 mb-2">This Week</div>
+                  <div className="text-sm text-paper-warm/70 mb-2 font-traditional">This Week</div>
                   <div className="flex space-x-1 mb-2">
                     {stats.weeklyProgress.map((active, index) => (
                       <div
                         key={index}
                         className={cn(
-                          "flex-1 h-8 rounded",
-                          active ? "bg-green-500" : "bg-gray-200"
+                          "flex-1 h-8 border border-wood-light/20",
+                          active ? "bg-wood-light/30" : "bg-wood-grain/20"
                         )}
                       />
                     ))}
                   </div>
-                  <div className="text-xs text-gray-500 text-center">
+                  <div className="text-xs text-paper-warm/50 text-center font-traditional">
                     {stats.weeklyProgress.filter(Boolean).length}/7 days
                   </div>
                 </div>
               </div>
 
               <Button 
-                variant="outline" 
-                className="w-full mt-6"
+                className="w-full mt-6 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
                 onClick={() => setShowDetails(!showDetails)}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
@@ -417,25 +403,22 @@ const RevampedProgress: React.FC = () => {
               </Button>
 
               <Button 
-                variant="outline" 
-                className="w-full mt-3"
+                className="w-full mt-3 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
                 onClick={() => navigate('/achievements')}
               >
                 <Award className="mr-2 h-4 w-4" />
                 Achievements
               </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </TraditionalCard>
+          </div>
 
-        {/* Expandable Details Section */}
-        {showDetails && (
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg mb-8">
-            <CardContent className="p-6">
+          {/* Expandable Details Section */}
+          {showDetails && (
+            <TraditionalCard className="p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Detailed Progress</h2>
+                <h2 className="text-xl font-traditional font-semibold text-paper-warm">Detailed Progress</h2>
                 <Button
-                  variant="ghost"
+                  className="bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70"
                   size="sm"
                   onClick={() => setShowDetails(false)}
                 >
@@ -444,10 +427,10 @@ const RevampedProgress: React.FC = () => {
               </div>
 
               <Tabs defaultValue="characters" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="characters">Characters</TabsTrigger>
-                  <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                  <TabsTrigger value="achievements">Achievements</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 bg-wood-grain/30 border-wood-light/40">
+                  <TabsTrigger value="characters" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Characters</TabsTrigger>
+                  <TabsTrigger value="timeline" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Timeline</TabsTrigger>
+                  <TabsTrigger value="achievements" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Achievements</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="characters" className="space-y-4">
@@ -464,10 +447,10 @@ const RevampedProgress: React.FC = () => {
                       <div
                         key={char.id}
                         className={cn(
-                          "aspect-square rounded-lg flex flex-col items-center justify-center text-xs border-2",
+                          "aspect-square border-2 flex flex-col items-center justify-center text-xs font-traditional",
                           char.character === '○' 
-                            ? "bg-gray-50 border-gray-200 text-gray-400"
-                            : getStatusColor(char.status)
+                            ? "bg-wood-grain/20 border-wood-light/20 text-paper-warm/40"
+                            : cn("bg-wood-grain/30 backdrop-blur-sm", getStatusColor(char.status))
                         )}
                       >
                         <div className="font-medium">{char.character}</div>
@@ -476,41 +459,41 @@ const RevampedProgress: React.FC = () => {
                     ))}
                   </div>
                   
-                  <div className="flex items-center space-x-4 text-sm">
+                  <div className="flex items-center space-x-4 text-sm font-traditional">
                     <div className="flex items-center space-x-1">
-                      <span>🔴</span>
-                      <span>New</span>
+                      <span className="text-lantern-amber">○</span>
+                      <span className="text-paper-warm/70">New</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <span>🟡</span>
-                      <span>Learning</span>
+                      <span className="text-lantern-warm">◐</span>
+                      <span className="text-paper-warm/70">Learning</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <span>🟢</span>
-                      <span>Learned</span>
+                      <span className="text-wood-light">●</span>
+                      <span className="text-paper-warm/70">Learned</span>
                     </div>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="timeline" className="space-y-4">
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-paper-warm/50">
                     <Calendar className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p>Practice timeline will appear here as you continue learning</p>
+                    <p className="font-traditional">Practice timeline will appear here as you continue learning</p>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="achievements" className="space-y-4">
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-paper-warm/50">
                     <Award className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p>Achievements will unlock as you progress</p>
+                    <p className="font-traditional">Achievements will unlock as you progress</p>
                   </div>
                 </TabsContent>
               </Tabs>
-            </CardContent>
-          </Card>
-        )}
+            </TraditionalCard>
+          )}
+        </div>
       </div>
-    </div>
+    </TraditionalBackground>
   );
 };
 
