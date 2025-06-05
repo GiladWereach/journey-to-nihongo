@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation - We'll now use buttons for main sections rather than the dropdown pattern */}
+        {/* Desktop Navigation - Modern product sections only */}
         <div className="hidden md:flex items-center space-x-6">
           {user && (
             <div className="flex items-center space-x-6">
@@ -84,16 +84,16 @@ const Navbar: React.FC = () => {
               <Button 
                 variant="ghost" 
                 className="text-gray-600 dark:text-gray-300 hover:text-indigo hover:bg-indigo/10"
-                onClick={() => navigate('/learn')}
+                onClick={() => navigate('/kana-learning')}
               >
-                Learn
+                Kana Learning
               </Button>
               <Button 
                 variant="ghost" 
                 className="text-gray-600 dark:text-gray-300 hover:text-indigo hover:bg-indigo/10"
-                onClick={() => navigate('/practice')}
+                onClick={() => navigate('/quiz')}
               >
-                Practice
+                Quiz Practice
               </Button>
               <Button 
                 variant="ghost" 

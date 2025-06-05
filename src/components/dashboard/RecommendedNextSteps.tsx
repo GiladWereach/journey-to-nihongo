@@ -54,7 +54,7 @@ const RecommendedNextSteps: React.FC<RecommendedNextStepsProps> = ({
             <p className="text-sm text-gray-600 mb-5">Keep your skills sharp with regular practice</p>
             <Button 
               className="mt-auto bg-indigo hover:bg-indigo/90 shadow-sm"
-              onClick={() => navigate('/practice')}
+              onClick={() => navigate('/quiz')}
             >
               Practice Now
             </Button>

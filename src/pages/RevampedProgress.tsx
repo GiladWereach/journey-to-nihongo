@@ -288,7 +288,7 @@ const RevampedProgress: React.FC = () => {
               </div>
 
               <Button 
-                onClick={() => navigate('/practice')} 
+                onClick={() => navigate('/quiz')} 
                 className="w-full mt-6 traditional-button"
               >
                 <Play className="mr-2 h-4 w-4" />
@@ -404,10 +404,10 @@ const RevampedProgress: React.FC = () => {
 
               <Button 
                 className="w-full mt-3 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
-                onClick={() => navigate('/achievements')}
+                onClick={() => navigate('/kana-learning')}
               >
                 <Award className="mr-2 h-4 w-4" />
-                Achievements
+                Kana Learning
               </Button>
             </TraditionalCard>
           </div>
@@ -430,7 +430,7 @@ const RevampedProgress: React.FC = () => {
                 <TabsList className="grid w-full grid-cols-3 bg-wood-grain/30 border-wood-light/40">
                   <TabsTrigger value="characters" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Characters</TabsTrigger>
                   <TabsTrigger value="timeline" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Timeline</TabsTrigger>
-                  <TabsTrigger value="achievements" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Achievements</TabsTrigger>
+                  <TabsTrigger value="achievements" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Progress</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="characters" className="space-y-4">
@@ -485,7 +485,7 @@ const RevampedProgress: React.FC = () => {
                 <TabsContent value="achievements" className="space-y-4">
                   <div className="text-center py-8 text-paper-warm/50">
                     <Award className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p className="font-traditional">Achievements will unlock as you progress</p>
+                    <p className="font-traditional">Progress tracking will show detailed analytics</p>
                   </div>
                 </TabsContent>
               </Tabs>

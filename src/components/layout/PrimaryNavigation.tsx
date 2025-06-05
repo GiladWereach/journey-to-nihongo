@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Home, BookOpen, Dumbbell, BarChart2, Users } from 'lucide-react';
+import { Home, BookOpen, Target, BarChart2 } from 'lucide-react';
 
 interface NavigationItemProps {
   to: string;
@@ -48,13 +48,12 @@ const PrimaryNavigation: React.FC<PrimaryNavigationProps> = ({
   const location = useLocation();
   const currentPath = location.pathname;
   
-  // Define the primary navigation items
+  // Define the primary navigation items for the modern product
   const navigationItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
-    { to: '/learn', icon: BookOpen, label: 'Learn' },
-    { to: '/practice', icon: Dumbbell, label: 'Practice' },
+    { to: '/kana-learning', icon: BookOpen, label: 'Kana Learning' },
+    { to: '/quiz', icon: Target, label: 'Quiz Practice' },
     { to: '/progress', icon: BarChart2, label: 'Progress' },
-    // Future expansion: { to: '/community', icon: Users, label: 'Community' }
   ];
   
   const isActive = (path: string) => {

@@ -1,47 +1,90 @@
 
 import React from 'react';
 import { User } from '@supabase/supabase-js';
-import { NavigateFunction } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import AuthButtons from './AuthButtons';
-import PrimaryNavigation from '../PrimaryNavigation';
 
 interface MobileMenuProps {
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: (open: boolean) => void;
   user: User | null;
-  navigate: NavigateFunction;
+  navigate: (path: string) => void;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ 
-  isOpen, 
-  setIsOpen, 
-  user, 
-  navigate 
-}) => {
-  const closeMenu = () => setIsOpen(false);
+const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, setIsOpen, user, navigate }) => {
+  const { logout } = useAuth();
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <div
-      className={cn(
-        'md:hidden fixed left-0 right-0 top-[56px] bg-white dark:bg-indigo/95 shadow-lg transition-all duration-300 ease-in-out overflow-hidden z-40 border-b',
-        isOpen ? 'max-h-[500px] py-4' : 'max-h-0 py-0 border-b-0',
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 space-y-4">
-        <PrimaryNavigation 
-          className="flex flex-col space-y-2" 
-          onItemClick={closeMenu} 
-        />
-        
-        <div className="pt-4 pb-2 flex flex-col space-y-3">
-          <AuthButtons 
-            user={user} 
-            className="w-full flex flex-col space-y-3 space-x-0" 
-            navigate={navigate} 
-            onActionComplete={closeMenu} 
-          />
-        </div>
+    <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-indigo border-t shadow-lg z-40">
+      <div className="container mx-auto px-4 py-4 space-y-4">
+        {user ? (
+          <>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-gray-600 dark:text-gray-300"
+              onClick={() => handleNavigation('/dashboard')}
+            >
+              Dashboard
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-gray-600 dark:text-gray-300"
+              onClick={() => handleNavigation('/kana-learning')}
+            >
+              Kana Learning
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-gray-600 dark:text-gray-300"
+              onClick={() => handleNavigation('/quiz')}
+            >
+              Quiz Practice
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-gray-600 dark:text-gray-300"
+              onClick={() => handleNavigation('/progress')}
+            >
+              Progress
+            </Button>
+            <div className="border-t pt-4">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-gray-600 dark:text-gray-300"
+                onClick={() => handleNavigation('/profile')}
+              >
+                Profile
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-red-600"
+                onClick={() => {
+                  logout();
+                  setIsOpen(false);
+                }}
+              >
+                Sign Out
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-2">
+            <Button 
+              className="w-full"
+              onClick={() => handleNavigation('/auth')}
+            >
+              Sign In
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
