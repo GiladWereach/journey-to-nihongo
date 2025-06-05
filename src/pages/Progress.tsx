@@ -1,312 +1,282 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from '@/hooks/use-toast';
-import { kanaService } from '@/services/kanaService';
-import KanaGrid from '@/components/kana/KanaGrid';
-import { KanaType, UserKanaProgress, PracticeResult } from '@/types/kana';
-import { Book, PenTool, BookOpen, BarChart } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import ProgressHeader from '@/components/progress/ProgressHeader';
-import IntroTab from '@/components/progress/tabs/IntroTab';
-import PracticeSelectionTab from '@/components/progress/tabs/PracticeSelectionTab';
-import PracticeSessionTab from '@/components/progress/tabs/PracticeSessionTab';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { BookOpen, Award, TrendingUp, Clock, Target, BarChart3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ProgressStatsTab from '@/components/progress/tabs/ProgressStatsTab';
-import ProgressIndicator from '@/components/ui/ProgressIndicator';
+import ProgressOverview from '@/components/progress/ProgressOverview';
+import { characterProgressService } from '@/services/characterProgressService';
+import { kanaService } from '@/services/kanaService';
+import { UserKanaProgress } from '@/types/kana';
 
-const Progress = () => {
+const Progress: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('intro');
-  const [selectedKanaType, setSelectedKanaType] = useState<KanaType | 'all'>('all');
-  const [practiceMode, setPracticeMode] = useState<'selection' | 'practice' | 'results'>('selection');
-  const [practiceType, setPracticeType] = useState<'recognition' | 'matching'>('recognition');
-  const [practiceResults, setPracticeResults] = useState<PracticeResult | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
   const [userProgress, setUserProgress] = useState<UserKanaProgress[]>([]);
-  const [isLoadingProgress, setIsLoadingProgress] = useState(false);
-  const [overallProgress, setOverallProgress] = useState<{
-    all: number;
-    hiragana: number;
-    katakana: number;
-  }>({ all: 0, hiragana: 0, katakana: 0 });
+  const [hiragana, setHiragana] = useState<any[]>([]);
+  const [katakana, setKatakana] = useState<any[]>([]);
+  const [allKana, setAllKana] = useState<any[]>([]);
+  const [overallProgress, setOverallProgress] = useState({
+    all: 0,
+    hiragana: 0,
+    katakana: 0,
+  });
+  const [hiraganaStats, setHiraganaStats] = useState({
+    level0: 0,
+    level1: 0,
+    level2: 0,
+    level3Plus: 0,
+    total: 0,
+  });
+  const [katakanaStats, setKatakanaStats] = useState({
+    level0: 0,
+    level1: 0,
+    level2: 0,
+    level3Plus: 0,
+    total: 0,
+  });
+  const [streakData, setStreakData] = useState({
+    currentStreak: 0,
+    longestStreak: 0,
+    lastPracticeDate: null as Date | null,
+  });
+  const [timelineData, setTimelineData] = useState<
+    Array<{
+      date: string;
+      charactersStudied: number;
+      averageProficiency: number;
+    }>
+  >([]);
+  const [overallLearningProgress, setOverallLearningProgress] = useState({
+    hiragana: 0,
+    katakana: 0,
+    basic_kanji: 0,
+    grammar: 0,
+  });
 
-  const hiragana = kanaService.getKanaByType('hiragana');
-  const katakana = kanaService.getKanaByType('katakana');
-  const allKana = kanaService.getAllKana();
-
-  const navigate = useNavigate();
-
-  // Load user progress
   useEffect(() => {
-    if (user) {
+    const fetchKana = async () => {
+      const hiraganaData = await kanaService.getKanaByType('hiragana');
+      const katakanaData = await kanaService.getKanaByType('katakana');
+      setHiragana(hiraganaData);
+      setKatakana(katakanaData);
+      setAllKana([...hiraganaData, ...katakanaData]);
+    };
+
+    fetchKana();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProgress = async () => {
+      if (!user) return;
+
+      setIsLoadingProgress(true);
       try {
-        setIsLoadingProgress(true);
-        kanaService.getUserKanaProgress(user.id)
-          .then(progress => {
-            setUserProgress(progress);
-            setIsLoadingProgress(false);
-          })
-          .catch(error => {
-            console.error('Error loading user progress:', error);
-            setIsLoadingProgress(false);
-          });
+        const progressData = await characterProgressService.getUserProgress(user.id);
+        setUserProgress(progressData);
+
+        // Calculate overall progress
+        const hiraganaProgress = progressData.filter((p) =>
+          hiragana.some((k) => k.id === p.character_id)
+        );
+        const katakanaProgress = progressData.filter((p) =>
+          katakana.some((k) => k.id === p.character_id)
+        );
+
+        const overallHiragana =
+          hiragana.length > 0
+            ? hiraganaProgress.reduce((sum, p) => sum + p.proficiency, 0) / hiragana.length
+            : 0;
+        const overallKatakana =
+          katakana.length > 0
+            ? katakanaProgress.reduce((sum, p) => sum + p.proficiency, 0) / katakana.length
+            : 0;
+
+        setOverallProgress({
+          all: (overallHiragana + overallKatakana) / 2,
+          hiragana: overallHiragana,
+          katakana: overallKatakana,
+        });
+
+        // Calculate mastery stats
+        const hiraganaStatsData = calculateMasteryStats(hiraganaProgress);
+        const katakanaStatsData = calculateMasteryStats(katakanaProgress);
+
+        setHiraganaStats(hiraganaStatsData);
+        setKatakanaStats(katakanaStatsData);
+
+        // Fetch streak data
+        const streak = await fetchStreakData(user.id);
+        setStreakData(streak);
+
+        // Mock timeline data
+        const timeline = generateMockTimelineData();
+        setTimelineData(timeline);
+
+        // Mock overall learning progress
+        const learningProgress = generateMockLearningProgress();
+        setOverallLearningProgress(learningProgress);
       } catch (error) {
-        console.error('Error loading user progress:', error);
+        console.error('Error fetching user progress:', error);
+      } finally {
         setIsLoadingProgress(false);
       }
-    }
-  }, [user]);
-
-  // Calculate overall progress
-  useEffect(() => {
-    const loadProgressData = async () => {
-      if (user) {
-        try {
-          const allProgress = await kanaService.calculateOverallProficiency(user.id, 'all');
-          const hiraganaProgress = await kanaService.calculateOverallProficiency(user.id, 'hiragana');
-          const katakanaProgress = await kanaService.calculateOverallProficiency(user.id, 'katakana');
-          
-          setOverallProgress({
-            all: allProgress,
-            hiragana: hiraganaProgress,
-            katakana: katakanaProgress
-          });
-        } catch (error) {
-          console.error('Error calculating progress:', error);
-        }
-      }
     };
-    
-    loadProgressData();
-  }, [user, userProgress]);
 
-  const calculateProficiencyLevel = (proficiency: number): 'beginner' | 'intermediate' | 'advanced' | 'mastered' => {
+    if (user && hiragana.length > 0 && katakana.length > 0) {
+      fetchUserProgress();
+    }
+  }, [user, hiragana, katakana]);
+
+  const calculateMasteryStats = (progress: UserKanaProgress[]) => {
+    const level0 = progress.filter((p) => p.proficiency < 25).length;
+    const level1 = progress.filter((p) => p.proficiency >= 25 && p.proficiency < 50).length;
+    const level2 = progress.filter((p) => p.proficiency >= 50 && p.proficiency < 75).length;
+    const level3Plus = progress.filter((p) => p.proficiency >= 75).length;
+    const total = progress.length;
+
+    return {
+      level0,
+      level1,
+      level2,
+      level3Plus,
+      total,
+    };
+  };
+
+  const fetchStreakData = async (userId: string) => {
+    // Mock streak data
+    return {
+      currentStreak: 5,
+      longestStreak: 12,
+      lastPracticeDate: new Date(),
+    };
+  };
+
+  const generateMockTimelineData = () => {
+    const data = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateString = date.toLocaleDateString();
+      data.push({
+        date: dateString,
+        charactersStudied: Math.floor(Math.random() * 10),
+        averageProficiency: Math.floor(Math.random() * 100),
+      });
+    }
+    return data;
+  };
+
+  const generateMockLearningProgress = () => {
+    return {
+      hiragana: Math.floor(Math.random() * 100),
+      katakana: Math.floor(Math.random() * 100),
+      basic_kanji: Math.floor(Math.random() * 100),
+      grammar: Math.floor(Math.random() * 100),
+    };
+  };
+
+  const calculateProficiencyLevel = (proficiency: number) => {
     if (proficiency >= 90) return 'mastered';
     if (proficiency >= 70) return 'advanced';
     if (proficiency >= 40) return 'intermediate';
     return 'beginner';
   };
 
-  const calculateMasteryPercentage = (type: KanaType | 'all'): number => {
-    if (!userProgress.length) return 0;
-    
-    let relevantKana;
-    if (type === 'all') {
-      relevantKana = allKana;
-    } else {
-      relevantKana = type === 'hiragana' ? hiragana : katakana;
+  const calculateMasteryPercentage = (type: 'hiragana' | 'katakana' | 'all') => {
+    let masteredCount = 0;
+    let totalCount = 0;
+
+    if (type === 'hiragana' || type === 'all') {
+      masteredCount += userProgress.filter((p) =>
+        hiragana.some((k) => k.id === p.character_id && p.proficiency >= 90)
+      ).length;
+      totalCount += hiragana.length;
     }
-    
-    const relevantProgress = userProgress.filter(progress => 
-      relevantKana.some(kana => kana.id === progress.character_id)
-    );
-    
-    if (relevantProgress.length === 0) return 0;
-    
-    const masteredChars = relevantProgress.filter(progress => progress.proficiency >= 90).length;
-    return (masteredChars / relevantProgress.length) * 100;
+
+    if (type === 'katakana' || type === 'all') {
+      masteredCount += userProgress.filter((p) =>
+        katakana.some((k) => k.id === p.character_id && p.proficiency >= 90)
+      ).length;
+      totalCount += katakana.length;
+    }
+
+    return totalCount > 0 ? (masteredCount / totalCount) * 100 : 0;
   };
 
-  const getMostChallenging = (): UserKanaProgress[] => {
-    if (!userProgress.length) return [];
-    
+  const getMostChallenging = () => {
     return [...userProgress]
-      .filter(progress => progress.total_practice_count > 0)
-      .sort((a, b) => a.proficiency - b.proficiency)
+      .sort((a, b) => a.mistake_count - b.mistake_count)
       .slice(0, 5);
   };
 
-  const getMostPracticed = (): UserKanaProgress[] => {
-    if (!userProgress.length) return [];
-    
+  const getMostPracticed = () => {
     return [...userProgress]
       .sort((a, b) => b.total_practice_count - a.total_practice_count)
       .slice(0, 5);
   };
 
   const getMostRecentlyPracticed = () => {
-    if (!userProgress.length) return [];
-    
     return [...userProgress]
-      .sort((a, b) => {
-        const dateA = typeof a.last_practiced === 'string' 
-          ? new Date(a.last_practiced).getTime() 
-          : a.last_practiced instanceof Date 
-            ? a.last_practiced.getTime() 
-            : 0;
-        
-        const dateB = typeof b.last_practiced === 'string' 
-          ? new Date(b.last_practiced).getTime() 
-          : b.last_practiced instanceof Date 
-            ? b.last_practiced.getTime() 
-            : 0;
-        
-        return dateB - dateA;
-      })
+      .sort(
+        (a, b) =>
+          new Date(b.last_practiced).getTime() - new Date(a.last_practiced).getTime()
+      )
       .slice(0, 5);
   };
 
-  const handlePracticeStart = (type: KanaType | 'all', mode: 'recognition' | 'matching') => {
-    setSelectedKanaType(type);
-    setPracticeType(mode);
-    setPracticeMode('practice');
-    setActiveTab('practice');
-  };
-
-  const handlePracticeComplete = async (results: PracticeResult) => {
-    setPracticeResults(results);
-    setPracticeMode('results');
-    
-    if (user && results.characterResults.length > 0) {
-      const practiceResults = results.characterResults.map(result => {
-        const kanaChar = kanaService.getAllKana().find(k => k.character === result.character);
-        if (!kanaChar) return null;
-        
-        return {
-          characterId: kanaChar.id,
-          correct: result.correct,
-          timestamp: new Date()
-        };
-      }).filter(Boolean) as Array<{ characterId: string; correct: boolean; timestamp: Date }>;
-      
-      for (const result of practiceResults) {
-        await kanaService.updateProgressFromResults(user.id, result.characterId, result.correct);
-      }
-      
-      const updatedProgress = await kanaService.getUserKanaProgress(user.id);
-      setUserProgress(updatedProgress);
-    }
-  };
-
-  const handlePracticeCancel = () => {
-    setPracticeMode('selection');
-  };
-
-  const handlePracticeSimilar = () => {
-    setPracticeMode('practice');
-  };
-
-  const handlePracticeAgain = () => {
-    setPracticeMode('practice');
-  };
-
-  const handleFinishPractice = () => {
-    setPracticeMode('selection');
-  };
-
-  const handleQuickQuizStart = (kanaType: KanaType) => {
-    navigate('/quick-quiz', {
-      state: {
-        fromKanaLearning: true,
-        kanaType
-      }
-    });
-  };
-
-  const renderProgressIndicator = (type: KanaType | 'all') => {
-    const progress = type === 'all' 
-      ? overallProgress.all
-      : type === 'hiragana' 
-        ? overallProgress.hiragana 
-        : type === 'katakana' 
-          ? overallProgress.katakana
-          : 0;
-    
-    return (
-      <ProgressIndicator 
-        progress={progress} 
-        size="sm" 
-        color={type === 'hiragana' ? 'bg-matcha' : type === 'katakana' ? 'bg-vermilion' : 'bg-indigo'} 
-      />
-    );
-  };
-
   return (
-    <div className="container mx-auto px-4">
-      <ProgressHeader user={user} />
-      
-      <div className="pt-16 pb-6">
-        <Tabs 
-          defaultValue="intro" 
-          className="max-w-5xl mx-auto"
-          onValueChange={setActiveTab}
-          value={activeTab}
-        >
-          <TabsList className="grid grid-cols-4 mb-6 sticky top-16 z-40 bg-background/95 backdrop-blur-sm shadow-sm p-1 rounded-lg max-w-md mx-auto">
-            <TabsTrigger value="intro" className="flex items-center gap-2 rounded-md">
-              <BookOpen size={16} />
-              Intro
-            </TabsTrigger>
-            <TabsTrigger value="learn" className="flex items-center gap-2 rounded-md">
-              <Book size={16} />
-              Learn
-            </TabsTrigger>
-            <TabsTrigger value="practice" className="flex items-center gap-2 rounded-md">
-              <PenTool size={16} />
-              Practice
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2 rounded-md">
-              <BarChart size={16} />
-              Progress
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="intro" className="space-y-6 animate-fade-in">
-            <IntroTab 
-              user={user} 
-              setActiveTab={setActiveTab} 
-              renderProgressIndicator={renderProgressIndicator}
-            />
-          </TabsContent>
-          
-          <TabsContent value="learn" className="space-y-4">
-            <KanaGrid 
-              kanaList={allKana} 
-              userProgress={userProgress}
-            />
-          </TabsContent>
-          
-          <TabsContent value="practice" className="space-y-6">
-            {practiceMode === 'selection' ? (
-              <PracticeSelectionTab 
-                onPracticeStart={handlePracticeStart}
-                onQuickQuizStart={handleQuickQuizStart}
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold">Learning Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="stats">Statistics</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview">
+              <ProgressOverview
+                hiraganaStats={hiraganaStats}
+                katakanaStats={katakanaStats}
+                streakData={streakData}
+                timelineData={timelineData}
+                overallProgress={overallLearningProgress}
+                loading={isLoadingProgress}
               />
-            ) : (
-              <PracticeSessionTab 
-                practiceMode={practiceMode}
-                practiceType={practiceType}
-                selectedKanaType={selectedKanaType}
-                practiceResults={practiceResults}
-                onPracticeComplete={handlePracticeComplete}
-                onPracticeCancel={handlePracticeCancel}
-                onPracticeSimilar={handlePracticeSimilar}
-                onPracticeAgain={handlePracticeAgain}
-                onFinishPractice={handleFinishPractice}
+            </TabsContent>
+            <TabsContent value="stats">
+              <ProgressStatsTab
+                user={user}
+                isLoadingProgress={isLoadingProgress}
+                userProgress={userProgress}
+                hiragana={hiragana}
+                katakana={katakana}
+                allKana={allKana}
+                overallProgress={{
+                  all: overallProgress.all,
+                  hiragana: overallProgress.hiragana,
+                  katakana: overallProgress.katakana,
+                }}
+                calculateProficiencyLevel={calculateProficiencyLevel}
+                calculateMasteryPercentage={calculateMasteryPercentage}
+                getMostChallenging={getMostChallenging}
+                getMostPracticed={getMostPracticed}
+                getMostRecentlyPracticed={getMostRecentlyPracticed}
+                setActiveTab={setActiveTab}
               />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="progress" className="space-y-8">
-            <ProgressStatsTab
-              user={user}
-              isLoadingProgress={isLoadingProgress}
-              userProgress={userProgress}
-              hiragana={hiragana}
-              katakana={katakana}
-              allKana={allKana}
-              overallProgress={overallProgress}
-              calculateProficiencyLevel={calculateProficiencyLevel}
-              calculateMasteryPercentage={calculateMasteryPercentage}
-              getMostChallenging={getMostChallenging}
-              getMostPracticed={getMostPracticed}
-              getMostRecentlyPracticed={getMostRecentlyPracticed}
-              setActiveTab={setActiveTab}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { TraditionalBackground, TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import TraditionalHeader from '@/components/ui/TraditionalHeader';
@@ -39,6 +39,7 @@ interface ProgressStats {
   weeklyProgress: boolean[];
   overallProficiency: number;
   currentLevel: 'Beginner' | 'Intermediate' | 'Advanced';
+  totalSessions: number;
 }
 
 const RevampedProgress: React.FC = () => {
@@ -53,7 +54,8 @@ const RevampedProgress: React.FC = () => {
     streak: 0,
     weeklyProgress: [false, false, false, false, false, false, false],
     overallProficiency: 0,
-    currentLevel: 'Beginner'
+    currentLevel: 'Beginner',
+    totalSessions: 0
   });
   const [nextCharacters, setNextCharacters] = useState<CharacterProgress[]>([]);
   const [hiraganaProgress, setHiraganaProgress] = useState(0);
@@ -73,18 +75,18 @@ const RevampedProgress: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get all character progress
+      // Get all character progress from database
       const allProgress = await characterProgressService.getUserProgress(user.id);
       const hiraganaChars = kanaService.getKanaByType('hiragana');
       const katakanaChars = kanaService.getKanaByType('katakana');
       
-      // Calculate basic stats
-      const learnedCount = allProgress.filter(p => p.proficiency >= 50).length;
+      // Calculate real stats from database
+      const learnedCount = allProgress.filter(p => p.proficiency >= 70).length;
       const avgAccuracy = allProgress.length > 0 
         ? Math.round(allProgress.reduce((sum, p) => sum + p.proficiency, 0) / allProgress.length)
         : 0;
       
-      // Calculate hiragana and katakana progress
+      // Calculate hiragana and katakana progress from actual data
       const hiraganaProgressData = allProgress.filter(p => 
         hiraganaChars.some(c => c.id === p.character_id)
       );
@@ -92,52 +94,123 @@ const RevampedProgress: React.FC = () => {
         katakanaChars.some(c => c.id === p.character_id)
       );
       
+      const hiraganaLearned = hiraganaProgressData.filter(p => p.proficiency >= 70).length;
+      const katakanaLearned = katakanaProgressData.filter(p => p.proficiency >= 70).length;
+      
       const hiraganaPercent = hiraganaChars.length > 0 
-        ? Math.round((hiraganaProgressData.filter(p => p.proficiency >= 50).length / hiraganaChars.length) * 100)
+        ? Math.round((hiraganaLearned / hiraganaChars.length) * 100)
         : 0;
       const katakanaPercent = katakanaChars.length > 0 
-        ? Math.round((katakanaProgressData.filter(p => p.proficiency >= 50).length / katakanaChars.length) * 100)
+        ? Math.round((katakanaLearned / katakanaChars.length) * 100)
         : 0;
 
       setHiraganaProgress(hiraganaPercent);
       setKatakanaProgress(katakanaPercent);
       
-      // Determine current level
-      let currentLevel: 'Beginner' | 'Intermediate' | 'Advanced' = 'Beginner';
-      if (avgAccuracy >= 70) currentLevel = 'Advanced';
-      else if (avgAccuracy >= 40) currentLevel = 'Intermediate';
+      // Get learning sessions for streak calculation
+      const { data: sessions, error: sessionError } = await supabase
+        .from('kana_learning_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('completed', true)
+        .order('start_time', { ascending: false });
+
+      if (sessionError) {
+        console.error('Error fetching sessions:', sessionError);
+      }
+
+      // Calculate streak from sessions
+      let currentStreak = 0;
+      if (sessions && sessions.length > 0) {
+        const today = new Date();
+        const oneDay = 24 * 60 * 60 * 1000;
+        let checkDate = new Date(today);
+        
+        // Check consecutive days backwards
+        for (let i = 0; i < 30; i++) { // Check up to 30 days
+          const dayStart = new Date(checkDate);
+          dayStart.setHours(0, 0, 0, 0);
+          const dayEnd = new Date(checkDate);
+          dayEnd.setHours(23, 59, 59, 999);
+          
+          const hasSessionThisDay = sessions.some(session => {
+            const sessionDate = new Date(session.start_time);
+            return sessionDate >= dayStart && sessionDate <= dayEnd;
+          });
+          
+          if (hasSessionThisDay) {
+            currentStreak++;
+            checkDate = new Date(checkDate.getTime() - oneDay);
+          } else if (i === 0) {
+            // If no session today, check yesterday
+            checkDate = new Date(checkDate.getTime() - oneDay);
+          } else {
+            // Break streak
+            break;
+          }
+        }
+      }
+
+      // Calculate weekly progress (last 7 days)
+      const weeklyProgress = Array(7).fill(false);
+      if (sessions && sessions.length > 0) {
+        const today = new Date();
+        for (let i = 0; i < 7; i++) {
+          const checkDate = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
+          const dayStart = new Date(checkDate);
+          dayStart.setHours(0, 0, 0, 0);
+          const dayEnd = new Date(checkDate);
+          dayEnd.setHours(23, 59, 59, 999);
+          
+          const hasSession = sessions.some(session => {
+            const sessionDate = new Date(session.start_time);
+            return sessionDate >= dayStart && sessionDate <= dayEnd;
+          });
+          
+          weeklyProgress[6 - i] = hasSession;
+        }
+      }
       
-      // Get next characters to practice (mix of new and review)
+      // Determine current level based on real progress
+      let currentLevel: 'Beginner' | 'Intermediate' | 'Advanced' = 'Beginner';
+      if (avgAccuracy >= 80 && learnedCount >= 60) currentLevel = 'Advanced';
+      else if (avgAccuracy >= 60 && learnedCount >= 30) currentLevel = 'Intermediate';
+      
+      // Get next characters to practice (prioritize low proficiency or unlearned)
       const allKana = [...hiraganaChars, ...katakanaChars];
       const nextChars: CharacterProgress[] = [];
       
-      // Add some characters that need practice
-      for (const kana of allKana.slice(0, 8)) {
-        const progress = allProgress.find(p => p.character_id === kana.id);
-        const proficiency = progress?.proficiency || 0;
-        
-        let status: 'new' | 'learning' | 'learned' = 'new';
-        if (proficiency >= 70) status = 'learned';
-        else if (proficiency > 0) status = 'learning';
-        
-        nextChars.push({
-          character: kana.character,
-          romaji: kana.romaji,
-          status,
-          proficiency,
-          id: kana.id
-        });
-      }
+      // Sort characters by proficiency (lowest first) and select up to 8
+      const sortedKana = allKana
+        .map(kana => {
+          const progress = allProgress.find(p => p.character_id === kana.id);
+          const proficiency = progress?.proficiency || 0;
+          
+          let status: 'new' | 'learning' | 'learned' = 'new';
+          if (proficiency >= 70) status = 'learned';
+          else if (proficiency > 0) status = 'learning';
+          
+          return {
+            character: kana.character,
+            romaji: kana.romaji,
+            status,
+            proficiency,
+            id: kana.id
+          };
+        })
+        .sort((a, b) => a.proficiency - b.proficiency)
+        .slice(0, 8);
       
-      setNextCharacters(nextChars);
+      setNextCharacters(sortedKana);
       setStats({
         totalLearned: learnedCount,
-        totalCharacters: 92,
+        totalCharacters: allKana.length,
         accuracy: avgAccuracy,
-        streak: 7, // Mock data - could be calculated from sessions
-        weeklyProgress: [true, true, false, true, true, true, false], // Mock data
+        streak: currentStreak,
+        weeklyProgress,
         overallProficiency: avgAccuracy,
-        currentLevel
+        currentLevel,
+        totalSessions: sessions?.length || 0
       });
       
     } catch (error) {
@@ -281,9 +354,9 @@ const RevampedProgress: React.FC = () => {
                   </Badge>
                 </div>
                 <p className="text-sm text-paper-warm/60 font-traditional">
-                  {stats.currentLevel === 'Beginner' && "Just getting started! Focus on basic characters."}
-                  {stats.currentLevel === 'Intermediate' && "Making good progress! Keep practicing regularly."}
-                  {stats.currentLevel === 'Advanced' && "Excellent work! You're mastering the fundamentals."}
+                  {stats.currentLevel === 'Beginner' && "Focus on learning basic characters and building consistency."}
+                  {stats.currentLevel === 'Intermediate' && "Great progress! Continue practicing to build fluency."}
+                  {stats.currentLevel === 'Advanced' && "Excellent mastery! Ready for advanced challenges."}
                 </p>
               </div>
 
@@ -300,7 +373,7 @@ const RevampedProgress: React.FC = () => {
             <TraditionalCard className="p-6">
               <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
                 <BookOpen className="mr-2 h-5 w-5 text-wood-light" />
-                Today's Practice
+                Priority Practice
               </h2>
 
               <div className="grid grid-cols-4 gap-3 mb-6">
@@ -312,7 +385,7 @@ const RevampedProgress: React.FC = () => {
                     <div className="text-2xl font-traditional font-bold text-paper-warm mb-1">{char.character}</div>
                     <div className="text-xs text-paper-warm/60 mb-1 font-traditional">{char.romaji}</div>
                     <div className={cn("text-xs font-traditional", getStatusColor(char.status))}>
-                      {getStatusIcon(char.status)}
+                      {getStatusIcon(char.status)} {char.proficiency}%
                     </div>
                   </div>
                 ))}
@@ -320,13 +393,13 @@ const RevampedProgress: React.FC = () => {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-wood-grain/30 backdrop-blur-sm border border-wood-light/20">
-                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Next Focus</span>
-                  <span className="text-sm text-wood-light font-traditional">Practice basic characters</span>
+                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Total Sessions</span>
+                  <span className="text-sm text-wood-light font-traditional">{stats.totalSessions}</span>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-wood-grain/30 backdrop-blur-sm border border-wood-light/20">
-                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Daily Goal</span>
-                  <span className="text-sm text-lantern-warm font-traditional">15 minutes</span>
+                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Characters Learned</span>
+                  <span className="text-sm text-lantern-warm font-traditional">{stats.totalLearned}/{stats.totalCharacters}</span>
                 </div>
               </div>
 
@@ -350,7 +423,7 @@ const RevampedProgress: React.FC = () => {
             <TraditionalCard className="p-6">
               <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
                 <BarChart3 className="mr-2 h-5 w-5 text-wood-light" />
-                Quick Stats
+                Your Statistics
               </h2>
 
               <div className="space-y-6">
@@ -369,8 +442,13 @@ const RevampedProgress: React.FC = () => {
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-paper-warm/70 font-traditional">Average Accuracy</span>
+                    <span className="text-sm text-paper-warm/70 font-traditional">Average Proficiency</span>
                     <span className="font-traditional font-semibold text-paper-warm">{stats.accuracy}%</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-paper-warm/70 font-traditional">Practice Sessions</span>
+                    <span className="font-traditional font-semibold text-paper-warm">{stats.totalSessions}</span>
                   </div>
                 </div>
 
@@ -389,7 +467,7 @@ const RevampedProgress: React.FC = () => {
                     ))}
                   </div>
                   <div className="text-xs text-paper-warm/50 text-center font-traditional">
-                    {stats.weeklyProgress.filter(Boolean).length}/7 days
+                    {stats.weeklyProgress.filter(Boolean).length}/7 days active
                   </div>
                 </div>
               </div>
@@ -407,7 +485,7 @@ const RevampedProgress: React.FC = () => {
                 onClick={() => navigate('/kana-learning')}
               >
                 <Award className="mr-2 h-4 w-4" />
-                Kana Learning
+                Character Details
               </Button>
             </TraditionalCard>
           </div>
