@@ -35,8 +35,8 @@ const queryClient = new QueryClient();
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   
-  // Pages that should not have the navbar and legacy layout
-  const noNavbarPages = ['/progress'];
+  // Pages that should not have the navbar and legacy layout (all TraditionalBackground pages)
+  const noNavbarPages = ['/progress', '/', '/quiz', '/profile'];
   const shouldHideNavbar = noNavbarPages.includes(location.pathname);
   
   if (shouldHideNavbar) {

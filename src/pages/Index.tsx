@@ -13,38 +13,8 @@ const Index = () => {
 
   return (
     <TraditionalBackground>
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-glass-wood backdrop-blur-traditional border-b-2 border-wood-light/40">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center">
-              <span className="text-xl font-traditional font-bold text-paper-warm tracking-tight">
-                Nihongo Journey
-              </span>
-            </Link>
-            
-            <div className="flex items-center gap-4">
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm" asChild className="bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night">
-                    <Link to="/progress">Progress</Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild className="bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night">
-                    <Link to="/profile">Profile</Link>
-                  </Button>
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" asChild className="bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night">
-                  <Link to="/auth">Sign In</Link>
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="pt-16">
+      <div>
         {/* Hero Section */}
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-4xl text-center">
