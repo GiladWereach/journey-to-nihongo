@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 lg:px-8 border-b',
         isScrolled 
           ? 'py-3 bg-white/95 dark:bg-indigo/95 backdrop-blur-md shadow-sm' 
-          : 'py-5 bg-white/80 dark:bg-indigo/80 backdrop-blur-sm'
+          : 'bg-white/80 dark:bg-indigo/80 backdrop-blur-sm'
       )}
       style={{
         willChange: 'transform, opacity, background',
