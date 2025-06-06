@@ -1,13 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
-import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
+import { TraditionalBackground, TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import { KanaType } from '@/types/kana';
 import { QuizSession, quizSessionService } from '@/services/quizSessionService';
 import { useToast } from '@/hooks/use-toast';
@@ -115,17 +113,15 @@ const Quiz: React.FC = () => {
     return (
       <TraditionalBackground>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
-            <CardContent className="p-8 text-center">
-              <h3 className="text-xl font-semibold mb-4">Sign in to Take Quiz</h3>
-              <p className="text-gray-600 mb-6">Create an account to track your progress and take quizzes.</p>
-              <Link to="/auth">
-                <Button className="bg-indigo hover:bg-indigo/90">
-                  Sign In
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <TraditionalCard className="p-8 text-center">
+            <h3 className="text-xl font-traditional text-paper-warm mb-4">Sign in to Take Quiz</h3>
+            <p className="text-wood-light/80 mb-6 font-traditional">Create an account to track your progress and take quizzes.</p>
+            <Link to="/auth">
+              <Button className="bg-vermilion hover:bg-vermilion/90 text-paper-warm font-traditional">
+                Sign In
+              </Button>
+            </Link>
+          </TraditionalCard>
         </div>
       </TraditionalBackground>
     );
@@ -138,7 +134,7 @@ const Quiz: React.FC = () => {
           <Button
             variant="ghost"
             asChild
-            className="mb-4 text-wood-light hover:text-lantern-warm font-traditional"
+            className="mb-4 text-paper-warm hover:text-lantern-warm font-traditional bg-wood-grain/20 border border-wood-light/40"
           >
             <Link to="/dashboard" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
@@ -147,13 +143,15 @@ const Quiz: React.FC = () => {
           </Button>
         </div>
 
-        <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
-          <CardHeader>
-            <CardTitle className="text-2xl font-traditional text-gion-night">
-              {quizStarted ? 'Kana Quiz' : 'Choose Your Quiz'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <TraditionalCard>
+          <div className="p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-traditional text-paper-warm mb-2 tracking-wide">
+                {quizStarted ? 'Kana Quiz' : 'Choose Your Quiz'}
+              </h1>
+              <div className="w-20 h-px bg-gradient-to-r from-transparent via-lantern-warm to-transparent mx-auto"></div>
+            </div>
+            
             {!quizStarted ? (
               <SimpleQuizSetup onStartQuiz={handleStartQuiz} />
             ) : (
@@ -163,8 +161,8 @@ const Quiz: React.FC = () => {
                 session={currentSession}
               />
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </TraditionalCard>
       </div>
     </TraditionalBackground>
   );
