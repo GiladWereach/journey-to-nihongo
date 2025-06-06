@@ -7,7 +7,7 @@ import { CheckCircle2, XCircle, RotateCcw, Trophy, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { kanaService } from '@/services/kanaService';
-import { Kana, KanaType } from '@/types/kana';
+import { KanaCharacter, KanaType } from '@/types/kana';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuizProgress } from '@/hooks/useQuizProgress';
 import { QuizSession, quizSessionService } from '@/services/quizSessionService';
@@ -20,7 +20,7 @@ interface EnhancedQuizInterfaceProps {
 }
 
 interface QuizQuestion {
-  character: Kana;
+  character: KanaCharacter;
   options: string[];
   correctAnswer: string;
 }
