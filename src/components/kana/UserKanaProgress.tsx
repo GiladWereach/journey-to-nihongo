@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -162,8 +161,12 @@ const UserKanaProgressGrid: React.FC<KanaProgressGridProps> = ({
   );
 };
 
-const UserKanaProgress: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('hiragana');
+interface UserKanaProgressProps {
+  kanaType?: 'hiragana' | 'katakana';
+}
+
+const UserKanaProgress: React.FC<UserKanaProgressProps> = ({ kanaType }) => {
+  const [activeTab, setActiveTab] = useState<string>(kanaType || 'hiragana');
   const { user } = useAuth();
   const [stats, setStats] = useState<{
     hiragana: { learned: number, total: number, avgProficiency: number },
@@ -217,6 +220,39 @@ const UserKanaProgress: React.FC = () => {
     
     fetchStats();
   }, [user]);
+
+  // If a specific kanaType is provided, show only that type
+  if (kanaType) {
+    return (
+      <div className="space-y-6">
+        <Card className="bg-indigo/5 border-indigo/10">
+          <CardContent className="p-4">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{kanaType === 'hiragana' ? 'Hiragana' : 'Katakana'} Progress</p>
+              <div className="flex items-baseline gap-1">
+                <span className={`text-xl font-semibold ${kanaType === 'hiragana' ? 'text-indigo' : 'text-vermilion'}`}>
+                  {kanaType === 'hiragana' ? stats.hiragana.learned : stats.katakana.learned}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  / {kanaType === 'hiragana' ? stats.hiragana.total : stats.katakana.total} learned
+                </span>
+              </div>
+              <TraditionalProgressIndicator 
+                progress={kanaType === 'hiragana' 
+                  ? (stats.hiragana.learned / Math.max(1, stats.hiragana.total)) * 100
+                  : (stats.katakana.learned / Math.max(1, stats.katakana.total)) * 100
+                }
+                size="sm"
+                type={kanaType}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <UserKanaProgressGrid kanaType={kanaType} />
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
