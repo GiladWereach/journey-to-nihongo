@@ -1,283 +1,233 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Play, 
-  BookOpen, 
-  TrendingUp, 
-  Calendar,
-  Award,
-  ChevronUp,
-  Target,
-  BarChart3
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, AlertTriangle, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
+import UserKanaProgress from '@/components/kana/UserKanaProgress';
+import ProgressOverview from '@/components/progress/ProgressOverview';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
+import { UserKanaProgress as UserKanaProgressType } from '@/types/kana';
+import { useSessionCleanup } from '@/hooks/useSessionCleanup';
+import { useToast } from '@/hooks/use-toast';
+import AbandonedSessionsFixer from '@/components/admin/AbandonedSessionsFixer';
 import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
-import { TraditionalBackground, TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
-import TraditionalHeader from '@/components/ui/TraditionalHeader';
-import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
-
-interface CharacterProgress {
-  character: string;
-  romaji: string;
-  status: 'new' | 'learning' | 'learned';
-  proficiency: number;
-  id: string;
-}
-
-interface ProgressStats {
-  totalLearned: number;
-  totalCharacters: number;
-  accuracy: number;
-  streak: number;
-  weeklyProgress: boolean[];
-  overallProficiency: number;
-  currentLevel: 'Beginner' | 'Intermediate' | 'Advanced';
-  totalSessions: number;
-}
 
 const RevampedProgress: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [showDetails, setShowDetails] = useState(false);
-  const [stats, setStats] = useState<ProgressStats>({
-    totalLearned: 0,
-    totalCharacters: 92,
-    accuracy: 0,
-    streak: 0,
-    weeklyProgress: [false, false, false, false, false, false, false],
-    overallProficiency: 0,
-    currentLevel: 'Beginner',
-    totalSessions: 0
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const [userProgress, setUserProgress] = useState<UserKanaProgressType[]>([]);
+  const [hiragana, setHiragana] = useState<any[]>([]);
+  const [katakana, setKatakana] = useState<any[]>([]);
+  const [overallProgress, setOverallProgress] = useState({
+    all: 0,
+    hiragana: 0,
+    katakana: 0,
   });
-  const [nextCharacters, setNextCharacters] = useState<CharacterProgress[]>([]);
-  const [hiraganaProgress, setHiraganaProgress] = useState(0);
-  const [katakanaProgress, setKatakanaProgress] = useState(0);
+  const [hiraganaStats, setHiraganaStats] = useState({
+    level0: 0,
+    level1: 0,
+    level2: 0,
+    level3Plus: 0,
+    total: 0,
+  });
+  const [katakanaStats, setKatakanaStats] = useState({
+    level0: 0,
+    level1: 0,
+    level2: 0,
+    level3Plus: 0,
+    total: 0,
+  });
+  const [streakData, setStreakData] = useState({
+    currentStreak: 0,
+    longestStreak: 0,
+    lastPracticeDate: null as Date | null,
+  });
+  const [timelineData, setTimelineData] = useState<
+    Array<{
+      date: string;
+      charactersStudied: number;
+      averageProficiency: number;
+    }>
+  >([]);
+  const [overallLearningProgress, setOverallLearningProgress] = useState({
+    hiragana: 0,
+    katakana: 0,
+    basic_kanji: 0,
+    grammar: 0,
+  });
+  const [hasIncompleteData, setHasIncompleteData] = useState(false);
+
+  // Use the cleanup hook to fix abandoned sessions when viewing progress
+  useSessionCleanup();
 
   useEffect(() => {
-    if (user) {
-      fetchProgressData();
-    } else {
-      setLoading(false);
+    const fetchKana = async () => {
+      const hiraganaData = await kanaService.getKanaByType('hiragana');
+      const katakanaData = await kanaService.getKanaByType('katakana');
+      setHiragana(hiraganaData);
+      setKatakana(katakanaData);
+    };
+
+    fetchKana();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProgress = async () => {
+      if (!user) return;
+
+      setIsLoadingProgress(true);
+      try {
+        // Check for incomplete sessions
+        const { data: incompleteSessions, error: sessionError } = await supabase
+          .from('kana_learning_sessions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('completed', false);
+
+        if (sessionError) {
+          console.error('Error checking sessions:', sessionError);
+        } else if (incompleteSessions && incompleteSessions.length > 0) {
+          setHasIncompleteData(true);
+          toast({
+            title: "Incomplete quiz sessions detected",
+            description: `You have ${incompleteSessions.length} incomplete quiz sessions. This may affect your progress statistics.`,
+            variant: "destructive",
+          });
+        }
+
+        const progressData = await characterProgressService.getUserProgress(user.id);
+        setUserProgress(progressData);
+
+        // Calculate overall progress
+        const hiraganaProgress = progressData.filter((p) =>
+          hiragana.some((k) => k.id === p.character_id)
+        );
+        const katakanaProgress = progressData.filter((p) =>
+          katakana.some((k) => k.id === p.character_id)
+        );
+
+        const overallHiragana =
+          hiragana.length > 0
+            ? hiraganaProgress.reduce((sum, p) => sum + p.proficiency, 0) / hiragana.length
+            : 0;
+        const overallKatakana =
+          katakana.length > 0
+            ? katakanaProgress.reduce((sum, p) => sum + p.proficiency, 0) / katakana.length
+            : 0;
+
+        setOverallProgress({
+          all: (overallHiragana + overallKatakana) / 2,
+          hiragana: overallHiragana,
+          katakana: overallKatakana,
+        });
+
+        // Calculate mastery stats
+        const hiraganaStatsData = calculateMasteryStats(hiraganaProgress);
+        const katakanaStatsData = calculateMasteryStats(katakanaProgress);
+
+        setHiraganaStats(hiraganaStatsData);
+        setKatakanaStats(katakanaStatsData);
+
+        // Fetch streak data
+        const streak = await fetchStreakData(user.id);
+        setStreakData(streak);
+
+        // Mock timeline data
+        const timeline = generateMockTimelineData();
+        setTimelineData(timeline);
+
+        // Mock overall learning progress
+        const learningProgress = generateMockLearningProgress();
+        setOverallLearningProgress(learningProgress);
+      } catch (error) {
+        console.error('Error fetching user progress:', error);
+        toast({
+          title: "Error loading progress",
+          description: "There was an issue loading your progress data.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingProgress(false);
+      }
+    };
+
+    if (user && hiragana.length > 0 && katakana.length > 0) {
+      fetchUserProgress();
     }
-  }, [user]);
+  }, [user, hiragana, katakana, toast]);
 
-  const fetchProgressData = async () => {
-    if (!user) return;
+  const calculateMasteryStats = (progress: UserKanaProgressType[]) => {
+    const level0 = progress.filter((p) => p.proficiency < 25).length;
+    const level1 = progress.filter((p) => p.proficiency >= 25 && p.proficiency < 50).length;
+    const level2 = progress.filter((p) => p.proficiency >= 50 && p.proficiency < 75).length;
+    const level3Plus = progress.filter((p) => p.proficiency >= 75).length;
+    const total = progress.length;
 
-    try {
-      setLoading(true);
-      
-      // Get all character progress from database
-      const allProgress = await characterProgressService.getUserProgress(user.id);
-      const hiraganaChars = kanaService.getKanaByType('hiragana');
-      const katakanaChars = kanaService.getKanaByType('katakana');
-      
-      // Calculate real stats from database
-      const learnedCount = allProgress.filter(p => p.proficiency >= 70).length;
-      const avgAccuracy = allProgress.length > 0 
-        ? Math.round(allProgress.reduce((sum, p) => sum + p.proficiency, 0) / allProgress.length)
-        : 0;
-      
-      // Calculate hiragana and katakana progress from actual data
-      const hiraganaProgressData = allProgress.filter(p => 
-        hiraganaChars.some(c => c.id === p.character_id)
-      );
-      const katakanaProgressData = allProgress.filter(p => 
-        katakanaChars.some(c => c.id === p.character_id)
-      );
-      
-      const hiraganaLearned = hiraganaProgressData.filter(p => p.proficiency >= 70).length;
-      const katakanaLearned = katakanaProgressData.filter(p => p.proficiency >= 70).length;
-      
-      const hiraganaPercent = hiraganaChars.length > 0 
-        ? Math.round((hiraganaLearned / hiraganaChars.length) * 100)
-        : 0;
-      const katakanaPercent = katakanaChars.length > 0 
-        ? Math.round((katakanaLearned / katakanaChars.length) * 100)
-        : 0;
+    return {
+      level0,
+      level1,
+      level2,
+      level3Plus,
+      total,
+    };
+  };
 
-      setHiraganaProgress(hiraganaPercent);
-      setKatakanaProgress(katakanaPercent);
-      
-      // Get learning sessions for streak calculation
-      const { data: sessions, error: sessionError } = await supabase
-        .from('kana_learning_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('completed', true)
-        .order('start_time', { ascending: false });
+  const fetchStreakData = async (userId: string) => {
+    // Mock streak data for now
+    return {
+      currentStreak: 5,
+      longestStreak: 12,
+      lastPracticeDate: new Date(),
+    };
+  };
 
-      if (sessionError) {
-        console.error('Error fetching sessions:', sessionError);
-      }
-
-      // Calculate streak from sessions
-      let currentStreak = 0;
-      if (sessions && sessions.length > 0) {
-        const today = new Date();
-        const oneDay = 24 * 60 * 60 * 1000;
-        let checkDate = new Date(today);
-        
-        // Check consecutive days backwards
-        for (let i = 0; i < 30; i++) { // Check up to 30 days
-          const dayStart = new Date(checkDate);
-          dayStart.setHours(0, 0, 0, 0);
-          const dayEnd = new Date(checkDate);
-          dayEnd.setHours(23, 59, 59, 999);
-          
-          const hasSessionThisDay = sessions.some(session => {
-            const sessionDate = new Date(session.start_time);
-            return sessionDate >= dayStart && sessionDate <= dayEnd;
-          });
-          
-          if (hasSessionThisDay) {
-            currentStreak++;
-            checkDate = new Date(checkDate.getTime() - oneDay);
-          } else if (i === 0) {
-            // If no session today, check yesterday
-            checkDate = new Date(checkDate.getTime() - oneDay);
-          } else {
-            // Break streak
-            break;
-          }
-        }
-      }
-
-      // Calculate weekly progress (last 7 days)
-      const weeklyProgress = Array(7).fill(false);
-      if (sessions && sessions.length > 0) {
-        const today = new Date();
-        for (let i = 0; i < 7; i++) {
-          const checkDate = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
-          const dayStart = new Date(checkDate);
-          dayStart.setHours(0, 0, 0, 0);
-          const dayEnd = new Date(checkDate);
-          dayEnd.setHours(23, 59, 59, 999);
-          
-          const hasSession = sessions.some(session => {
-            const sessionDate = new Date(session.start_time);
-            return sessionDate >= dayStart && sessionDate <= dayEnd;
-          });
-          
-          weeklyProgress[6 - i] = hasSession;
-        }
-      }
-      
-      // Determine current level based on real progress
-      let currentLevel: 'Beginner' | 'Intermediate' | 'Advanced' = 'Beginner';
-      if (avgAccuracy >= 80 && learnedCount >= 60) currentLevel = 'Advanced';
-      else if (avgAccuracy >= 60 && learnedCount >= 30) currentLevel = 'Intermediate';
-      
-      // Get next characters to practice (prioritize low proficiency or unlearned)
-      const allKana = [...hiraganaChars, ...katakanaChars];
-      const nextChars: CharacterProgress[] = [];
-      
-      // Sort characters by proficiency (lowest first) and select up to 8
-      const sortedKana = allKana
-        .map(kana => {
-          const progress = allProgress.find(p => p.character_id === kana.id);
-          const proficiency = progress?.proficiency || 0;
-          
-          let status: 'new' | 'learning' | 'learned' = 'new';
-          if (proficiency >= 70) status = 'learned';
-          else if (proficiency > 0) status = 'learning';
-          
-          return {
-            character: kana.character,
-            romaji: kana.romaji,
-            status,
-            proficiency,
-            id: kana.id
-          };
-        })
-        .sort((a, b) => a.proficiency - b.proficiency)
-        .slice(0, 8);
-      
-      setNextCharacters(sortedKana);
-      setStats({
-        totalLearned: learnedCount,
-        totalCharacters: allKana.length,
-        accuracy: avgAccuracy,
-        streak: currentStreak,
-        weeklyProgress,
-        overallProficiency: avgAccuracy,
-        currentLevel,
-        totalSessions: sessions?.length || 0
+  const generateMockTimelineData = () => {
+    const data = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateString = date.toLocaleDateString();
+      data.push({
+        date: dateString,
+        charactersStudied: Math.floor(Math.random() * 10),
+        averageProficiency: Math.floor(Math.random() * 100),
       });
-      
-    } catch (error) {
-      console.error('Error fetching progress data:', error);
-    } finally {
-      setLoading(false);
     }
+    return data;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return 'border-lantern-amber text-lantern-amber';
-      case 'learning': return 'border-lantern-warm text-lantern-warm';
-      case 'learned': return 'border-wood-light text-wood-light';
-      default: return 'border-paper-warm/40 text-paper-warm/60';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'new': return '○';
-      case 'learning': return '◐';
-      case 'learned': return '●';
-      default: return '○';
-    }
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'Beginner': return 'bg-lantern-amber/20 text-lantern-amber border-lantern-amber/40';
-      case 'Intermediate': return 'bg-lantern-warm/20 text-lantern-warm border-lantern-warm/40';
-      case 'Advanced': return 'bg-wood-light/20 text-wood-light border-wood-light/40';
-      default: return 'bg-paper-warm/10 text-paper-warm/60 border-paper-warm/20';
-    }
+  const generateMockLearningProgress = () => {
+    return {
+      hiragana: Math.floor(Math.random() * 100),
+      katakana: Math.floor(Math.random() * 100),
+      basic_kanji: Math.floor(Math.random() * 100),
+      grammar: Math.floor(Math.random() * 100),
+    };
   };
 
   if (!user) {
     return (
       <TraditionalBackground>
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <TraditionalCard className="max-w-md w-full p-8">
-            <div className="text-center">
-              <BookOpen className="mx-auto h-12 w-12 text-wood-light mb-4" />
-              <h2 className="text-2xl font-traditional font-bold text-paper-warm mb-2">
-                Track Your Progress
-              </h2>
-              <p className="text-paper-warm/70 mb-6 font-traditional">
-                Sign in to see your Japanese learning journey
-              </p>
-              <Button 
-                onClick={() => navigate('/auth')} 
-                className="w-full traditional-button"
-              >
-                Sign In
-              </Button>
-            </div>
-          </TraditionalCard>
-        </div>
-      </TraditionalBackground>
-    );
-  }
-
-  if (loading) {
-    return (
-      <TraditionalBackground>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-wood-light border-t-transparent rounded-full animate-spin"></div>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-xl font-semibold mb-4">Sign in to View Progress</h3>
+              <p className="text-gray-600 mb-6">Create an account to track your Japanese learning journey.</p>
+              <Link to="/auth">
+                <Button className="bg-indigo hover:bg-indigo/90">
+                  Sign In
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </TraditionalBackground>
     );
@@ -285,291 +235,102 @@ const RevampedProgress: React.FC = () => {
 
   return (
     <TraditionalBackground>
-      <div className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Traditional Header */}
-          <TraditionalHeader 
-            showStats={true}
-            stats={{
-              streak: stats.streak,
-              mastered: stats.totalLearned,
-              proficiency: stats.accuracy
-            }}
-          />
-
-          {/* Three-Column Hero Dashboard */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Left Column: Learning Path */}
-            <TraditionalCard className="p-6">
-              <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
-                <Target className="mr-2 h-5 w-5 text-wood-light" />
-                Your Learning Path
-              </h2>
-              
-              <div className="space-y-6">
-                {/* Hiragana Progress */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-traditional font-medium text-paper-warm">ひらがな Hiragana</span>
-                    <span className="text-sm text-paper-warm/70 font-traditional">{hiraganaProgress}%</span>
-                  </div>
-                  <TraditionalProgressIndicator 
-                    progress={hiraganaProgress}
-                    type="hiragana"
-                    size="md"
-                  />
-                </div>
-
-                {/* Katakana Progress */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-traditional font-medium text-paper-warm">カタカナ Katakana</span>
-                    <span className="text-sm text-paper-warm/70 font-traditional">{katakanaProgress}%</span>
-                  </div>
-                  <TraditionalProgressIndicator 
-                    progress={katakanaProgress}
-                    type="katakana"
-                    size="md"
-                  />
-                </div>
-
-                {/* Basic Kanji (Future) */}
-                <div className="opacity-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-traditional font-medium text-paper-warm">漢字 Basic Kanji</span>
-                    <span className="text-sm text-paper-warm/70 font-traditional">0%</span>
-                  </div>
-                  <TraditionalProgressIndicator 
-                    progress={0}
-                    size="md"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-wood-grain/50 backdrop-blur-md border border-wood-light/40">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Current Level</span>
-                  <Badge className={getLevelColor(stats.currentLevel)}>
-                    {stats.currentLevel}
-                  </Badge>
-                </div>
-                <p className="text-sm text-paper-warm/60 font-traditional">
-                  {stats.currentLevel === 'Beginner' && "Focus on learning basic characters and building consistency."}
-                  {stats.currentLevel === 'Intermediate' && "Great progress! Continue practicing to build fluency."}
-                  {stats.currentLevel === 'Advanced' && "Excellent mastery! Ready for advanced challenges."}
-                </p>
-              </div>
-
-              <Button 
-                onClick={() => navigate('/quiz')} 
-                className="w-full mt-6 traditional-button"
-              >
-                <Play className="mr-2 h-4 w-4" />
-                Continue Learning
-              </Button>
-            </TraditionalCard>
-
-            {/* Center Column: Today's Focus */}
-            <TraditionalCard className="p-6">
-              <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
-                <BookOpen className="mr-2 h-5 w-5 text-wood-light" />
-                Priority Practice
-              </h2>
-
-              <div className="grid grid-cols-4 gap-3 mb-6">
-                {nextCharacters.map((char, index) => (
-                  <div
-                    key={char.id}
-                    className="aspect-square bg-wood-grain/30 backdrop-blur-sm border-2 border-wood-light/20 flex flex-col items-center justify-center p-2 hover:border-wood-light/40 transition-all cursor-pointer"
-                  >
-                    <div className="text-2xl font-traditional font-bold text-paper-warm mb-1">{char.character}</div>
-                    <div className="text-xs text-paper-warm/60 mb-1 font-traditional">{char.romaji}</div>
-                    <div className={cn("text-xs font-traditional", getStatusColor(char.status))}>
-                      {getStatusIcon(char.status)} {char.proficiency}%
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-wood-grain/30 backdrop-blur-sm border border-wood-light/20">
-                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Total Sessions</span>
-                  <span className="text-sm text-wood-light font-traditional">{stats.totalSessions}</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-wood-grain/30 backdrop-blur-sm border border-wood-light/20">
-                  <span className="text-sm font-traditional font-medium text-paper-warm/80">Characters Learned</span>
-                  <span className="text-sm text-lantern-warm font-traditional">{stats.totalLearned}/{stats.totalCharacters}</span>
-                </div>
-              </div>
-
-              <Button 
-                onClick={() => navigate('/quiz')} 
-                className="w-full mt-6 traditional-button"
-              >
-                <Play className="mr-2 h-4 w-4" />
-                Start Practice Session
-              </Button>
-
-              <Button 
-                onClick={() => navigate('/quick-quiz')} 
-                className="w-full mt-3 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
-              >
-                Quick 5-Minute Review
-              </Button>
-            </TraditionalCard>
-
-            {/* Right Column: Quick Stats */}
-            <TraditionalCard className="p-6">
-              <h2 className="text-xl font-traditional font-semibold text-paper-warm mb-6 flex items-center">
-                <BarChart3 className="mr-2 h-5 w-5 text-wood-light" />
-                Your Statistics
-              </h2>
-
-              <div className="space-y-6">
-                {/* Streak */}
-                <div className="text-center p-4 bg-wood-grain/30 backdrop-blur-sm border border-lantern-amber/40">
-                  <div className="text-3xl mb-2">🔥</div>
-                  <div className="text-2xl font-traditional font-bold text-lantern-amber">{stats.streak} days</div>
-                  <div className="text-sm text-paper-warm/60 font-traditional">Current Streak</div>
-                </div>
-
-                {/* Progress Summary */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-paper-warm/70 font-traditional">Characters Learned</span>
-                    <span className="font-traditional font-semibold text-paper-warm">{stats.totalLearned}/{stats.totalCharacters}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-paper-warm/70 font-traditional">Average Proficiency</span>
-                    <span className="font-traditional font-semibold text-paper-warm">{stats.accuracy}%</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-paper-warm/70 font-traditional">Practice Sessions</span>
-                    <span className="font-traditional font-semibold text-paper-warm">{stats.totalSessions}</span>
-                  </div>
-                </div>
-
-                {/* Weekly Progress */}
-                <div>
-                  <div className="text-sm text-paper-warm/70 mb-2 font-traditional">This Week</div>
-                  <div className="flex space-x-1 mb-2">
-                    {stats.weeklyProgress.map((active, index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          "flex-1 h-8 border border-wood-light/20",
-                          active ? "bg-wood-light/30" : "bg-wood-grain/20"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <div className="text-xs text-paper-warm/50 text-center font-traditional">
-                    {stats.weeklyProgress.filter(Boolean).length}/7 days active
-                  </div>
-                </div>
-              </div>
-
-              <Button 
-                className="w-full mt-6 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
-                onClick={() => setShowDetails(!showDetails)}
-              >
-                <TrendingUp className="mr-2 h-4 w-4" />
-                View Detailed Progress
-              </Button>
-
-              <Button 
-                className="w-full mt-3 bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70 hover:border-wood-light/60"
-                onClick={() => navigate('/kana-learning')}
-              >
-                <Award className="mr-2 h-4 w-4" />
-                Character Details
-              </Button>
-            </TraditionalCard>
-          </div>
-
-          {/* Expandable Details Section */}
-          {showDetails && (
-            <TraditionalCard className="p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-traditional font-semibold text-paper-warm">Detailed Progress</h2>
-                <Button
-                  className="bg-wood-grain/50 border-wood-light/40 text-paper-warm hover:bg-wood-grain/70"
-                  size="sm"
-                  onClick={() => setShowDetails(false)}
-                >
-                  <ChevronUp className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <Tabs defaultValue="characters" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-wood-grain/30 border-wood-light/40">
-                  <TabsTrigger value="characters" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Characters</TabsTrigger>
-                  <TabsTrigger value="timeline" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Timeline</TabsTrigger>
-                  <TabsTrigger value="achievements" className="font-traditional text-paper-warm data-[state=active]:bg-wood-light/20">Progress</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="characters" className="space-y-4">
-                  <div className="grid grid-cols-8 sm:grid-cols-12 gap-2">
-                    {nextCharacters.concat(
-                      Array.from({ length: 24 }, (_, i) => ({
-                        character: '○',
-                        romaji: '',
-                        status: 'new' as const,
-                        proficiency: 0,
-                        id: `placeholder-${i}`
-                      }))
-                    ).slice(0, 32).map((char, index) => (
-                      <div
-                        key={char.id}
-                        className={cn(
-                          "aspect-square border-2 flex flex-col items-center justify-center text-xs font-traditional",
-                          char.character === '○' 
-                            ? "bg-wood-grain/20 border-wood-light/20 text-paper-warm/40"
-                            : cn("bg-wood-grain/30 backdrop-blur-sm", getStatusColor(char.status))
-                        )}
-                      >
-                        <div className="font-medium">{char.character}</div>
-                        {char.romaji && <div className="text-xs opacity-70">{char.romaji}</div>}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex items-center space-x-4 text-sm font-traditional">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-lantern-amber">○</span>
-                      <span className="text-paper-warm/70">New</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-lantern-warm">◐</span>
-                      <span className="text-paper-warm/70">Learning</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-wood-light">●</span>
-                      <span className="text-paper-warm/70">Learned</span>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="timeline" className="space-y-4">
-                  <div className="text-center py-8 text-paper-warm/50">
-                    <Calendar className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p className="font-traditional">Practice timeline will appear here as you continue learning</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="achievements" className="space-y-4">
-                  <div className="text-center py-8 text-paper-warm/50">
-                    <Award className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p className="font-traditional">Progress tracking will show detailed analytics</p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </TraditionalCard>
-          )}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            asChild
+            className="mb-4 text-wood-light hover:text-lantern-warm font-traditional"
+          >
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
         </div>
+
+        {hasIncompleteData && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-amber-800">Data Quality Issue Detected</h4>
+                  <p className="text-sm text-amber-700">
+                    Some quiz sessions weren't properly completed. Use the admin tools below to fix this.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
+          <CardHeader>
+            <CardTitle className="text-2xl font-traditional text-gion-night">
+              Learning Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-wood-grain/10">
+                <TabsTrigger value="overview" className="font-traditional">Overview</TabsTrigger>
+                <TabsTrigger value="characters" className="font-traditional">Characters</TabsTrigger>
+                <TabsTrigger value="admin" className="font-traditional">
+                  <Settings className="h-4 w-4 mr-1" />
+                  Admin
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="overview" className="mt-6">
+                <ProgressOverview
+                  hiraganaStats={hiraganaStats}
+                  katakanaStats={katakanaStats}
+                  streakData={streakData}
+                  timelineData={timelineData}
+                  overallProgress={overallLearningProgress}
+                  loading={isLoadingProgress}
+                />
+              </TabsContent>
+              
+              <TabsContent value="characters" className="mt-6">
+                <UserKanaProgress />
+              </TabsContent>
+              
+              <TabsContent value="admin" className="mt-6">
+                <div className="space-y-6">
+                  <AbandonedSessionsFixer />
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Progress Data Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium">Character Progress Records:</p>
+                          <p className="text-muted-foreground">{userProgress.length} entries</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Overall Progress:</p>
+                          <p className="text-muted-foreground">{overallProgress.all.toFixed(1)}%</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Hiragana Progress:</p>
+                          <p className="text-muted-foreground">{overallProgress.hiragana.toFixed(1)}%</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Katakana Progress:</p>
+                          <p className="text-muted-foreground">{overallProgress.katakana.toFixed(1)}%</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </TraditionalBackground>
   );

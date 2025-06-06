@@ -75,16 +75,6 @@ function App() {
                     <RevampedProgress />
                   </RequireAuth>
                 } />
-                <Route path="/progress/legacy" element={
-                  <RequireAuth>
-                    <Progress />
-                  </RequireAuth>
-                } />
-                <Route path="/progress/enhanced" element={
-                  <RequireAuth>
-                    <EnhancedProgress />
-                  </RequireAuth>
-                } />
                 <Route path="/learn" element={<Learn />} />
                 <Route path="/practice" element={<Practice />} />
                 <Route path="/quiz" element={<Quiz />} />
