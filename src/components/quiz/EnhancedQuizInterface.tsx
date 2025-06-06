@@ -1,37 +1,20 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, RotateCcw, Trophy, Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
+import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { kanaService } from '@/services/kanaService';
-import { KanaCharacter, KanaType } from '@/types/kana';
-import { useAuth } from '@/contexts/AuthContext';
-import { useQuizProgress } from '@/hooks/useQuizProgress';
-import { QuizSession, quizSessionService } from '@/services/quizSessionService';
-import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { characterProgressService } from '@/services/characterProgressService';
+import { quizSessionService, QuizSession } from '@/services/quizSessionService';
+import { KanaType, KanaCharacter } from '@/types/kana';
 
 interface EnhancedQuizInterfaceProps {
   kanaType: KanaType;
   onEndQuiz: () => void;
   session: QuizSession | null;
-}
-
-interface QuizQuestion {
-  character: KanaCharacter;
-  options: string[];
-  correctAnswer: string;
-}
-
-interface QuizResult {
-  character: string;
-  romaji: string;
-  userAnswer: string;
-  correct: boolean;
-  timeSpent: number;
-  characterId: string;
 }
 
 const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
@@ -41,353 +24,286 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { updateProgress } = useQuizProgress();
   
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [characters, setCharacters] = useState<KanaCharacter[]>([]);
+  const [currentCharacter, setCurrentCharacter] = useState<KanaCharacter | null>(null);
+  const [options, setOptions] = useState<string[]>([]);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
-  const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
-  const [isQuizComplete, setIsQuizComplete] = useState(false);
 
-  const sessionRef = useRef(session);
-  sessionRef.current = session;
-
+  // Load characters
   useEffect(() => {
-    const initializeQuiz = async () => {
+    const loadCharacters = async () => {
       try {
         const kanaData = await kanaService.getKanaByType(kanaType);
-        const shuffledKana = [...kanaData].sort(() => Math.random() - 0.5);
-        const selectedKana = shuffledKana.slice(0, 10);
-
-        const quizQuestions: QuizQuestion[] = selectedKana.map(kana => {
-          const allKana = kanaData.filter(k => k.id !== kana.id);
-          const wrongAnswers = allKana
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3)
-            .map(k => k.romaji);
-          
-          const options = [kana.romaji, ...wrongAnswers].sort(() => Math.random() - 0.5);
-          
-          return {
-            character: kana,
-            options,
-            correctAnswer: kana.romaji
-          };
-        });
-
-        setQuestions(quizQuestions);
-        setQuestionStartTime(Date.now());
+        setCharacters(kanaData);
+        setIsLoading(false);
       } catch (error) {
-        console.error('Error initializing quiz:', error);
+        console.error('Error loading characters:', error);
         toast({
           title: "Error",
-          description: "Failed to load quiz questions. Please try again.",
+          description: "Failed to load quiz questions.",
           variant: "destructive",
         });
-      } finally {
         setIsLoading(false);
       }
     };
 
-    initializeQuiz();
+    loadCharacters();
   }, [kanaType, toast]);
 
-  // Update session progress whenever score changes
+  // Generate new question
+  const generateQuestion = useCallback(() => {
+    if (characters.length === 0) return;
+
+    const randomCharacter = characters[Math.floor(Math.random() * characters.length)];
+    setCurrentCharacter(randomCharacter);
+
+    // Generate wrong answers
+    const wrongAnswers = characters
+      .filter(char => char.romaji !== randomCharacter.romaji)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3)
+      .map(char => char.romaji);
+
+    // Mix with correct answer and shuffle
+    const allOptions = [randomCharacter.romaji, ...wrongAnswers].sort(() => 0.5 - Math.random());
+    setOptions(allOptions);
+
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    setShowResult(false);
+  }, [characters]);
+
+  // Initialize first question
   useEffect(() => {
-    const updateSessionProgress = async () => {
-      if (sessionRef.current && user) {
-        const questionsAnswered = quizResults.length;
-        const correctAnswers = score;
-        
-        await quizSessionService.updateSession(
-          sessionRef.current.id, 
-          questionsAnswered, 
-          correctAnswers
-        );
-      }
-    };
-
-    if (quizResults.length > 0) {
-      updateSessionProgress();
+    if (characters.length > 0) {
+      generateQuestion();
     }
-  }, [score, quizResults.length, user]);
+  }, [characters, generateQuestion]);
 
-  const handleAnswerSubmit = (answer: string) => {
-    if (!answer || showResult) return;
-
-    const currentQuestion = questions[currentQuestionIndex];
-    const correct = answer === currentQuestion.correctAnswer;
-    const timeSpent = Date.now() - questionStartTime;
+  const handleAnswerSelect = async (answer: string) => {
+    if (selectedAnswer || !currentCharacter || !user) return;
 
     setSelectedAnswer(answer);
+    const correct = answer === currentCharacter.romaji;
     setIsCorrect(correct);
     setShowResult(true);
 
-    if (correct) {
-      setScore(score + 1);
-      setStreak(streak + 1);
-      setMaxStreak(Math.max(maxStreak, streak + 1));
-    } else {
-      setStreak(0);
+    // Update session
+    if (session) {
+      await quizSessionService.updateSession(session.id, {
+        questions_answered: questionCount + 1,
+        correct_answers: correctCount + (correct ? 1 : 0)
+      });
     }
 
-    // Record the result
-    const result: QuizResult = {
-      character: currentQuestion.character.character,
-      romaji: currentQuestion.correctAnswer,
-      userAnswer: answer,
-      correct,
-      timeSpent,
-      characterId: currentQuestion.character.id
-    };
+    // Update progress
+    await characterProgressService.updateProgress(
+      user.id,
+      currentCharacter.id,
+      correct ? 'correct' : 'incorrect'
+    );
 
-    setQuizResults(prev => [...prev, result]);
+    // Update counters
+    setQuestionCount(prev => prev + 1);
+    if (correct) {
+      setCorrectCount(prev => prev + 1);
+      setCurrentStreak(prev => {
+        const newStreak = prev + 1;
+        setMaxStreak(current => Math.max(current, newStreak));
+        return newStreak;
+      });
+    } else {
+      setCurrentStreak(0);
+    }
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer('');
-      setShowResult(false);
-      setQuestionStartTime(Date.now());
-    } else {
-      completeQuiz();
-    }
+    generateQuestion();
   };
 
-  const completeQuiz = async () => {
-    if (isQuizComplete) return;
-    
-    setIsQuizComplete(true);
-    
-    try {
-      // Update character progress
-      if (user && quizResults.length > 0) {
-        const sessionId = sessionRef.current?.id || 'unknown';
-        await updateProgress(quizResults, sessionId);
-      }
-
-      // End the quiz session
-      if (sessionRef.current) {
-        console.log('Completing quiz session:', sessionRef.current.id);
-        await quizSessionService.endSession(sessionRef.current.id);
-      }
-
-      // Show completion message
-      const accuracy = Math.round((score / questions.length) * 100);
-      toast({
-        title: "Quiz Complete!",
-        description: `You scored ${score}/${questions.length} (${accuracy}%) with a max streak of ${maxStreak}`,
-      });
-
-      // End the quiz
-      onEndQuiz();
-    } catch (error) {
-      console.error('Error completing quiz:', error);
-      toast({
-        title: "Quiz completed with issues",
-        description: "Your quiz is done but there may have been issues saving your progress.",
-        variant: "destructive",
-      });
-      onEndQuiz();
-    }
+  const handleFinishQuiz = () => {
+    onEndQuiz();
   };
-
-  // Cleanup effect for component unmount
-  useEffect(() => {
-    return () => {
-      if (!isQuizComplete && sessionRef.current) {
-        // Force complete session if component unmounts before quiz is finished
-        quizSessionService.forceCompleteSession(
-          sessionRef.current.id,
-          quizResults.length,
-          score
-        );
-      }
-    };
-  }, []);
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo"></div>
-      </div>
+      <TraditionalCard>
+        <div className="p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lantern-warm mx-auto mb-4"></div>
+          <p className="text-wood-light font-traditional">Loading quiz questions...</p>
+        </div>
+      </TraditionalCard>
     );
   }
 
-  if (questions.length === 0) {
+  if (!currentCharacter) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600 mb-4">No questions available for this kana type.</p>
-        <Button onClick={onEndQuiz}>Return to Setup</Button>
-      </div>
+      <TraditionalCard>
+        <div className="p-8 text-center">
+          <p className="text-wood-light font-traditional">No questions available for this kana type.</p>
+          <Button 
+            onClick={onEndQuiz}
+            className="mt-4 bg-vermilion hover:bg-vermilion/90 text-paper-warm font-traditional"
+          >
+            Back to Setup
+          </Button>
+        </div>
+      </TraditionalCard>
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + (showResult ? 1 : 0)) / questions.length) * 100;
+  const accuracy = questionCount > 0 ? Math.round((correctCount / questionCount) * 100) : 0;
 
   return (
     <div className="space-y-6">
-      {/* Progress and Stats Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Badge variant="outline" className="text-sm">
-            Question {currentQuestionIndex + 1} of {questions.length}
-          </Badge>
-          <Badge variant="outline" className="text-sm">
-            Score: {score}/{questions.length}
-          </Badge>
-          <Badge variant="outline" className="text-sm flex items-center gap-1">
-            <Zap className="h-3 w-3" />
-            Streak: {streak}
-          </Badge>
+      {/* Progress Section */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-4 text-sm">
+          <span className="text-wood-light font-traditional">Question {questionCount + 1}</span>
+          <span className="text-wood-light font-traditional">•</span>
+          <span className="text-wood-light font-traditional">{kanaType.charAt(0).toUpperCase() + kanaType.slice(1)} Quiz</span>
         </div>
-        <div className="text-sm text-gray-600">
-          {kanaType === 'hiragana' ? 'ひらがな' : 'カタカナ'} Quiz
-        </div>
+        <Button
+          variant="ghost"
+          onClick={handleFinishQuiz}
+          className="text-wood-light hover:text-lantern-warm font-traditional bg-wood-grain/20 border border-wood-light/40"
+        >
+          End Quiz
+        </Button>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
-          className="bg-indigo h-2 rounded-full transition-all duration-300" 
-          style={{ width: `${progress}%` }}
+      <div className="mb-8">
+        <TraditionalProgressIndicator 
+          progress={Math.min(questionCount * 10, 100)} 
+          size="lg"
+          type={kanaType}
         />
       </div>
 
-      {/* Question Card */}
-      <Card className="bg-gradient-to-br from-indigo/5 to-purple/5">
-        <CardContent className="p-8">
-          <div className="text-center space-y-6">
-            {/* Character Display */}
-            <div className="flex justify-center">
-              <JapaneseCharacter 
-                character={currentQuestion.character.character}
-                size="xl"
-                color="text-gion-night"
-              />
-            </div>
+      {/* Main Quiz Card */}
+      <TraditionalCard className="bg-gradient-to-br from-paper-warm/95 to-paper-aged/95">
+        <div className="p-12 text-center">
+          {/* Character Display */}
+          <div className="mb-8">
+            <JapaneseCharacter 
+              character={currentCharacter.character} 
+              size="xl" 
+              color="text-gion-night"
+              animated={true}
+            />
+          </div>
 
-            {/* Question */}
-            <div>
-              <h3 className="text-xl font-semibold mb-2">
-                What is the romaji for this character?
-              </h3>
-              <p className="text-gray-600">
-                Choose the correct pronunciation below
-              </p>
-            </div>
+          {/* Question */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-traditional text-gion-night mb-4">
+              What is the romaji for this character?
+            </h2>
+            <p className="text-wood-medium font-traditional">
+              Choose the correct pronunciation below
+            </p>
+          </div>
 
-            {/* Answer Options */}
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              {currentQuestion.options.map((option, index) => (
+          {/* Answer Options */}
+          <div className="grid grid-cols-2 gap-4 mb-8 max-w-md mx-auto">
+            {options.map((option, index) => {
+              let buttonClass = "p-4 text-lg font-traditional border-2 transition-all duration-300 ";
+              
+              if (showResult) {
+                if (option === currentCharacter.romaji) {
+                  buttonClass += "bg-matcha/20 border-matcha text-matcha border-matcha/60";
+                } else if (option === selectedAnswer) {
+                  buttonClass += "bg-vermilion/20 border-vermilion text-vermilion border-vermilion/60";
+                } else {
+                  buttonClass += "bg-wood-grain/10 border-wood-light/40 text-wood-medium opacity-50";
+                }
+              } else {
+                buttonClass += "bg-wood-grain/20 border-wood-light/40 text-gion-night hover:bg-wood-grain/30 hover:border-wood-light";
+              }
+
+              return (
                 <Button
                   key={index}
-                  variant={
-                    showResult
-                      ? option === currentQuestion.correctAnswer
-                        ? "default"
-                        : option === selectedAnswer
-                        ? "destructive"
-                        : "outline"
-                      : selectedAnswer === option
-                      ? "default"
-                      : "outline"
-                  }
-                  className={cn(
-                    "h-12 text-lg font-medium transition-all",
-                    showResult && option === currentQuestion.correctAnswer && "bg-green-500 hover:bg-green-600",
-                    showResult && option === selectedAnswer && option !== currentQuestion.correctAnswer && "bg-red-500 hover:bg-red-600"
-                  )}
-                  onClick={() => !showResult && setSelectedAnswer(option)}
+                  onClick={() => handleAnswerSelect(option)}
                   disabled={showResult}
+                  className={buttonClass}
                 >
                   {option}
                 </Button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
 
-            {/* Submit/Next Button */}
-            <div className="pt-4">
-              {!showResult ? (
-                <Button
-                  onClick={() => handleAnswerSubmit(selectedAnswer)}
-                  disabled={!selectedAnswer}
-                  className="bg-indigo hover:bg-indigo/90 px-8"
-                  size="lg"
-                >
-                  Submit Answer
-                </Button>
+          {/* Result Feedback */}
+          {showResult && (
+            <div className="mb-6">
+              {isCorrect ? (
+                <div className="text-matcha font-traditional text-lg">
+                  ✓ Correct! Well done!
+                </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Result Feedback */}
-                  <div className={cn(
-                    "flex items-center justify-center gap-2 text-lg font-semibold",
-                    isCorrect ? "text-green-600" : "text-red-600"
-                  )}>
-                    {isCorrect ? (
-                      <>
-                        <CheckCircle2 className="h-6 w-6" />
-                        Correct!
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-6 w-6" />
-                        Incorrect
-                      </>
-                    )}
-                  </div>
-
-                  {!isCorrect && (
-                    <p className="text-gray-600">
-                      The correct answer is: <strong>{currentQuestion.correctAnswer}</strong>
-                    </p>
-                  )}
-
-                  {/* Next Button */}
-                  <Button
-                    onClick={handleNextQuestion}
-                    className="bg-indigo hover:bg-indigo/90 px-8"
-                    size="lg"
-                  >
-                    {currentQuestionIndex < questions.length - 1 ? (
-                      "Next Question"
-                    ) : (
-                      <>
-                        <Trophy className="mr-2 h-4 w-4" />
-                        Complete Quiz
-                      </>
-                    )}
-                  </Button>
+                <div className="text-vermilion font-traditional text-lg">
+                  ✗ Incorrect. The answer is "{currentCharacter.romaji}"
                 </div>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
 
-      {/* Quick Stats */}
-      <div className="flex justify-center gap-6 text-sm text-gray-600">
-        <div className="text-center">
-          <div className="font-semibold">Accuracy</div>
-          <div>{quizResults.length > 0 ? Math.round((score / quizResults.length) * 100) : 0}%</div>
+          {/* Action Button */}
+          {showResult ? (
+            <Button
+              onClick={handleNextQuestion}
+              className="bg-lantern-warm hover:bg-lantern-amber text-gion-night font-traditional px-8 py-3"
+            >
+              Next Question
+            </Button>
+          ) : (
+            <Button
+              className="bg-wood-grain/30 border border-wood-light/40 text-wood-medium font-traditional px-8 py-3"
+              disabled
+            >
+              Submit Answer
+            </Button>
+          )}
         </div>
-        <div className="text-center">
-          <div className="font-semibold">Max Streak</div>
-          <div>{maxStreak}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-semibold">Remaining</div>
-          <div>{questions.length - currentQuestionIndex - (showResult ? 1 : 0)}</div>
-        </div>
+      </TraditionalCard>
+
+      {/* Stats Section */}
+      <div className="grid grid-cols-3 gap-4">
+        <TraditionalCard className="bg-wood-grain/20 border-wood-light/40">
+          <div className="p-4 text-center">
+            <div className="text-2xl font-bold text-wood-light">{accuracy}%</div>
+            <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
+              Accuracy
+            </div>
+          </div>
+        </TraditionalCard>
+
+        <TraditionalCard className="bg-wood-grain/20 border-wood-light/40">
+          <div className="p-4 text-center">
+            <div className="text-2xl font-bold text-wood-light">{maxStreak}</div>
+            <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
+              Max Streak
+            </div>
+          </div>
+        </TraditionalCard>
+
+        <TraditionalCard className="bg-wood-grain/20 border-wood-light/40">
+          <div className="p-4 text-center">
+            <div className="text-2xl font-bold text-wood-light">{questionCount}</div>
+            <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
+              Remaining
+            </div>
+          </div>
+        </TraditionalCard>
       </div>
     </div>
   );
