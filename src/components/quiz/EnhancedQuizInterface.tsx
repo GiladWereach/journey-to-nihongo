@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
-import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { kanaService } from '@/services/kanaService';
@@ -25,6 +24,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const [characters, setCharacters] = useState<KanaCharacter[]>([]);
   const [currentCharacter, setCurrentCharacter] = useState<KanaCharacter | null>(null);
@@ -67,6 +67,13 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     setUserInput('');
     setIsCorrect(null);
     setShowResult(false);
+    
+    // Auto-focus the input when new character is presented
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
   }, [characters]);
 
   // Initialize first question
@@ -115,24 +122,17 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       setCurrentStreak(0);
     }
 
-    // Auto-advance after 2 seconds
+    // Faster feedback timing - 500ms for correct, 1000ms for incorrect
     setTimeout(() => {
       generateQuestion();
-    }, 2000);
+    }, correct ? 500 : 1000);
   }, [currentCharacter, user, showResult, session, questionCount, correctCount, generateQuestion]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (userInput.trim() && !showResult) {
-      checkAnswer(userInput);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUserInput(value);
     
-    // Auto-check when user types the correct length (most romaji are 1-3 characters)
+    // Auto-check when user types the correct answer
     if (value.trim().length >= 1 && currentCharacter && !showResult) {
       const correctAnswer = currentCharacter.romaji.toLowerCase();
       if (value.toLowerCase().trim() === correctAnswer) {
@@ -182,12 +182,10 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Progress Section */}
+      {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4 text-sm">
-          <span className="text-paper-warm font-traditional">Question {questionCount + 1}</span>
-          <span className="text-paper-warm font-traditional">•</span>
-          <span className="text-paper-warm font-traditional">{kanaType.charAt(0).toUpperCase() + kanaType.slice(1)} Quiz</span>
+          <span className="text-paper-warm font-traditional">Endless {kanaType.charAt(0).toUpperCase() + kanaType.slice(1)} Quiz</span>
         </div>
         <Button
           variant="ghost"
@@ -196,15 +194,6 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
         >
           End Quiz
         </Button>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <TraditionalProgressIndicator 
-          progress={Math.min(questionCount * 10, 100)} 
-          size="lg"
-          type={kanaType}
-        />
       </div>
 
       {/* Main Quiz Card */}
@@ -225,15 +214,13 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
             <h2 className="text-2xl font-traditional text-gion-night mb-4">
               Type the romaji for this character
             </h2>
-            <p className="text-wood-medium font-traditional">
-              Enter the pronunciation below
-            </p>
           </div>
 
           {/* Input Form */}
-          <form onSubmit={handleSubmit} className="mb-8">
+          <div className="mb-8">
             <div className="max-w-xs mx-auto mb-6">
               <Input
+                ref={inputRef}
                 type="text"
                 value={userInput}
                 onChange={handleInputChange}
@@ -250,37 +237,20 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
                 autoFocus
               />
             </div>
-
-            {/* Submit Button */}
-            {!showResult && (
-              <Button
-                type="submit"
-                disabled={!userInput.trim()}
-                className="bg-lantern-warm hover:bg-lantern-amber text-gion-night font-traditional px-8 py-3"
-              >
-                Submit Answer
-              </Button>
-            )}
-          </form>
+          </div>
 
           {/* Result Feedback */}
           {showResult && (
             <div className="mb-6">
               {isCorrect ? (
                 <div className="text-matcha font-traditional text-xl mb-4">
-                  ✓ Correct! Well done!
+                  ✓ Correct!
                 </div>
               ) : (
                 <div className="text-vermilion font-traditional text-xl mb-4">
-                  ✗ Incorrect. The answer is "{currentCharacter.romaji}"
-                  <br />
-                  <span className="text-lg">You entered: "{userInput}"</span>
+                  ✗ The answer is "{currentCharacter.romaji}"
                 </div>
               )}
-              
-              <p className="text-wood-medium font-traditional text-sm">
-                Next question in 2 seconds...
-              </p>
             </div>
           )}
         </div>
