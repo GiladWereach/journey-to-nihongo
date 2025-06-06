@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
@@ -26,8 +28,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
   
   const [characters, setCharacters] = useState<KanaCharacter[]>([]);
   const [currentCharacter, setCurrentCharacter] = useState<KanaCharacter | null>(null);
-  const [options, setOptions] = useState<string[]>([]);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [userInput, setUserInput] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
@@ -63,19 +64,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
     const randomCharacter = characters[Math.floor(Math.random() * characters.length)];
     setCurrentCharacter(randomCharacter);
-
-    // Generate wrong answers
-    const wrongAnswers = characters
-      .filter(char => char.romaji !== randomCharacter.romaji)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3)
-      .map(char => char.romaji);
-
-    // Mix with correct answer and shuffle
-    const allOptions = [randomCharacter.romaji, ...wrongAnswers].sort(() => 0.5 - Math.random());
-    setOptions(allOptions);
-
-    setSelectedAnswer(null);
+    setUserInput('');
     setIsCorrect(null);
     setShowResult(false);
   }, [characters]);
@@ -87,15 +76,19 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     }
   }, [characters, generateQuestion]);
 
-  const handleAnswerSelect = async (answer: string) => {
-    if (selectedAnswer || !currentCharacter || !user) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentCharacter || !user || showResult) return;
 
-    setSelectedAnswer(answer);
-    const correct = answer === currentCharacter.romaji;
+    const userAnswer = userInput.toLowerCase().trim();
+    const correctAnswer = currentCharacter.romaji.toLowerCase();
+    const correct = userAnswer === correctAnswer;
+    
     setIsCorrect(correct);
     setShowResult(true);
 
-    // Update session - fix: provide individual parameters instead of object
+    // Update session
     if (session) {
       await quizSessionService.updateSession(
         session.id,
@@ -104,7 +97,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       );
     }
 
-    // Update progress - fix: pass correct as boolean, not string
+    // Update progress
     await characterProgressService.updateProgress(
       user.id,
       currentCharacter.id,
@@ -131,6 +124,12 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
   const handleFinishQuiz = () => {
     onEndQuiz();
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !showResult && userInput.trim()) {
+      handleSubmit(e as any);
+    }
   };
 
   if (isLoading) {
@@ -205,73 +204,68 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           {/* Question */}
           <div className="mb-8">
             <h2 className="text-2xl font-traditional text-gion-night mb-4">
-              What is the romaji for this character?
+              Type the romaji for this character
             </h2>
             <p className="text-wood-medium font-traditional">
-              Choose the correct pronunciation below
+              Enter the pronunciation below
             </p>
           </div>
 
-          {/* Answer Options */}
-          <div className="grid grid-cols-2 gap-4 mb-8 max-w-md mx-auto">
-            {options.map((option, index) => {
-              let buttonClass = "p-4 text-lg font-traditional border-2 transition-all duration-300 ";
-              
-              if (showResult) {
-                if (option === currentCharacter.romaji) {
-                  buttonClass += "bg-matcha/20 border-matcha text-matcha border-matcha/60";
-                } else if (option === selectedAnswer) {
-                  buttonClass += "bg-vermilion/20 border-vermilion text-vermilion border-vermilion/60";
-                } else {
-                  buttonClass += "bg-wood-grain/10 border-wood-light/40 text-wood-medium opacity-50";
-                }
-              } else {
-                buttonClass += "bg-wood-grain/20 border-wood-light/40 text-gion-night hover:bg-wood-grain/30 hover:border-wood-light";
-              }
+          {/* Input Form */}
+          <form onSubmit={handleSubmit} className="mb-8">
+            <div className="max-w-xs mx-auto mb-6">
+              <Input
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={showResult}
+                placeholder="Type romaji here..."
+                className={`text-center text-xl font-traditional bg-wood-grain/10 border-2 transition-all duration-300 ${
+                  showResult
+                    ? isCorrect
+                      ? 'border-matcha bg-matcha/10 text-matcha'
+                      : 'border-vermilion bg-vermilion/10 text-vermilion'
+                    : 'border-wood-light/40 focus:border-lantern-warm'
+                }`}
+                autoFocus
+              />
+            </div>
 
-              return (
-                <Button
-                  key={index}
-                  onClick={() => handleAnswerSelect(option)}
-                  disabled={showResult}
-                  className={buttonClass}
-                >
-                  {option}
-                </Button>
-              );
-            })}
-          </div>
+            {/* Submit Button */}
+            {!showResult && (
+              <Button
+                type="submit"
+                disabled={!userInput.trim()}
+                className="bg-lantern-warm hover:bg-lantern-amber text-gion-night font-traditional px-8 py-3"
+              >
+                Submit Answer
+              </Button>
+            )}
+          </form>
 
           {/* Result Feedback */}
           {showResult && (
             <div className="mb-6">
               {isCorrect ? (
-                <div className="text-matcha font-traditional text-lg">
+                <div className="text-matcha font-traditional text-lg mb-4">
                   ✓ Correct! Well done!
                 </div>
               ) : (
-                <div className="text-vermilion font-traditional text-lg">
+                <div className="text-vermilion font-traditional text-lg mb-4">
                   ✗ Incorrect. The answer is "{currentCharacter.romaji}"
+                  <br />
+                  <span className="text-sm">You entered: "{userInput}"</span>
                 </div>
               )}
+              
+              <Button
+                onClick={handleNextQuestion}
+                className="bg-lantern-warm hover:bg-lantern-amber text-gion-night font-traditional px-8 py-3"
+              >
+                Next Question
+              </Button>
             </div>
-          )}
-
-          {/* Action Button */}
-          {showResult ? (
-            <Button
-              onClick={handleNextQuestion}
-              className="bg-lantern-warm hover:bg-lantern-amber text-gion-night font-traditional px-8 py-3"
-            >
-              Next Question
-            </Button>
-          ) : (
-            <Button
-              className="bg-wood-grain/30 border border-wood-light/40 text-wood-medium font-traditional px-8 py-3"
-              disabled
-            >
-              Submit Answer
-            </Button>
           )}
         </div>
       </TraditionalCard>
@@ -300,7 +294,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-wood-light">{questionCount}</div>
             <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
-              Remaining
+              Questions
             </div>
           </div>
         </TraditionalCard>
