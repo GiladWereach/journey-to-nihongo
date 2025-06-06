@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ const KanaLearning: React.FC = () => {
         </CardHeader>
         <CardContent>
           {user ? (
-            <Tabs defaultvalue="hiragana" className="space-y-4">
+            <Tabs defaultValue="hiragana" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="hiragana">Hiragana</TabsTrigger>
                 <TabsTrigger value="katakana">Katakana</TabsTrigger>
