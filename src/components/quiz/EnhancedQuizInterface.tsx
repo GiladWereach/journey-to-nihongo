@@ -41,7 +41,9 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
   useEffect(() => {
     const loadCharacters = async () => {
       try {
+        console.log('Loading characters for type:', kanaType);
         const kanaData = await kanaService.getKanaByType(kanaType);
+        console.log('Loaded characters:', kanaData);
         setCharacters(kanaData);
         setIsLoading(false);
       } catch (error) {
@@ -63,6 +65,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     if (characters.length === 0) return;
 
     const randomCharacter = characters[Math.floor(Math.random() * characters.length)];
+    console.log('Generated new character:', randomCharacter);
     setCurrentCharacter(randomCharacter);
     setUserInput('');
     setIsCorrect(null);
@@ -89,6 +92,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     const userAnswer = answer.toLowerCase().trim();
     const correctAnswer = currentCharacter.romaji.toLowerCase();
     const correct = userAnswer === correctAnswer;
+    
+    console.log('Checking answer:', { userAnswer, correctAnswer, correct });
     
     setIsCorrect(correct);
     setShowResult(true);
