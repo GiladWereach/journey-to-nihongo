@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
@@ -96,12 +95,13 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     setIsCorrect(correct);
     setShowResult(true);
 
-    // Update session - fix: provide all required parameters
+    // Update session - fix: provide individual parameters instead of object
     if (session) {
-      await quizSessionService.updateSession(session.id, {
-        questions_answered: questionCount + 1,
-        correct_answers: correctCount + (correct ? 1 : 0)
-      });
+      await quizSessionService.updateSession(
+        session.id,
+        questionCount + 1,
+        correctCount + (correct ? 1 : 0)
+      );
     }
 
     // Update progress - fix: pass correct as boolean, not string
