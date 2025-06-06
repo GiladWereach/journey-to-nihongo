@@ -4,18 +4,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle, Settings } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Settings, Wrench } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import UserKanaProgress from '@/components/kana/UserKanaProgress';
-import ProgressOverview from '@/components/progress/ProgressOverview';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
 import { UserKanaProgress as UserKanaProgressType } from '@/types/kana';
 import { useSessionCleanup } from '@/hooks/useSessionCleanup';
 import { useToast } from '@/hooks/use-toast';
 import AbandonedSessionsFixer from '@/components/admin/AbandonedSessionsFixer';
+import ProgressRepairTools from '@/components/progress/ProgressRepairTools';
 import { supabase } from '@/integrations/supabase/client';
+import ModernProgressOverview from '@/components/progress/ModernProgressOverview';
 
 const RevampedProgress: React.FC = () => {
   const { user } = useAuth();
@@ -63,6 +64,7 @@ const RevampedProgress: React.FC = () => {
     grammar: 0,
   });
   const [hasIncompleteData, setHasIncompleteData] = useState(false);
+  const [showRepairTools, setShowRepairTools] = useState(false);
 
   // Use the cleanup hook to fix abandoned sessions when viewing progress
   useSessionCleanup();
@@ -95,57 +97,59 @@ const RevampedProgress: React.FC = () => {
           console.error('Error checking sessions:', sessionError);
         } else if (incompleteSessions && incompleteSessions.length > 0) {
           setHasIncompleteData(true);
-          toast({
-            title: "Incomplete quiz sessions detected",
-            description: `You have ${incompleteSessions.length} incomplete quiz sessions. This may affect your progress statistics.`,
-            variant: "destructive",
-          });
+          setShowRepairTools(true);
         }
 
         const progressData = await characterProgressService.getUserProgress(user.id);
         setUserProgress(progressData);
 
-        // Calculate overall progress
-        const hiraganaProgress = progressData.filter((p) =>
-          hiragana.some((k) => k.id === p.character_id)
-        );
-        const katakanaProgress = progressData.filter((p) =>
-          katakana.some((k) => k.id === p.character_id)
-        );
+        // Calculate progress only if we have character data
+        if (hiragana.length > 0 && katakana.length > 0) {
+          const hiraganaProgress = progressData.filter((p) =>
+            hiragana.some((k) => k.id === p.character_id)
+          );
+          const katakanaProgress = progressData.filter((p) =>
+            katakana.some((k) => k.id === p.character_id)
+          );
 
-        const overallHiragana =
-          hiragana.length > 0
-            ? hiraganaProgress.reduce((sum, p) => sum + p.proficiency, 0) / hiragana.length
-            : 0;
-        const overallKatakana =
-          katakana.length > 0
-            ? katakanaProgress.reduce((sum, p) => sum + p.proficiency, 0) / katakana.length
-            : 0;
+          const overallHiragana =
+            hiragana.length > 0
+              ? hiraganaProgress.reduce((sum, p) => sum + p.proficiency, 0) / hiragana.length
+              : 0;
+          const overallKatakana =
+            katakana.length > 0
+              ? katakanaProgress.reduce((sum, p) => sum + p.proficiency, 0) / katakana.length
+              : 0;
 
-        setOverallProgress({
-          all: (overallHiragana + overallKatakana) / 2,
-          hiragana: overallHiragana,
-          katakana: overallKatakana,
-        });
+          setOverallProgress({
+            all: (overallHiragana + overallKatakana) / 2,
+            hiragana: overallHiragana,
+            katakana: overallKatakana,
+          });
 
-        // Calculate mastery stats
-        const hiraganaStatsData = calculateMasteryStats(hiraganaProgress);
-        const katakanaStatsData = calculateMasteryStats(katakanaProgress);
+          // Calculate mastery stats
+          const hiraganaStatsData = calculateMasteryStats(hiraganaProgress);
+          const katakanaStatsData = calculateMasteryStats(katakanaProgress);
 
-        setHiraganaStats(hiraganaStatsData);
-        setKatakanaStats(katakanaStatsData);
+          setHiraganaStats(hiraganaStatsData);
+          setKatakanaStats(katakanaStatsData);
+
+          // Set learning progress based on actual data
+          setOverallLearningProgress({
+            hiragana: overallHiragana,
+            katakana: overallKatakana,
+            basic_kanji: 0, // TODO: Implement when kanji learning is added
+            grammar: 0, // TODO: Implement when grammar learning is added
+          });
+        }
 
         // Fetch streak data
         const streak = await fetchStreakData(user.id);
         setStreakData(streak);
 
-        // Mock timeline data
-        const timeline = generateMockTimelineData();
+        // Generate timeline data based on actual sessions
+        const timeline = await generateTimelineData(user.id);
         setTimelineData(timeline);
-
-        // Mock overall learning progress
-        const learningProgress = generateMockLearningProgress();
-        setOverallLearningProgress(learningProgress);
       } catch (error) {
         console.error('Error fetching user progress:', error);
         toast({
@@ -180,37 +184,119 @@ const RevampedProgress: React.FC = () => {
   };
 
   const fetchStreakData = async (userId: string) => {
-    // Mock streak data for now
-    return {
-      currentStreak: 5,
-      longestStreak: 12,
-      lastPracticeDate: new Date(),
-    };
-  };
+    try {
+      const { data: sessions, error } = await supabase
+        .from('kana_learning_sessions')
+        .select('start_time, streak')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('start_time', { ascending: false })
+        .limit(30);
 
-  const generateMockTimelineData = () => {
-    const data = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateString = date.toLocaleDateString();
-      data.push({
-        date: dateString,
-        charactersStudied: Math.floor(Math.random() * 10),
-        averageProficiency: Math.floor(Math.random() * 100),
-      });
+      if (error) throw error;
+
+      // Calculate streak based on consecutive days with sessions
+      let currentStreak = 0;
+      let longestStreak = 0;
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+      if (sessions && sessions.length > 0) {
+        const sessionDates = [...new Set(sessions.map(s => new Date(s.start_time).toDateString()))];
+        
+        // Calculate current streak
+        for (let i = 0; i < sessionDates.length; i++) {
+          const sessionDate = sessionDates[i];
+          if (i === 0 && (sessionDate === today || sessionDate === yesterday)) {
+            currentStreak = 1;
+          } else if (sessionDates[i - 1] && 
+                     new Date(sessionDates[i - 1]).getTime() - new Date(sessionDate).getTime() === 86400000) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+
+        // Calculate longest streak (simplified)
+        longestStreak = Math.max(...sessions.map(s => s.streak || 0));
+      }
+
+      return {
+        currentStreak,
+        longestStreak,
+        lastPracticeDate: sessions && sessions.length > 0 ? new Date(sessions[0].start_time) : null,
+      };
+    } catch (error) {
+      console.error('Error fetching streak data:', error);
+      return {
+        currentStreak: 0,
+        longestStreak: 0,
+        lastPracticeDate: null,
+      };
     }
-    return data;
   };
 
-  const generateMockLearningProgress = () => {
-    return {
-      hiragana: Math.floor(Math.random() * 100),
-      katakana: Math.floor(Math.random() * 100),
-      basic_kanji: Math.floor(Math.random() * 100),
-      grammar: Math.floor(Math.random() * 100),
-    };
+  const generateTimelineData = async (userId: string) => {
+    try {
+      const { data: sessions, error } = await supabase
+        .from('kana_learning_sessions')
+        .select('start_time, questions_answered, accuracy')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .gte('start_time', new Date(Date.now() - 7 * 86400000).toISOString())
+        .order('start_time', { ascending: true });
+
+      if (error) throw error;
+
+      const timelineMap = new Map();
+      
+      // Group sessions by date
+      sessions?.forEach(session => {
+        const date = new Date(session.start_time).toLocaleDateString();
+        if (!timelineMap.has(date)) {
+          timelineMap.set(date, {
+            date,
+            charactersStudied: 0,
+            averageProficiency: 0,
+            sessions: []
+          });
+        }
+        timelineMap.get(date).sessions.push(session);
+        timelineMap.get(date).charactersStudied += session.questions_answered || 0;
+      });
+
+      // Calculate averages
+      const timelineArray = Array.from(timelineMap.values()).map(day => ({
+        date: day.date,
+        charactersStudied: day.charactersStudied,
+        averageProficiency: day.sessions.reduce((sum: number, s: any) => sum + (s.accuracy || 0), 0) / day.sessions.length
+      }));
+
+      // Fill in missing days with zeros
+      const data = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(Date.now() - i * 86400000);
+        const dateString = date.toLocaleDateString();
+        const existingData = timelineArray.find(d => d.date === dateString);
+        data.push(existingData || {
+          date: dateString,
+          charactersStudied: 0,
+          averageProficiency: 0
+        });
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error generating timeline data:', error);
+      return [];
+    }
+  };
+
+  const handleRepairComplete = () => {
+    setShowRepairTools(false);
+    setHasIncompleteData(false);
+    // Refresh the data
+    window.location.reload();
   };
 
   if (!user) {
@@ -249,7 +335,13 @@ const RevampedProgress: React.FC = () => {
           </Button>
         </div>
 
-        {hasIncompleteData && (
+        {showRepairTools && (
+          <div className="mb-6">
+            <ProgressRepairTools onRepairComplete={handleRepairComplete} />
+          </div>
+        )}
+
+        {hasIncompleteData && !showRepairTools && (
           <Card className="mb-6 border-amber-200 bg-amber-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -257,9 +349,17 @@ const RevampedProgress: React.FC = () => {
                 <div className="flex-1">
                   <h4 className="font-medium text-amber-800">Data Quality Issue Detected</h4>
                   <p className="text-sm text-amber-700">
-                    Some quiz sessions weren't properly completed. Use the admin tools below to fix this.
+                    Some quiz sessions weren't properly completed. This may affect your progress statistics.
                   </p>
                 </div>
+                <Button
+                  onClick={() => setShowRepairTools(true)}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                  size="sm"
+                >
+                  <Wrench className="h-4 w-4 mr-1" />
+                  Fix Issues
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -283,7 +383,7 @@ const RevampedProgress: React.FC = () => {
               </TabsList>
               
               <TabsContent value="overview" className="mt-6">
-                <ProgressOverview
+                <ModernProgressOverview
                   hiraganaStats={hiraganaStats}
                   katakanaStats={katakanaStats}
                   streakData={streakData}

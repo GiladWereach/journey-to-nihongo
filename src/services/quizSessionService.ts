@@ -19,6 +19,9 @@ export const quizSessionService = {
   // Start a new quiz session
   startSession: async (userId: string, kanaType: KanaType): Promise<QuizSession | null> => {
     try {
+      // First, clean up any old incomplete sessions for this user
+      await quizSessionService.cleanupAbandonedSessions(userId);
+      
       const { data, error } = await supabase
         .from('kana_learning_sessions')
         .insert([{
@@ -63,7 +66,7 @@ export const quizSessionService = {
     }
   },
 
-  // End a quiz session
+  // End a quiz session - CRITICAL: This must be called when quiz completes
   endSession: async (sessionId: string): Promise<boolean> => {
     try {
       const { error } = await supabase
@@ -75,9 +78,35 @@ export const quizSessionService = {
         .eq('id', sessionId);
 
       if (error) throw error;
+      console.log(`Quiz session ${sessionId} marked as completed`);
       return true;
     } catch (error) {
       console.error('Error ending quiz session:', error);
+      return false;
+    }
+  },
+
+  // Force complete session - for when quiz ends abruptly
+  forceCompleteSession: async (sessionId: string, questionsAnswered: number, correctAnswers: number): Promise<boolean> => {
+    try {
+      const accuracy = questionsAnswered > 0 ? Math.round((correctAnswers / questionsAnswered) * 100) : 0;
+      
+      const { error } = await supabase
+        .from('kana_learning_sessions')
+        .update({
+          questions_answered: questionsAnswered,
+          correct_answers: correctAnswers,
+          accuracy: accuracy,
+          end_time: new Date().toISOString(),
+          completed: true
+        })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+      console.log(`Quiz session ${sessionId} force completed`);
+      return true;
+    } catch (error) {
+      console.error('Error force completing quiz session:', error);
       return false;
     }
   },
@@ -113,6 +142,7 @@ export const quizSessionService = {
 
       if (updateError) throw updateError;
       
+      console.log(`Cleaned up ${data.length} abandoned sessions for user ${userId}`);
       return data.length;
     } catch (error) {
       console.error('Error cleaning up abandoned sessions:', error);
@@ -142,33 +172,43 @@ export const quizSessionService = {
   // Run data fix to complete abandoned sessions (for admin use)
   runDataFixForAbandonedSessions: async (): Promise<number> => {
     try {
-      // Get all incomplete sessions that are older than 24 hours
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      // Get all incomplete sessions that are older than 1 hour (more aggressive cleanup)
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
       
       const { data, error } = await supabase
         .from('kana_learning_sessions')
-        .select('id')
+        .select('id, questions_answered, correct_answers')
         .eq('completed', false)
-        .lt('start_time', oneDayAgo.toISOString());
+        .lt('start_time', oneHourAgo.toISOString());
 
       if (error) throw error;
       
       if (!data || data.length === 0) return 0;
       
-      // Mark these sessions as completed
-      const sessionIds = data.map(session => session.id);
-      
-      const { error: updateError } = await supabase
-        .from('kana_learning_sessions')
-        .update({
-          end_time: new Date().toISOString(),
-          completed: true
-        })
-        .in('id', sessionIds);
+      // Mark these sessions as completed with proper accuracy calculation
+      const updates = data.map(session => ({
+        id: session.id,
+        end_time: new Date().toISOString(),
+        completed: true,
+        accuracy: session.questions_answered > 0 
+          ? Math.round((session.correct_answers / session.questions_answered) * 100) 
+          : 0
+      }));
 
-      if (updateError) throw updateError;
+      // Batch update all sessions
+      for (const update of updates) {
+        await supabase
+          .from('kana_learning_sessions')
+          .update({
+            end_time: update.end_time,
+            completed: update.completed,
+            accuracy: update.accuracy
+          })
+          .eq('id', update.id);
+      }
       
+      console.log(`Fixed ${data.length} abandoned sessions`);
       return data.length;
     } catch (error) {
       console.error('Error fixing abandoned sessions:', error);

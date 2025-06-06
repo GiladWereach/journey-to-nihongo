@@ -1,122 +1,170 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
-import { KanaType } from '@/types/kana';
-import { quizSessionService, QuizSession } from '@/services/quizSessionService';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
+import { KanaType } from '@/types/kana';
+import { QuizSession, quizSessionService } from '@/services/quizSessionService';
 import { useToast } from '@/hooks/use-toast';
 
 const Quiz: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isQuizActive, setIsQuizActive] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType>('hiragana');
   const [currentSession, setCurrentSession] = useState<QuizSession | null>(null);
 
-  // Cleanup abandoned sessions on component mount
+  // Cleanup any incomplete sessions when component mounts
   useEffect(() => {
     if (user) {
-      // Clean up any abandoned sessions when the component mounts
-      quizSessionService.cleanupAbandonedSessions(user.id)
-        .then(count => {
-          if (count > 0) {
-            console.log(`Cleaned up ${count} abandoned quiz sessions`);
-          }
-        });
+      quizSessionService.cleanupAbandonedSessions(user.id);
     }
   }, [user]);
 
-  // Handle component unmount - make sure to complete the session if user leaves without ending properly
+  // Cleanup session when component unmounts or page is refreshed
   useEffect(() => {
-    return () => {
-      if (currentSession && !currentSession.completed) {
-        console.log('Component unmounting, completing quiz session');
+    const handleBeforeUnload = () => {
+      if (currentSession && user) {
+        // Force complete the session if page is being closed
+        quizSessionService.forceCompleteSession(
+          currentSession.id, 
+          currentSession.questions_answered, 
+          currentSession.correct_answers
+        );
+      }
+    };
+
+    const handleUnload = () => {
+      if (currentSession && user) {
+        // Force complete the session
         quizSessionService.endSession(currentSession.id);
       }
     };
-  }, [currentSession]);
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+      
+      // Final cleanup when component unmounts
+      if (currentSession && user) {
+        quizSessionService.endSession(currentSession.id);
+      }
+    };
+  }, [currentSession, user]);
 
   const handleStartQuiz = async (kanaType: KanaType) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to start a quiz.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSelectedKanaType(kanaType);
     
-    if (user) {
-      const session = await quizSessionService.startSession(user.id, kanaType);
+    // Start a new session
+    const session = await quizSessionService.startSession(user.id, kanaType);
+    if (session) {
       setCurrentSession(session);
+      setQuizStarted(true);
+      console.log('Quiz session started:', session.id);
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to start quiz session. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    setIsQuizActive(true);
   };
 
   const handleEndQuiz = async () => {
     if (currentSession) {
-      await quizSessionService.endSession(currentSession.id);
-      toast({
-        title: "Quiz completed",
-        description: "Your progress has been saved",
-      });
-      setCurrentSession(null);
+      console.log('Ending quiz session:', currentSession.id);
+      const success = await quizSessionService.endSession(currentSession.id);
+      if (success) {
+        console.log('Quiz session ended successfully');
+        toast({
+          title: "Quiz completed",
+          description: "Your progress has been saved.",
+        });
+      } else {
+        console.error('Failed to end quiz session');
+        toast({
+          title: "Warning",
+          description: "Quiz completed but there was an issue saving the session.",
+          variant: "destructive",
+        });
+      }
     }
-    setIsQuizActive(false);
+    
+    setQuizStarted(false);
+    setCurrentSession(null);
   };
+
+  if (!user) {
+    return (
+      <TraditionalBackground>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-xl font-semibold mb-4">Sign in to Take Quiz</h3>
+              <p className="text-gray-600 mb-6">Create an account to track your progress and take quizzes.</p>
+              <Link to="/auth">
+                <Button className="bg-indigo hover:bg-indigo/90">
+                  Sign In
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </TraditionalBackground>
+    );
+  }
 
   return (
     <TraditionalBackground>
-      {/* Main Content */}
-      <div className="py-6">
-        <div className="container mx-auto px-4 max-w-4xl">
-          {!isQuizActive ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between mb-8">
-                <Button variant="ghost" size="sm" asChild className="text-wood-light hover:text-lantern-warm font-traditional">
-                  <Link to="/" className="flex items-center gap-1">
-                    <ArrowLeft size={16} />
-                    Back to Home
-                  </Link>
-                </Button>
-              </div>
-              
-              <div className="text-center py-8">
-                <h1 className="text-3xl font-traditional font-bold text-paper-warm mb-4 tracking-wide">
-                  Master Japanese Characters
-                </h1>
-                <p className="text-lg text-wood-light/80 mb-8 font-traditional">
-                  Practice Hiragana and Katakana with our endless quiz system
-                </p>
-              </div>
-              
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            asChild
+            className="mb-4 text-wood-light hover:text-lantern-warm font-traditional"
+          >
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+
+        <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
+          <CardHeader>
+            <CardTitle className="text-2xl font-traditional text-gion-night">
+              {quizStarted ? 'Kana Quiz' : 'Choose Your Quiz'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!quizStarted ? (
               <SimpleQuizSetup onStartQuiz={handleStartQuiz} />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleEndQuiz}
-                  className="flex items-center gap-1 bg-wood-grain border-wood-light/40 text-wood-light hover:bg-wood-light hover:text-gion-night font-traditional"
-                >
-                  <ArrowLeft size={16} />
-                  Back to Setup
-                </Button>
-                <h2 className="text-xl font-traditional font-bold text-paper-warm tracking-wide">
-                  {selectedKanaType === 'hiragana' ? 'Hiragana' : 'Katakana'} Quiz
-                </h2>
-                <div className="w-20"></div>
-              </div>
-              
-              <SimpleQuizInterface 
+            ) : (
+              <SimpleQuizInterface
                 kanaType={selectedKanaType}
                 onEndQuiz={handleEndQuiz}
                 session={currentSession}
               />
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </TraditionalBackground>
   );
