@@ -9,12 +9,37 @@ import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
 import { KanaType } from '@/types/kana';
 import { quizSessionService, QuizSession } from '@/services/quizSessionService';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
+import { useToast } from '@/hooks/use-toast';
 
 const Quiz: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [selectedKanaType, setSelectedKanaType] = useState<KanaType>('hiragana');
   const [currentSession, setCurrentSession] = useState<QuizSession | null>(null);
+
+  // Cleanup abandoned sessions on component mount
+  useEffect(() => {
+    if (user) {
+      // Clean up any abandoned sessions when the component mounts
+      quizSessionService.cleanupAbandonedSessions(user.id)
+        .then(count => {
+          if (count > 0) {
+            console.log(`Cleaned up ${count} abandoned quiz sessions`);
+          }
+        });
+    }
+  }, [user]);
+
+  // Handle component unmount - make sure to complete the session if user leaves without ending properly
+  useEffect(() => {
+    return () => {
+      if (currentSession && !currentSession.completed) {
+        console.log('Component unmounting, completing quiz session');
+        quizSessionService.endSession(currentSession.id);
+      }
+    };
+  }, [currentSession]);
 
   const handleStartQuiz = async (kanaType: KanaType) => {
     setSelectedKanaType(kanaType);
@@ -30,6 +55,10 @@ const Quiz: React.FC = () => {
   const handleEndQuiz = async () => {
     if (currentSession) {
       await quizSessionService.endSession(currentSession.id);
+      toast({
+        title: "Quiz completed",
+        description: "Your progress has been saved",
+      });
       setCurrentSession(null);
     }
     setIsQuizActive(false);

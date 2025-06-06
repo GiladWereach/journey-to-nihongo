@@ -4,13 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Award, TrendingUp, Clock, Target, BarChart3 } from 'lucide-react';
+import { BookOpen, Award, TrendingUp, Clock, Target, BarChart3, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProgressStatsTab from '@/components/progress/tabs/ProgressStatsTab';
 import ProgressOverview from '@/components/progress/ProgressOverview';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
 import { UserKanaProgress } from '@/types/kana';
+import { quizSessionService } from '@/services/quizSessionService';
+import { useSessionCleanup } from '@/hooks/useSessionCleanup';
+import { useToast } from '@/hooks/use-toast';
+import AbandonedSessionsFixer from '@/components/admin/AbandonedSessionsFixer';
+import { supabase } from '@/integrations/supabase/client';
 
 const Progress: React.FC = () => {
   const { user } = useAuth();

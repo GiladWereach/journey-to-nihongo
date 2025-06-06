@@ -21,6 +21,22 @@ const QuickQuiz = () => {
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
   const [session, setSession] = useState<QuizSession | null>(null);
 
+  // Clean up abandoned sessions
+  useEffect(() => {
+    if (user) {
+      quizSessionService.cleanupAbandonedSessions(user.id);
+    }
+  }, [user]);
+  
+  // Handle component unmount to complete the session
+  useEffect(() => {
+    return () => {
+      if (session && !session.completed) {
+        quizSessionService.endSession(session.id);
+      }
+    };
+  }, [session]);
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -45,21 +61,29 @@ const QuickQuiz = () => {
   const handleEndQuiz = async () => {
     if (session) {
       await quizSessionService.endSession(session.id);
+      toast({
+        title: "Quiz completed",
+        description: "Your progress has been saved",
+      });
+      setSession(null);
     }
     setQuizStarted(false);
-    setSession(null);
   };
 
   const handleGoHome = () => {
+    // Make sure to complete the session before navigating away
+    if (session && !session.completed) {
+      quizSessionService.endSession(session.id);
+    }
     navigate('/dashboard');
   };
 
   const handleRestartQuiz = async () => {
     if (session) {
       await quizSessionService.endSession(session.id);
+      setSession(null);
     }
     setQuizStarted(false);
-    setSession(null);
   };
 
   return (

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp } from 'lucide-react';
 import ProgressIndicator from '@/components/ui/ProgressIndicator';
@@ -9,6 +8,8 @@ import ProgressTimelineCard from '@/components/progress/ProgressTimelineCard';
 import LearningPathProgress from '@/components/progress/LearningPathProgress';
 import TeachingMechanismsCard from '@/components/progress/TeachingMechanismsCard';
 import LearningFlowCard from '@/components/progress/LearningFlowCard';
+import { useSessionCleanup } from '@/hooks/useSessionCleanup';
+import { useAuth } from '@/contexts/AuthContext';
 import { Separator } from '@/components/ui/separator';
 
 interface ProgressOverviewProps {
@@ -53,6 +54,9 @@ const ProgressOverview: React.FC<ProgressOverviewProps> = ({
   overallProgress,
   loading
 }) => {
+  // Use the cleanup hook to fix abandoned sessions when viewing progress
+  useSessionCleanup();
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">

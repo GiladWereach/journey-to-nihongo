@@ -82,6 +82,44 @@ export const quizSessionService = {
     }
   },
 
+  // Cleanup abandoned sessions - any session more than 2 hours old that isn't completed
+  cleanupAbandonedSessions: async (userId: string): Promise<number> => {
+    try {
+      // Get sessions that are incomplete and older than 2 hours
+      const twoHoursAgo = new Date();
+      twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+      
+      const { data, error } = await supabase
+        .from('kana_learning_sessions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('completed', false)
+        .lt('start_time', twoHoursAgo.toISOString());
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) return 0;
+      
+      // Mark these sessions as completed
+      const sessionIds = data.map(session => session.id);
+      
+      const { error: updateError } = await supabase
+        .from('kana_learning_sessions')
+        .update({
+          end_time: new Date().toISOString(),
+          completed: true
+        })
+        .in('id', sessionIds);
+
+      if (updateError) throw updateError;
+      
+      return data.length;
+    } catch (error) {
+      console.error('Error cleaning up abandoned sessions:', error);
+      return 0;
+    }
+  },
+
   // Get user's quiz history
   getUserSessions: async (userId: string, limit: number = 10): Promise<QuizSession[]> => {
     try {
@@ -98,6 +136,43 @@ export const quizSessionService = {
     } catch (error) {
       console.error('Error fetching user sessions:', error);
       return [];
+    }
+  },
+
+  // Run data fix to complete abandoned sessions (for admin use)
+  runDataFixForAbandonedSessions: async (): Promise<number> => {
+    try {
+      // Get all incomplete sessions that are older than 24 hours
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      
+      const { data, error } = await supabase
+        .from('kana_learning_sessions')
+        .select('id')
+        .eq('completed', false)
+        .lt('start_time', oneDayAgo.toISOString());
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) return 0;
+      
+      // Mark these sessions as completed
+      const sessionIds = data.map(session => session.id);
+      
+      const { error: updateError } = await supabase
+        .from('kana_learning_sessions')
+        .update({
+          end_time: new Date().toISOString(),
+          completed: true
+        })
+        .in('id', sessionIds);
+
+      if (updateError) throw updateError;
+      
+      return data.length;
+    } catch (error) {
+      console.error('Error fixing abandoned sessions:', error);
+      return 0;
     }
   }
 };
