@@ -96,7 +96,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     setIsCorrect(correct);
     setShowResult(true);
 
-    // Update session
+    // Update session - fix: provide all required parameters
     if (session) {
       await quizSessionService.updateSession(session.id, {
         questions_answered: questionCount + 1,
@@ -104,11 +104,11 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       });
     }
 
-    // Update progress
+    // Update progress - fix: pass correct as boolean, not string
     await characterProgressService.updateProgress(
       user.id,
       currentCharacter.id,
-      correct ? 'correct' : 'incorrect'
+      correct
     );
 
     // Update counters
