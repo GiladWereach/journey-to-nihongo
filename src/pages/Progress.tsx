@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Target, Calendar, Award, TrendingUp, Zap } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, Award, TrendingUp, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
+import { TraditionalBackground, TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
+import TraditionalHeader from '@/components/ui/TraditionalHeader';
 import { characterProgressService } from '@/services/characterProgressService';
 import { kanaService } from '@/services/kanaService';
 import { UserKanaProgress as UserKanaProgressType } from '@/types/kana';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import ProgressIndicator from '@/components/ui/ProgressIndicator';
+import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 
 const Progress: React.FC = () => {
@@ -111,17 +111,15 @@ const Progress: React.FC = () => {
     return (
       <TraditionalBackground>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
-            <CardContent className="p-8 text-center">
-              <h3 className="text-xl font-semibold mb-4">Sign in to View Progress</h3>
-              <p className="text-gray-600 mb-6">Create an account to track your Japanese learning journey.</p>
-              <Link to="/auth">
-                <Button className="bg-indigo hover:bg-indigo/90">
-                  Sign In
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <TraditionalCard className="p-8 text-center">
+            <h3 className="text-xl font-traditional text-paper-warm mb-4">Sign in to View Progress</h3>
+            <p className="text-wood-light/80 mb-6">Create an account to track your Japanese learning journey.</p>
+            <Link to="/auth">
+              <Button className="bg-vermilion hover:bg-vermilion/90 text-paper-warm font-traditional">
+                Sign In
+              </Button>
+            </Link>
+          </TraditionalCard>
         </div>
       </TraditionalBackground>
     );
@@ -132,7 +130,7 @@ const Progress: React.FC = () => {
       <TraditionalBackground>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lantern-warm"></div>
           </div>
         </div>
       </TraditionalBackground>
@@ -156,11 +154,20 @@ const Progress: React.FC = () => {
   return (
     <TraditionalBackground>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <TraditionalHeader 
+          showStats={true}
+          stats={{
+            streak: streakData.currentStreak,
+            mastered: overallStats.totalCharactersLearned,
+            proficiency: Math.round((overallStats.hiraganaProgress + overallStats.katakanaProgress) / 2)
+          }}
+        />
+
         <div className="mb-6">
           <Button
             variant="ghost"
             asChild
-            className="mb-4 text-wood-light hover:text-lantern-warm font-traditional"
+            className="mb-4 text-paper-warm hover:text-lantern-warm font-traditional bg-wood-grain/20 border border-wood-light/40"
           >
             <Link to="/dashboard" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
@@ -169,75 +176,65 @@ const Progress: React.FC = () => {
           </Button>
         </div>
 
-        <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20 mb-8">
-          <CardHeader>
-            <CardTitle className="text-3xl font-traditional text-gion-night text-center">
-              Your Learning Journey
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
         {/* Learning Streak Card */}
-        <Card className="bg-gradient-to-br from-vermilion/10 to-vermilion/5 border-vermilion/20 mb-8">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-xl font-traditional text-vermilion">
-              <Zap className="mr-2 h-5 w-5" />
-              Learning Streak
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <TraditionalCard className="mb-8 bg-gradient-to-br from-vermilion/20 to-vermilion/10 border-vermilion/40">
+          <div className="p-8">
+            <div className="flex items-center mb-6">
+              <Zap className="mr-3 h-6 w-6 text-lantern-warm" />
+              <h2 className="text-2xl font-traditional text-paper-warm">Learning Streak</h2>
+            </div>
+            
             <div className="flex justify-between items-center">
               <div className="text-center">
-                <div className="text-4xl font-bold text-vermilion mb-1">
+                <div className="text-5xl font-bold text-lantern-warm mb-2">
                   {streakData.currentStreak}
                 </div>
-                <div className="text-sm text-gray-600">Current Streak</div>
-                <div className="text-xs text-gray-500">days</div>
+                <div className="text-sm text-paper-warm/80 font-traditional">Current Streak</div>
+                <div className="text-xs text-paper-warm/60">days</div>
               </div>
               
               <div className="text-center">
-                <div className="text-2xl font-semibold text-gray-700 mb-1">
+                <div className="text-3xl font-semibold text-paper-warm/90 mb-2">
                   {streakData.longestStreak}
                 </div>
-                <div className="text-sm text-gray-600">Best Streak</div>
-                <div className="text-xs text-gray-500">days</div>
+                <div className="text-sm text-paper-warm/80 font-traditional">Best Streak</div>
+                <div className="text-xs text-paper-warm/60">days</div>
               </div>
               
               <div className="text-center">
-                <div className="text-sm font-medium text-gray-700 mb-1">
+                <div className="text-sm font-medium text-paper-warm/90 mb-2">
                   {streakData.lastPracticeDate 
                     ? new Date(streakData.lastPracticeDate).toLocaleDateString() 
                     : 'Never'}
                 </div>
-                <div className="text-sm text-gray-600">Last Practice</div>
+                <div className="text-sm text-paper-warm/80 font-traditional">Last Practice</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </TraditionalCard>
 
         {/* Progress Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Hiragana Progress */}
-          <Card className="bg-gradient-to-br from-matcha/10 to-matcha/5 border-matcha/20">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl font-traditional text-matcha">
-                <JapaneseCharacter character="あ" size="sm" color="text-matcha" className="mr-2" />
-                Hiragana Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-matcha mb-2">
+          <TraditionalCard className="bg-gradient-to-br from-matcha/20 to-matcha/10 border-matcha/40">
+            <div className="p-8">
+              <div className="flex items-center mb-6">
+                <JapaneseCharacter character="あ" size="sm" color="text-lantern-warm" className="mr-3" />
+                <h3 className="text-xl font-traditional text-paper-warm">Hiragana Progress</h3>
+              </div>
+              
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold text-lantern-warm mb-4">
                   {Math.round(overallStats.hiraganaProgress)}%
                 </div>
-                <ProgressIndicator 
+                <TraditionalProgressIndicator 
                   progress={overallStats.hiraganaProgress} 
-                  color="bg-matcha" 
                   size="lg"
+                  type="hiragana"
                 />
               </div>
               
-              <div className="grid grid-cols-5 gap-2 mt-4">
+              <div className="grid grid-cols-5 gap-2">
                 {hiragana.slice(0, 10).map(kana => {
                   const progress = userProgress.find(p => p.character_id === kana.id);
                   const proficiency = progress ? progress.proficiency : 0;
@@ -245,45 +242,44 @@ const Progress: React.FC = () => {
                   return (
                     <div 
                       key={kana.id} 
-                      className={`aspect-square flex flex-col items-center justify-center rounded-lg border text-center ${
-                        proficiency >= 70 ? "border-green-300 bg-green-50" :
-                        proficiency >= 40 ? "border-yellow-300 bg-yellow-50" :
-                        proficiency > 0 ? "border-red-300 bg-red-50" : 
-                        "border-gray-200 bg-gray-50"
+                      className={`aspect-square flex flex-col items-center justify-center border border-wood-light/40 text-center transition-all duration-300 ${
+                        proficiency >= 70 ? "bg-matcha/20 border-matcha/60" :
+                        proficiency >= 40 ? "bg-lantern-warm/20 border-lantern-warm/60" :
+                        proficiency > 0 ? "bg-vermilion/20 border-vermilion/60" : 
+                        "bg-wood-grain/20 border-wood-light/40"
                       }`}
                     >
-                      <div className="text-lg font-traditional">{kana.character}</div>
-                      <div className="text-xs mt-1">
+                      <div className="text-lg font-traditional text-paper-warm">{kana.character}</div>
+                      <div className="text-xs mt-1 text-paper-warm/70">
                         {proficiency > 0 ? `${proficiency}%` : "New"}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </TraditionalCard>
 
           {/* Katakana Progress */}
-          <Card className="bg-gradient-to-br from-vermilion/10 to-vermilion/5 border-vermilion/20">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl font-traditional text-vermilion">
-                <JapaneseCharacter character="ア" size="sm" color="text-vermilion" className="mr-2" />
-                Katakana Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-vermilion mb-2">
+          <TraditionalCard className="bg-gradient-to-br from-vermilion/20 to-vermilion/10 border-vermilion/40">
+            <div className="p-8">
+              <div className="flex items-center mb-6">
+                <JapaneseCharacter character="ア" size="sm" color="text-lantern-warm" className="mr-3" />
+                <h3 className="text-xl font-traditional text-paper-warm">Katakana Progress</h3>
+              </div>
+              
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold text-lantern-warm mb-4">
                   {Math.round(overallStats.katakanaProgress)}%
                 </div>
-                <ProgressIndicator 
+                <TraditionalProgressIndicator 
                   progress={overallStats.katakanaProgress} 
-                  color="bg-vermilion" 
                   size="lg"
+                  type="katakana"
                 />
               </div>
               
-              <div className="grid grid-cols-5 gap-2 mt-4">
+              <div className="grid grid-cols-5 gap-2">
                 {katakana.slice(0, 10).map(kana => {
                   const progress = userProgress.find(p => p.character_id === kana.id);
                   const proficiency = progress ? progress.proficiency : 0;
@@ -291,134 +287,132 @@ const Progress: React.FC = () => {
                   return (
                     <div 
                       key={kana.id} 
-                      className={`aspect-square flex flex-col items-center justify-center rounded-lg border text-center ${
-                        proficiency >= 70 ? "border-green-300 bg-green-50" :
-                        proficiency >= 40 ? "border-yellow-300 bg-yellow-50" :
-                        proficiency > 0 ? "border-red-300 bg-red-50" : 
-                        "border-gray-200 bg-gray-50"
+                      className={`aspect-square flex flex-col items-center justify-center border border-wood-light/40 text-center transition-all duration-300 ${
+                        proficiency >= 70 ? "bg-matcha/20 border-matcha/60" :
+                        proficiency >= 40 ? "bg-lantern-warm/20 border-lantern-warm/60" :
+                        proficiency > 0 ? "bg-vermilion/20 border-vermilion/60" : 
+                        "bg-wood-grain/20 border-wood-light/40"
                       }`}
                     >
-                      <div className="text-lg font-traditional">{kana.character}</div>
-                      <div className="text-xs mt-1">
+                      <div className="text-lg font-traditional text-paper-warm">{kana.character}</div>
+                      <div className="text-xs mt-1 text-paper-warm/70">
                         {proficiency > 0 ? `${proficiency}%` : "New"}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </TraditionalCard>
         </div>
 
         {/* Character Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Most Practiced */}
-          <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg font-traditional text-gion-night">
-                <Award className="mr-2 h-5 w-5" />
-                Most Practiced
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <TraditionalCard>
+            <div className="p-8">
+              <div className="flex items-center mb-6">
+                <Award className="mr-3 h-5 w-5 text-lantern-warm" />
+                <h3 className="text-lg font-traditional text-paper-warm">Most Practiced</h3>
+              </div>
+              
               <div className="space-y-3">
                 {getMostPracticed().map(progress => {
                   const kana = [...hiragana, ...katakana].find(k => k.id === progress.character_id);
                   if (!kana) return null;
                   
                   return (
-                    <div key={progress.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={progress.id} className="flex items-center justify-between p-3 bg-wood-grain/10 border border-wood-light/30">
                       <div className="flex items-center gap-3">
-                        <div className="bg-white border rounded-full h-10 w-10 flex items-center justify-center">
-                          <span className="text-lg font-traditional">{kana.character}</span>
+                        <div className="bg-wood-grain/20 border border-wood-light/40 h-10 w-10 flex items-center justify-center">
+                          <span className="text-lg font-traditional text-paper-warm">{kana.character}</span>
                         </div>
                         <div>
-                          <div className="font-medium">{kana.romaji}</div>
-                          <div className="text-xs text-gray-500">{kana.type}</div>
+                          <div className="font-medium text-paper-warm font-traditional">{kana.romaji}</div>
+                          <div className="text-xs text-paper-warm/60">{kana.type}</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">{progress.total_practice_count} times</div>
-                        <div className="text-xs text-gray-500">{progress.proficiency}% mastery</div>
+                        <div className="font-medium text-lantern-warm">{progress.total_practice_count} times</div>
+                        <div className="text-xs text-paper-warm/70">{progress.proficiency}% mastery</div>
                       </div>
                     </div>
                   );
                 })}
                 
                 {getMostPracticed().length === 0 && (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-6 text-paper-warm/60">
                     <BookOpen className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                    <p className="text-sm">Start practicing to see your progress!</p>
+                    <p className="text-sm font-traditional">Start practicing to see your progress!</p>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </TraditionalCard>
 
-          {/* Needs Work */}
-          <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20">
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg font-traditional text-gion-night">
-                <Target className="mr-2 h-5 w-5" />
-                Focus Areas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Focus Areas */}
+          <TraditionalCard>
+            <div className="p-8">
+              <div className="flex items-center mb-6">
+                <TrendingUp className="mr-3 h-5 w-5 text-lantern-warm" />
+                <h3 className="text-lg font-traditional text-paper-warm">Focus Areas</h3>
+              </div>
+              
               <div className="space-y-3">
                 {getNeedsWork().map(progress => {
                   const kana = [...hiragana, ...katakana].find(k => k.id === progress.character_id);
                   if (!kana) return null;
                   
                   return (
-                    <div key={progress.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={progress.id} className="flex items-center justify-between p-3 bg-wood-grain/10 border border-wood-light/30">
                       <div className="flex items-center gap-3">
-                        <div className="bg-red-50 border border-red-200 rounded-full h-10 w-10 flex items-center justify-center">
-                          <span className="text-lg font-traditional">{kana.character}</span>
+                        <div className="bg-vermilion/20 border border-vermilion/40 h-10 w-10 flex items-center justify-center">
+                          <span className="text-lg font-traditional text-paper-warm">{kana.character}</span>
                         </div>
                         <div>
-                          <div className="font-medium">{kana.romaji}</div>
-                          <div className="text-xs text-gray-500">{kana.type}</div>
+                          <div className="font-medium text-paper-warm font-traditional">{kana.romaji}</div>
+                          <div className="text-xs text-paper-warm/60">{kana.type}</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-red-500">{progress.proficiency}%</div>
-                        <div className="text-xs text-gray-500">needs practice</div>
+                        <div className="font-medium text-vermilion">{progress.proficiency}%</div>
+                        <div className="text-xs text-paper-warm/70">needs practice</div>
                       </div>
                     </div>
                   );
                 })}
                 
                 {getNeedsWork().length === 0 && (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-6 text-paper-warm/60">
                     <TrendingUp className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                    <p className="text-sm">Great job! No weak areas found.</p>
+                    <p className="text-sm font-traditional">Great job! No weak areas found.</p>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </TraditionalCard>
         </div>
 
         {/* Quick Actions */}
-        <Card className="bg-white/95 backdrop-blur-sm border-wood-grain/20 mt-8">
-          <CardContent className="p-6">
+        <TraditionalCard className="mt-8">
+          <div className="p-6">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="bg-matcha hover:bg-matcha/90 text-white">
+              <Button asChild className="bg-matcha hover:bg-matcha/90 text-paper-warm font-traditional">
                 <Link to="/quiz">
                   <BookOpen className="mr-2 h-4 w-4" />
                   Take Quiz
                 </Link>
               </Button>
               
-              <Button asChild variant="outline" className="border-wood-grain text-gion-night hover:bg-wood-grain/10">
+              <Button asChild className="bg-wood-grain/20 border border-wood-light/40 text-paper-warm hover:bg-wood-grain/30 font-traditional">
                 <Link to="/dashboard">
                   <Calendar className="mr-2 h-4 w-4" />
                   Back to Dashboard
                 </Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </TraditionalCard>
       </div>
     </TraditionalBackground>
   );
