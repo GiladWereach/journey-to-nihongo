@@ -76,12 +76,10 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     }
   }, [characters, generateQuestion]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const checkAnswer = useCallback(async (answer: string) => {
     if (!currentCharacter || !user || showResult) return;
 
-    const userAnswer = userInput.toLowerCase().trim();
+    const userAnswer = answer.toLowerCase().trim();
     const correctAnswer = currentCharacter.romaji.toLowerCase();
     const correct = userAnswer === correctAnswer;
     
@@ -116,20 +114,41 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     } else {
       setCurrentStreak(0);
     }
+
+    // Auto-advance after 2 seconds
+    setTimeout(() => {
+      generateQuestion();
+    }, 2000);
+  }, [currentCharacter, user, showResult, session, questionCount, correctCount, generateQuestion]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userInput.trim() && !showResult) {
+      checkAnswer(userInput);
+    }
   };
 
-  const handleNextQuestion = () => {
-    generateQuestion();
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUserInput(value);
+    
+    // Auto-check when user types the correct length (most romaji are 1-3 characters)
+    if (value.trim().length >= 1 && currentCharacter && !showResult) {
+      const correctAnswer = currentCharacter.romaji.toLowerCase();
+      if (value.toLowerCase().trim() === correctAnswer) {
+        checkAnswer(value);
+      }
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && userInput.trim() && !showResult) {
+      checkAnswer(userInput);
+    }
   };
 
   const handleFinishQuiz = () => {
     onEndQuiz();
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !showResult && userInput.trim()) {
-      handleSubmit(e as any);
-    }
   };
 
   if (isLoading) {
@@ -137,7 +156,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       <TraditionalCard>
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lantern-warm mx-auto mb-4"></div>
-          <p className="text-wood-light font-traditional">Loading quiz questions...</p>
+          <p className="text-paper-warm font-traditional">Loading quiz questions...</p>
         </div>
       </TraditionalCard>
     );
@@ -147,7 +166,7 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
     return (
       <TraditionalCard>
         <div className="p-8 text-center">
-          <p className="text-wood-light font-traditional">No questions available for this kana type.</p>
+          <p className="text-paper-warm font-traditional">No questions available for this kana type.</p>
           <Button 
             onClick={onEndQuiz}
             className="mt-4 bg-vermilion hover:bg-vermilion/90 text-paper-warm font-traditional"
@@ -166,14 +185,14 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       {/* Progress Section */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4 text-sm">
-          <span className="text-wood-light font-traditional">Question {questionCount + 1}</span>
-          <span className="text-wood-light font-traditional">•</span>
-          <span className="text-wood-light font-traditional">{kanaType.charAt(0).toUpperCase() + kanaType.slice(1)} Quiz</span>
+          <span className="text-paper-warm font-traditional">Question {questionCount + 1}</span>
+          <span className="text-paper-warm font-traditional">•</span>
+          <span className="text-paper-warm font-traditional">{kanaType.charAt(0).toUpperCase() + kanaType.slice(1)} Quiz</span>
         </div>
         <Button
           variant="ghost"
           onClick={handleFinishQuiz}
-          className="text-wood-light hover:text-lantern-warm font-traditional bg-wood-grain/20 border border-wood-light/40"
+          className="text-paper-warm hover:text-lantern-warm font-traditional bg-wood-grain/20 border border-wood-light/40"
         >
           End Quiz
         </Button>
@@ -217,16 +236,16 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
               <Input
                 type="text"
                 value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
+                onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
                 disabled={showResult}
                 placeholder="Type romaji here..."
-                className={`text-center text-xl font-traditional bg-wood-grain/10 border-2 transition-all duration-300 ${
+                className={`text-center text-2xl font-traditional transition-all duration-300 ${
                   showResult
                     ? isCorrect
-                      ? 'border-matcha bg-matcha/10 text-matcha'
-                      : 'border-vermilion bg-vermilion/10 text-vermilion'
-                    : 'border-wood-light/40 focus:border-lantern-warm'
+                      ? 'bg-matcha/20 border-matcha text-matcha font-bold'
+                      : 'bg-vermilion/20 border-vermilion text-vermilion font-bold'
+                    : 'bg-paper-warm border-wood-light text-gion-night focus:border-lantern-warm focus:bg-white'
                 }`}
                 autoFocus
               />
@@ -248,23 +267,20 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
           {showResult && (
             <div className="mb-6">
               {isCorrect ? (
-                <div className="text-matcha font-traditional text-lg mb-4">
+                <div className="text-matcha font-traditional text-xl mb-4">
                   ✓ Correct! Well done!
                 </div>
               ) : (
-                <div className="text-vermilion font-traditional text-lg mb-4">
+                <div className="text-vermilion font-traditional text-xl mb-4">
                   ✗ Incorrect. The answer is "{currentCharacter.romaji}"
                   <br />
-                  <span className="text-sm">You entered: "{userInput}"</span>
+                  <span className="text-lg">You entered: "{userInput}"</span>
                 </div>
               )}
               
-              <Button
-                onClick={handleNextQuestion}
-                className="bg-lantern-warm hover:bg-lantern-amber text-gion-night font-traditional px-8 py-3"
-              >
-                Next Question
-              </Button>
+              <p className="text-wood-medium font-traditional text-sm">
+                Next question in 2 seconds...
+              </p>
             </div>
           )}
         </div>
@@ -274,8 +290,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
       <div className="grid grid-cols-3 gap-4">
         <TraditionalCard className="bg-wood-grain/20 border-wood-light/40">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-wood-light">{accuracy}%</div>
-            <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
+            <div className="text-2xl font-bold text-paper-warm">{accuracy}%</div>
+            <div className="text-xs text-paper-warm/70 tracking-wider uppercase mt-1 font-traditional">
               Accuracy
             </div>
           </div>
@@ -283,8 +299,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
         <TraditionalCard className="bg-wood-grain/20 border-wood-light/40">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-wood-light">{maxStreak}</div>
-            <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
+            <div className="text-2xl font-bold text-paper-warm">{maxStreak}</div>
+            <div className="text-xs text-paper-warm/70 tracking-wider uppercase mt-1 font-traditional">
               Max Streak
             </div>
           </div>
@@ -292,8 +308,8 @@ const EnhancedQuizInterface: React.FC<EnhancedQuizInterfaceProps> = ({
 
         <TraditionalCard className="bg-wood-grain/20 border-wood-light/40">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-wood-light">{questionCount}</div>
-            <div className="text-xs text-paper-warm/60 tracking-wider uppercase mt-1 font-traditional">
+            <div className="text-2xl font-bold text-paper-warm">{questionCount}</div>
+            <div className="text-xs text-paper-warm/70 tracking-wider uppercase mt-1 font-traditional">
               Questions
             </div>
           </div>
