@@ -1,0 +1,380 @@
+[
+  {
+    "id": "db76b22d-2b8a-40ba-8172-1510673e0c91",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "page_viewed",
+    "description": "User viewed a page",
+    "properties": [
+      "page_title",
+      "page_url",
+      "user_id"
+    ],
+    "priority": "low",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "67cebb4a-599b-443f-88ac-589f543cb155",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "quiz_started",
+    "description": "User started a quiz",
+    "properties": [
+      "quiz_id",
+      "quiz_name"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "cabccc5a-d382-4d96-8c8b-fc2465aecd8c",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "question_answered",
+    "description": "User answered a question in a quiz",
+    "properties": [
+      "quiz_id",
+      "question_id",
+      "answer_selected",
+      "is_correct"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "c342da4a-4208-4f76-a264-34139b69919a",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "quiz_completed",
+    "description": "User completed a quiz",
+    "properties": [
+      "quiz_id",
+      "score",
+      "time_taken"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "2e1e6cc3-be92-46e8-8358-fc35d3bc257e",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "lesson_started",
+    "description": "User started a lesson",
+    "properties": [
+      "lesson_id",
+      "lesson_name"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "03a6dd32-f807-4593-85b2-7f34c6ea0e46",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "lesson_completed",
+    "description": "User completed a lesson",
+    "properties": [
+      "lesson_id"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "da92ab65-c3e1-4f7d-98df-6ee684b96031",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "flashcard_deck_accessed",
+    "description": "User accessed a flashcard deck",
+    "properties": [
+      "deck_id",
+      "deck_name"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "c18dcfc1-bdae-4735-9550-4b6d90266b70",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "flashcard_studied",
+    "description": "User studied a flashcard",
+    "properties": [
+      "card_id",
+      "deck_id",
+      "is_correct_recall"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "9fca39d1-b956-4e36-b578-72d59cc16c25",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "streak_maintained",
+    "description": "User maintained a learning streak",
+    "properties": [
+      "streak_length_days"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "9d9b851a-ac0d-4e8d-84f8-405d7031b442",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "signup_started",
+    "description": "User initiated the signup process",
+    "properties": [
+      "signup_method"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "e827975e-0b51-41cf-8cec-1a4a1ba1f92f",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "signup_completed",
+    "description": "User successfully signed up",
+    "properties": [
+      "user_id",
+      "signup_method"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "d74363d9-4cde-4db4-bcea-6b30e8f44367",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "login_successful",
+    "description": "User successfully logged in",
+    "properties": [
+      "user_id",
+      "login_method"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "ec756ba0-7411-469f-80b2-15cbb5e8df88",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "logout_completed",
+    "description": "User logged out",
+    "properties": [
+      "user_id"
+    ],
+    "priority": "low",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "9d7a50d2-6329-4fe2-a0e0-480f1b2d3709",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "profile_updated",
+    "description": "User updated their profile",
+    "properties": [
+      "user_id",
+      "updated_fields"
+    ],
+    "priority": "low",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "997d4edc-88b3-4821-bea2-63b233d50be0",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "settings_updated",
+    "description": "User updated application settings",
+    "properties": [
+      "user_id",
+      "setting_name",
+      "new_value"
+    ],
+    "priority": "low",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "47e6217e-605e-43e4-a495-aa0975a75a9e",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "search_performed",
+    "description": "User performed a search",
+    "properties": [
+      "search_query",
+      "search_results_count"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "24767473-94a3-4bd0-9f25-1de2b2cc34ee",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "content_shared",
+    "description": "User shared content (e.g., quiz results, lesson progress)",
+    "properties": [
+      "share_medium",
+      "content_type",
+      "content_id"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "1b788399-5d0d-46ce-a2c4-2eaf3428d09a",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "feedback_submitted",
+    "description": "User submitted feedback",
+    "properties": [
+      "feedback_type",
+      "rating"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "59df2150-74eb-4021-82ed-adf76fe67f10",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "achievement_unlocked",
+    "description": "User unlocked an achievement",
+    "properties": [
+      "achievement_name"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "bdcc7041-e21d-40f4-97ff-9e694800d7d2",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "premium_feature_accessed",
+    "description": "User accessed a premium feature",
+    "properties": [
+      "feature_name"
+    ],
+    "priority": "medium",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "11a2d03d-ed33-45d9-bd51-5722dc5c7e90",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "subscription_started",
+    "description": "User started a premium subscription",
+    "properties": [
+      "plan_name",
+      "price",
+      "currency"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "eca37d78-0fc1-4d1c-bf2c-3fc868522de2",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "subscription_renewed",
+    "description": "User renewed their premium subscription",
+    "properties": [
+      "plan_name",
+      "price",
+      "currency"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "28d6fbea-3902-4524-bcc7-5a4d92b4ce68",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "subscription_cancelled",
+    "description": "User cancelled their premium subscription",
+    "properties": [
+      "plan_name"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "fbeed99c-a4fe-4f7d-ac7d-76fe0faf8942",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "purchase_made",
+    "description": "User made a purchase (e.g., in-app purchase for content)",
+    "properties": [
+      "item_name",
+      "item_price",
+      "currency"
+    ],
+    "priority": "high",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  },
+  {
+    "id": "d3ece074-48dd-437f-a1af-765953fe3466",
+    "project_id": "66c3308f-bd0d-46a7-98f2-e90a30a860ff",
+    "event_name": "ad_viewed",
+    "description": "User viewed an advertisement (if applicable)",
+    "properties": [
+      "ad_id",
+      "ad_placement"
+    ],
+    "priority": "low",
+    "is_implemented": false,
+    "last_fired_at": null,
+    "fire_count": 0,
+    "created_at": "2025-10-17T19:01:55.895284+00:00"
+  }
+]
