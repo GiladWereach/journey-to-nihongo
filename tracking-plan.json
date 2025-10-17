@@ -13,7 +13,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "67cebb4a-599b-443f-88ac-589f543cb155",
@@ -28,7 +33,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "cabccc5a-d382-4d96-8c8b-fc2465aecd8c",
@@ -45,7 +55,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "c342da4a-4208-4f76-a264-34139b69919a",
@@ -61,7 +76,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "2e1e6cc3-be92-46e8-8358-fc35d3bc257e",
@@ -76,7 +96,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "03a6dd32-f807-4593-85b2-7f34c6ea0e46",
@@ -90,7 +115,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "da92ab65-c3e1-4f7d-98df-6ee684b96031",
@@ -105,7 +135,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "c18dcfc1-bdae-4735-9550-4b6d90266b70",
@@ -121,7 +156,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "9fca39d1-b956-4e36-b578-72d59cc16c25",
@@ -135,7 +175,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "9d9b851a-ac0d-4e8d-84f8-405d7031b442",
@@ -149,7 +194,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "e827975e-0b51-41cf-8cec-1a4a1ba1f92f",
@@ -164,7 +214,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "d74363d9-4cde-4db4-bcea-6b30e8f44367",
@@ -179,7 +234,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "ec756ba0-7411-469f-80b2-15cbb5e8df88",
@@ -193,7 +253,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "9d7a50d2-6329-4fe2-a0e0-480f1b2d3709",
@@ -208,7 +273,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "997d4edc-88b3-4821-bea2-63b233d50be0",
@@ -224,7 +294,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "47e6217e-605e-43e4-a495-aa0975a75a9e",
@@ -239,7 +314,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "24767473-94a3-4bd0-9f25-1de2b2cc34ee",
@@ -255,7 +335,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "1b788399-5d0d-46ce-a2c4-2eaf3428d09a",
@@ -270,7 +355,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "59df2150-74eb-4021-82ed-adf76fe67f10",
@@ -284,7 +374,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "bdcc7041-e21d-40f4-97ff-9e694800d7d2",
@@ -298,7 +393,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "11a2d03d-ed33-45d9-bd51-5722dc5c7e90",
@@ -314,7 +414,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "eca37d78-0fc1-4d1c-bf2c-3fc868522de2",
@@ -330,7 +435,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "28d6fbea-3902-4524-bcc7-5a4d92b4ce68",
@@ -344,7 +454,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "fbeed99c-a4fe-4f7d-ac7d-76fe0faf8942",
@@ -360,7 +475,12 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   },
   {
     "id": "d3ece074-48dd-437f-a1af-765953fe3466",
@@ -375,6 +495,11 @@
     "is_implemented": false,
     "last_fired_at": null,
     "fire_count": 0,
-    "created_at": "2025-10-17T19:01:55.895284+00:00"
+    "created_at": "2025-10-17T19:01:55.895284+00:00",
+    "trigger_location": null,
+    "trigger_type": "custom",
+    "auto_implement": false,
+    "element_selector": null,
+    "component_path": null
   }
 ]
