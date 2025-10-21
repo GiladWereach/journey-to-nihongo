@@ -3,132 +3,101 @@
  */
 
 export interface TrackingEvents {
-  'search_performed': {
-    undefined: string;
-    undefined: string;
+  'password_reset_requested': {
+    email: string;
     page_url?: string;
   };
-  'quiz_started': {
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'premium_feature_accessed': {
-    undefined: string;
-    page_url?: string;
-  };
-  'achievement_unlocked': {
-    undefined: string;
-    page_url?: string;
-  };
-  'lesson_started': {
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'feedback_submitted': {
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'flashcard_deck_accessed': {
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'flashcard_studied': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'streak_maintained': {
-    undefined: string;
-    page_url?: string;
-  };
-  'signup_started': {
-    undefined: string;
-    page_url?: string;
-  };
-  'content_shared': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'ad_viewed': {
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'logout_completed': {
-    undefined: string;
+  'timed_challenge_started': {
+    user_id: string;
+    kana_type: string;
+    difficulty: string;
+    time_limit_seconds: string;
     page_url?: string;
   };
   'profile_updated': {
-    undefined: string;
-    undefined: string;
+    user_id: string;
+    updated_fields: string;
     page_url?: string;
   };
-  'settings_updated': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
+  'writing_practice_started': {
+    user_id: string;
+    kana_type: string;
     page_url?: string;
   };
-  'page_viewed': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
+  'writing_practice_completed': {
+    user_id: string;
+    kana_type: string;
+    duration_seconds: string;
+    characters_practiced: string;
+    page_url?: string;
+  };
+  'logout_completed': {
+    user_id: string;
+    page_url?: string;
+  };
+  'learning_path_card_clicked': {
+    user_id: string;
+    path_title: string;
+    page_destination: string;
+    page_url?: string;
+  };
+  'kana_mastery_level_changed': {
+    user_id: string;
+    character_id: string;
+    kana: string;
+    romaji: string;
+    previous_mastery_level: string;
+    new_mastery_level: string;
+    page_url?: string;
+  };
+  'quiz_session_started': {
+    user_id: string;
+    session_id: string;
+    kana_type: string;
     page_url?: string;
   };
   'signup_completed': {
-    undefined: string;
-    undefined: string;
+    user_id: string;
+    email: string;
+    signup_method: string;
     page_url?: string;
   };
-  'lesson_completed': {
-    undefined: string;
+  'login_completed': {
+    user_id: string;
+    email: string;
+    login_method: string;
     page_url?: string;
   };
-  'quiz_completed': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
+  'assessment_completed': {
+    user_id: string;
+    score: string;
+    percentage: string;
+    determined_learning_level: string;
     page_url?: string;
   };
-  'question_answered': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
-    undefined: string;
+  'page_viewed': {
+    page_name: string;
+    user_id: string;
     page_url?: string;
   };
-  'subscription_started': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
+  'quiz_session_ended': {
+    user_id: string;
+    session_id: string;
+    kana_type: string;
+    questions_attempted: string;
+    correct_answers: string;
+    accuracy: string;
+    session_duration_seconds: string;
     page_url?: string;
   };
-  'subscription_renewed': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'subscription_cancelled': {
-    undefined: string;
-    page_url?: string;
-  };
-  'purchase_made': {
-    undefined: string;
-    undefined: string;
-    undefined: string;
-    page_url?: string;
-  };
-  'login_successful': {
-    undefined: string;
-    undefined: string;
+  'timed_challenge_completed': {
+    user_id: string;
+    kana_type: string;
+    difficulty: string;
+    score: string;
+    time_remaining_seconds: string;
+    accuracy: string;
+    total_questions: string;
     page_url?: string;
   };
 }
