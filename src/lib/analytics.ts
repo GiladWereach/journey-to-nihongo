@@ -1,4 +1,4 @@
-import { CodeTrack } from '@codetrack/sdk';
+import { CodeTrack } from './sdk';
 import { initEventService } from './event-service';
 
 // Initialize CodeTrack with your integrations
@@ -11,8 +11,8 @@ CodeTrack.init({
     // ga4: { measurementId: 'YOUR_GA4_ID' },
   },
   autoTrack: {
-    pageViews: true,
-    clicks: false, // Handled by event service
+    pageViews: false, // Handled by event service route tracking
+    clicks: true, // Track ALL buttons and links automatically
     errors: true,
     performance: true,
   },
@@ -26,34 +26,24 @@ export { CodeTrack };
 
 /**
  * Tracking Plan Summary
- * Total Events: 25
- * Auto-implemented: 0
- * Manual: 25
+ * Total Events: 15
+ * Auto-implemented: 7
+ * Manual: 8
  * 
  * Events:
- * - search_performed (custom - manual)
- * - quiz_started (custom - manual)
- * - premium_feature_accessed (custom - manual)
- * - achievement_unlocked (custom - manual)
- * - lesson_started (custom - manual)
- * - feedback_submitted (custom - manual)
- * - flashcard_deck_accessed (custom - manual)
- * - flashcard_studied (custom - manual)
- * - streak_maintained (custom - manual)
- * - signup_started (custom - manual)
- * - content_shared (custom - manual)
- * - ad_viewed (custom - manual)
+ * - password_reset_requested (custom - manual)
+ * - timed_challenge_started (click - auto)
+ * - profile_updated (submit - auto)
+ * - writing_practice_started (click - auto)
+ * - writing_practice_completed (custom - manual)
  * - logout_completed (custom - manual)
- * - profile_updated (custom - manual)
- * - settings_updated (custom - manual)
- * - page_viewed (custom - manual)
- * - signup_completed (custom - manual)
- * - lesson_completed (custom - manual)
- * - quiz_completed (custom - manual)
- * - question_answered (custom - manual)
- * - subscription_started (custom - manual)
- * - subscription_renewed (custom - manual)
- * - subscription_cancelled (custom - manual)
- * - purchase_made (custom - manual)
- * - login_successful (custom - manual)
+ * - learning_path_card_clicked (click - auto)
+ * - kana_mastery_level_changed (custom - manual)
+ * - quiz_session_started (click - auto)
+ * - signup_completed (submit - auto)
+ * - login_completed (submit - auto)
+ * - assessment_completed (custom - manual)
+ * - page_viewed (load - manual)
+ * - quiz_session_ended (custom - manual)
+ * - timed_challenge_completed (custom - manual)
  */
