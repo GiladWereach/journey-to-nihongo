@@ -26,24 +26,37 @@ export { CodeTrack };
 
 /**
  * Tracking Plan Summary
- * Total Events: 15
- * Auto-implemented: 7
- * Manual: 8
+ * Total Events: 28
+ * Auto-implemented: 21
+ * Manual: 7
  * 
  * Events:
+ * - quick_quiz_restarted (click - auto)
+ * - edit_profile_saved (click - auto)
+ * - assessment_question_answered (custom - manual)
+ * - timed_challenge_reset (custom - manual)
+ * - progress_page_viewed (load - auto)
+ * - quiz_page_viewed (load - auto)
+ * - learn_page_viewed (load - auto)
+ * - kana_learning_page_viewed (load - manual)
+ * - achievements_page_viewed (load - auto)
+ * - timed_challenge_answer_submitted (submit - auto)
+ * - home_page_viewed (load - auto)
+ * - auth_page_viewed (submit - auto)
  * - password_reset_requested (custom - manual)
- * - timed_challenge_started (click - auto)
- * - profile_updated (submit - auto)
- * - writing_practice_started (click - auto)
- * - writing_practice_completed (custom - manual)
- * - logout_completed (custom - manual)
- * - learning_path_card_clicked (click - auto)
- * - kana_mastery_level_changed (custom - manual)
- * - quiz_session_started (click - auto)
- * - signup_completed (submit - auto)
- * - login_completed (submit - auto)
- * - assessment_completed (custom - manual)
  * - page_viewed (load - manual)
- * - quiz_session_ended (custom - manual)
- * - timed_challenge_completed (custom - manual)
+ * - edit_profile_page_viewed (load - auto)
+ * - profile_page_viewed (load - auto)
+ * - assessment_navigated_back (load - manual)
+ * - setting_display_furigana_toggled (click - auto)
+ * - setting_quiz_auto_advance_toggled (click - auto)
+ * - setting_show_stroke_order_toggled (click - auto)
+ * - button_clicked (click - auto)
+ * - dashboard_page_viewed (load - auto)
+ * - signup_submitted (submit - auto)
+ * - assessment_completed (custom - manual)
+ * - login_submitted (submit - auto)
+ * - assessment_started (click - auto)
+ * - timed_challenge_started (click - auto)
+ * - assessment_page_viewed (load - auto)
  */
