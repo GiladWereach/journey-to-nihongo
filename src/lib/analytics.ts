@@ -3,7 +3,7 @@ import { initEventService } from './event-service';
 
 // Initialize CodeTrack with your integrations
 CodeTrack.init({
-  projectId: 'YOUR_PROJECT_ID', // TODO: Replace with your actual project ID
+  projectId: '655f027d-271d-4700-8139-f42d84901cbf', // TODO: Replace with your actual project ID
   integrations: {
     // Configure your integrations here
     // amplitude: { apiKey: 'YOUR_AMPLITUDE_KEY' },
