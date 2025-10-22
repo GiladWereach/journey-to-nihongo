@@ -26,37 +26,31 @@ export { CodeTrack };
 
 /**
  * Tracking Plan Summary
- * Total Events: 28
- * Auto-implemented: 21
- * Manual: 7
+ * Total Events: 22
+ * Auto-implemented: 13
+ * Manual: 9
  * 
  * Events:
- * - quick_quiz_restarted (click - auto)
- * - edit_profile_saved (click - auto)
- * - assessment_question_answered (custom - manual)
- * - timed_challenge_reset (custom - manual)
- * - progress_page_viewed (load - auto)
- * - quiz_page_viewed (load - auto)
- * - learn_page_viewed (load - auto)
- * - kana_learning_page_viewed (load - manual)
+ * - learning_path_section_clicked (click - auto)
+ * - setting_toggled (click - auto)
+ * - logout_completed (custom - manual)
  * - achievements_page_viewed (load - auto)
- * - timed_challenge_answer_submitted (submit - auto)
- * - home_page_viewed (load - auto)
- * - auth_page_viewed (submit - auto)
+ * - practice_session_restarted (click - auto)
+ * - kana_type_selected (click - auto)
+ * - assessment_question_answered (custom - manual)
+ * - timed_challenge_question_answered (custom - manual)
+ * - profile_settings_updated (click - auto)
  * - password_reset_requested (custom - manual)
+ * - navigation_link_clicked (route_change - auto)
+ * - profile_navigated_to (route_change - auto)
+ * - dashboard_navigated_to (route_change - auto)
  * - page_viewed (load - manual)
- * - edit_profile_page_viewed (load - auto)
- * - profile_page_viewed (load - auto)
- * - assessment_navigated_back (load - manual)
- * - setting_display_furigana_toggled (click - auto)
- * - setting_quiz_auto_advance_toggled (click - auto)
- * - setting_show_stroke_order_toggled (click - auto)
- * - button_clicked (click - auto)
- * - dashboard_page_viewed (load - auto)
- * - signup_submitted (submit - auto)
- * - assessment_completed (custom - manual)
- * - login_submitted (submit - auto)
+ * - timed_challenge_completed (custom - manual)
  * - assessment_started (click - auto)
+ * - achievement_unlocked (custom - manual)
+ * - login_completed (submit - auto)
+ * - signup_completed (submit - auto)
+ * - password_reset_completed (custom - manual)
  * - timed_challenge_started (click - auto)
- * - assessment_page_viewed (load - auto)
+ * - assessment_completed (custom - manual)
  */
