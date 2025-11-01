@@ -11,7 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import { KanaType, QuizCharacter } from '@/types/quiz';
 import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
+import { timedChallengeRestarted, timedChallengeAnswerSubmitted, timedChallengeStarted, useAuth, useNavigate, useToast, endGame, random, generateQuestions, setResult, toast, toString } from '@/analytics.generated';
 
+// Track timed_challenge_restarted
+timedChallengeRestarted();
+// Track timed_challenge_answer_submitted
+timedChallengeAnswerSubmitted();
+// Track timed_challenge_started
+timedChallengeStarted();
 interface ChallengeResult {
   score: number;
   timeRemaining: number;
