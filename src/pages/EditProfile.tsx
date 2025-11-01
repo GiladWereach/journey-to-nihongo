@@ -11,7 +11,16 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { showStrokeOrderToggled, quizAutoAdvanceToggled, displayFuriganaToggled, profileSettingsUpdated, useAuth, useNavigate, useToast, loadProfile, loadSettings, single, setProfile, setSettings, upsert, ate, toISOString, toast } from '@/lib/analytics-generated';
+import { showStrokeOrderToggled, quizAutoAdvanceToggled, displayFuriganaToggled, profileSettingsUpdated, useAuth, useNavigate, useToast, loadProfile, loadSettings, single, setProfile, setSettings, upsert, ate, toISOString, toast } from '@/lib/analytics-generated';
 
+// Track show_stroke_order_toggled
+showStrokeOrderToggled();
+// Track quiz_auto_advance_toggled
+quizAutoAdvanceToggled();
+// Track display_furigana_toggled
+displayFuriganaToggled();
+// Track profile_settings_updated
+profileSettingsUpdated();
 // Track show_stroke_order_toggled
 showStrokeOrderToggled();
 // Track quiz_auto_advance_toggled
