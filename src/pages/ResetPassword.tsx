@@ -7,7 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { passwordResetRequested, useAuth, preventDefault } from '@/lib/analytics-generated';
+import { passwordResetRequested, useAuth, preventDefault } from '@/lib/analytics-generated';
 const ResetPassword = () => {
+  // Track password_reset_requested
+  passwordResetRequested();
   // Track password_reset_requested
   passwordResetRequested();
   const [email, setEmail] = useState('');
