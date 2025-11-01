@@ -9,7 +9,16 @@ import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { assessmentQuestions, AssessmentQuestion } from '@/data/assessmentQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { assessmentFailed, assessmentCompleted, assessmentQuestionAnswered, assessmentStarted, useAuth, useNavigate, useToast, completeAssessment, update, toast } from '@/lib/analytics-generated';
+import { assessmentFailed, assessmentCompleted, assessmentQuestionAnswered, assessmentStarted, useAuth, useNavigate, useToast, completeAssessment, update, toast } from '@/lib/analytics-generated';
 
+// Track assessment_failed
+assessmentFailed();
+// Track assessment_completed
+assessmentCompleted();
+// Track assessment_question_answered
+assessmentQuestionAnswered();
+// Track assessment_started
+assessmentStarted();
 // Track assessment_failed
 assessmentFailed();
 // Track assessment_completed
