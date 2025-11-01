@@ -3,7 +3,10 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { modalOpened, buttonVariants } from '@/lib/analytics-generated';
 const AlertDialog = AlertDialogPrimitive.Root
+// Track modal_opened
+modalOpened();
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
