@@ -8,7 +8,10 @@ import { ArrowLeft } from 'lucide-react';
 import WritingPracticeExercise from '@/components/kana/WritingPracticeExercise';
 import { characterProgressService } from '@/services/characterProgressService';
 import { writingPracticeStarted, useNavigate, useToast, useAuth, toast } from '@/lib/analytics-generated';
+import { writingPracticeStarted, useNavigate, useToast, useAuth, toast } from '@/lib/analytics-generated';
 
+// Track writing_practice_started
+writingPracticeStarted();
 // Track writing_practice_started
 writingPracticeStarted();
 const WritingPractice = () => {
