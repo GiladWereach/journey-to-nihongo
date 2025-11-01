@@ -10,12 +10,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
-import { loginFormSubmitted, signupFormSubmitted, useAuth, useNavigate, useLocation, preventDefault } from '@/lib/analytics-generated';
+import { signupFailed, signupSucceeded, signupAttempted, loginFailed, loginSucceeded, loginAttempted, authPageViewed, useAuth, useNavigate, useLocation, preventDefault } from '@/lib/analytics-generated';
 
-// Track login_form_submitted
-loginFormSubmitted();
-// Track signup_form_submitted
-signupFormSubmitted();
+// Track signup_failed
+signupFailed();
+// Track signup_succeeded
+signupSucceeded();
+// Track signup_attempted
+signupAttempted();
+// Track login_failed
+loginFailed();
+// Track login_succeeded
+loginSucceeded();
+// Track login_attempted
+loginAttempted();
+// Track auth_page_viewed
+authPageViewed();
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
