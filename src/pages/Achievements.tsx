@@ -6,12 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trophy, Star, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { achievementEarned, achievementViewed, useAuth } from '@/analytics.generated';
 
-// Track achievement_earned
-achievementEarned();
-// Track achievement_viewed
-achievementViewed();
 const Achievements = () => {
   const { user } = useAuth();
 
