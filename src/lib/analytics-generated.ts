@@ -2,8 +2,8 @@
  * Weave BI Tracking
  * Auto-generated - DO NOT EDIT
  *
- * Generated at: 2025-11-01T21:58:31.180Z
- * Total events: 42
+ * Generated at: 2025-11-01T19:09:36.133Z
+ * Total events: 26
  */
 
 import { track } from './weave-bi';
@@ -11,257 +11,220 @@ import { track } from './weave-bi';
 /**
  * Track: page_viewed
  */
-export const pageViewed = () => track('page_viewed');
+export const pageViewed = (props: {
+  undefined: any;
+  undefined: any;
+  undefined: any;
+}) => track('page_viewed', props);
 
 /**
- * Track: achievement_viewed
+ * Track: signup_form_submitted
  */
-export const achievementViewed = () => track('achievement_viewed');
+export const signupFormSubmitted = (props: {
+  undefined: any;
+  undefined: any;
+  undefined: any;
+}) => track('signup_form_submitted', props);
 
 /**
- * Track: achievement_link_clicked
+ * Track: login_form_submitted
  */
-export const achievementLinkClicked = () => track('achievement_link_clicked');
+export const loginFormSubmitted = (props: {
+  undefined: any;
+  undefined: any;
+  undefined: any;
+}) => track('login_form_submitted', props);
+
+/**
+ * Track: password_reset_requested
+ */
+export const passwordResetRequested = (props: {
+  undefined: any;
+  undefined: any;
+  undefined: any;
+}) => track('password_reset_requested', props);
 
 /**
  * Track: assessment_started
  */
-export const assessmentStarted = () => track('assessment_started');
+export const assessmentStarted = (props: {
+  undefined: any;
+}) => track('assessment_started', props);
 
 /**
  * Track: assessment_question_answered
  */
-export const assessmentQuestionAnswered = () => track('assessment_question_answered');
-
-/**
- * Track: assessment_next_question_clicked
- */
-export const assessmentNextQuestionClicked = () => track('assessment_next_question_clicked');
-
-/**
- * Track: assessment_previous_question_clicked
- */
-export const assessmentPreviousQuestionClicked = () => track('assessment_previous_question_clicked');
+export const assessmentQuestionAnswered = (props: {
+  undefined: any;
+  undefined: any;
+  undefined: any;
+  undefined: any;
+}) => track('assessment_question_answered', props);
 
 /**
  * Track: assessment_completed
  */
-export const assessmentCompleted = () => track('assessment_completed');
+export const assessmentCompleted = (props: {
+  undefined: any;
+  undefined: any;
+  undefined: any;
+  undefined: any;
+}) => track('assessment_completed', props);
 
 /**
  * Track: assessment_failed
  */
-export const assessmentFailed = () => track('assessment_failed');
+export const assessmentFailed = (props: {
+  undefined: any;
+}) => track('assessment_failed', props);
 
 /**
- * Track: assessment_dashboard_navigated
+ * Track: profile_settings_updated
  */
-export const assessmentDashboardNavigated = () => track('assessment_dashboard_navigated');
+export const profileSettingsUpdated = (props: {
+  undefined: any;
+  undefined: any;
+}) => track('profile_settings_updated', props);
 
 /**
- * Track: auth_page_viewed
+ * Track: display_furigana_toggled
  */
-export const authPageViewed = () => track('auth_page_viewed');
+export const displayFuriganaToggled = (props: {
+  undefined: any;
+}) => track('display_furigana_toggled', props);
 
 /**
- * Track: login_attempted
+ * Track: quiz_auto_advance_toggled
  */
-export const loginAttempted = () => track('login_attempted');
+export const quizAutoAdvanceToggled = (props: {
+  undefined: any;
+}) => track('quiz_auto_advance_toggled', props);
 
 /**
- * Track: login_succeeded
+ * Track: show_stroke_order_toggled
  */
-export const loginSucceeded = () => track('login_succeeded');
+export const showStrokeOrderToggled = (props: {
+  undefined: any;
+}) => track('show_stroke_order_toggled', props);
 
 /**
- * Track: login_failed
+ * Track: quick_quiz_started
  */
-export const loginFailed = () => track('login_failed');
+export const quickQuizStarted = () => track('quick_quiz_started');
 
 /**
- * Track: signup_attempted
+ * Track: quick_quiz_restarted
  */
-export const signupAttempted = () => track('signup_attempted');
-
-/**
- * Track: signup_succeeded
- */
-export const signupSucceeded = () => track('signup_succeeded');
-
-/**
- * Track: signup_failed
- */
-export const signupFailed = () => track('signup_failed');
-
-/**
- * Track: edit_profile_page_viewed
- */
-export const editProfilePageViewed = () => track('edit_profile_page_viewed');
-
-/**
- * Track: profile_settings_toggled
- */
-export const profileSettingsToggled = () => track('profile_settings_toggled');
-
-/**
- * Track: profile_saved
- */
-export const profileSaved = () => track('profile_saved');
-
-/**
- * Track: profile_save_failed
- */
-export const profileSaveFailed = () => track('profile_save_failed');
-
-/**
- * Track: quick_quiz_page_viewed
- */
-export const quickQuizPageViewed = () => track('quick_quiz_page_viewed');
-
-/**
- * Track: quick_quiz_go_home_clicked
- */
-export const quickQuizGoHomeClicked = () => track('quick_quiz_go_home_clicked');
-
-/**
- * Track: quick_quiz_restart_clicked
- */
-export const quickQuizRestartClicked = () => track('quick_quiz_restart_clicked');
-
-/**
- * Track: reset_password_page_viewed
- */
-export const resetPasswordPageViewed = () => track('reset_password_page_viewed');
-
-/**
- * Track: password_reset_attempted
- */
-export const passwordResetAttempted = () => track('password_reset_attempted');
-
-/**
- * Track: password_reset_succeeded
- */
-export const passwordResetSucceeded = () => track('password_reset_succeeded');
-
-/**
- * Track: password_reset_failed
- */
-export const passwordResetFailed = () => track('password_reset_failed');
-
-/**
- * Track: timed_challenge_page_viewed
- */
-export const timedChallengePageViewed = () => track('timed_challenge_page_viewed');
-
-/**
- * Track: timed_challenge_type_selected
- */
-export const timedChallengeTypeSelected = () => track('timed_challenge_type_selected');
+export const quickQuizRestarted = () => track('quick_quiz_restarted');
 
 /**
  * Track: timed_challenge_started
  */
-export const timedChallengeStarted = () => track('timed_challenge_started');
+export const timedChallengeStarted = (props: {
+  undefined: any;
+}) => track('timed_challenge_started', props);
 
 /**
  * Track: timed_challenge_answer_submitted
  */
-export const timedChallengeAnswerSubmitted = () => track('timed_challenge_answer_submitted');
+export const timedChallengeAnswerSubmitted = (props: {
+  undefined: any;
+  undefined: any;
+}) => track('timed_challenge_answer_submitted', props);
 
 /**
- * Track: timed_challenge_reset
+ * Track: timed_challenge_restarted
  */
-export const timedChallengeReset = () => track('timed_challenge_reset');
+export const timedChallengeRestarted = () => track('timed_challenge_restarted');
 
 /**
- * Track: timed_challenge_dashboard_navigated
+ * Track: writing_practice_started
  */
-export const timedChallengeDashboardNavigated = () => track('timed_challenge_dashboard_navigated');
-
-/**
- * Track: writing_practice_page_viewed
- */
-export const writingPracticePageViewed = () => track('writing_practice_page_viewed');
-
-/**
- * Track: writing_practice_progress_navigated
- */
-export const writingPracticeProgressNavigated = () => track('writing_practice_progress_navigated');
-
-/**
- * Track: abandoned_sessions_fixed
- */
-export const abandonedSessionsFixed = () => track('abandoned_sessions_fixed');
-
-/**
- * Track: learning_path_section_viewed
- */
-export const learningPathSectionViewed = () => track('learning_path_section_viewed');
+export const writingPracticeStarted = () => track('writing_practice_started');
 
 /**
  * Track: learning_path_navigated
  */
-export const learningPathNavigated = () => track('learning_path_navigated');
+export const learningPathNavigated = (props: {
+  undefined: any;
+  undefined: any;
+}) => track('learning_path_navigated', props);
 
 /**
- * Track: courses_page_navigated
+ * Track: courses_page_viewed
  */
-export const coursesPageNavigated = () => track('courses_page_navigated');
+export const coursesPageViewed = () => track('courses_page_viewed');
 
 /**
  * Track: modal_opened
  */
-export const modalOpened = () => track('modal_opened');
+export const modalOpened = (props: {
+  undefined: any;
+}) => track('modal_opened', props);
 
 /**
- * Track: search_performed
+ * Track: command_dialog_opened
  */
-export const searchPerformed = () => track('search_performed');
+export const commandDialogOpened = () => track('command_dialog_opened');
+
+/**
+ * Track: command_search_performed
+ */
+export const commandSearchPerformed = (props: {
+  undefined: any;
+}) => track('command_search_performed', props);
+
+/**
+ * Track: achievement_viewed
+ */
+export const achievementViewed = (props: {
+  undefined: any;
+}) => track('achievement_viewed', props);
+
+/**
+ * Track: achievement_earned
+ */
+export const achievementEarned = (props: {
+  undefined: any;
+  undefined: any;
+}) => track('achievement_earned', props);
+
+/**
+ * Track: abandoned_sessions_fixed
+ */
+export const abandonedSessionsFixed = (props: {
+  undefined: any;
+  undefined: any;
+}) => track('abandoned_sessions_fixed', props);
 
 /**
  * All analytics tracking functions
  */
 export const analytics = {
   pageViewed,
-  achievementViewed,
-  achievementLinkClicked,
+  signupFormSubmitted,
+  loginFormSubmitted,
+  passwordResetRequested,
   assessmentStarted,
   assessmentQuestionAnswered,
-  assessmentNextQuestionClicked,
-  assessmentPreviousQuestionClicked,
   assessmentCompleted,
   assessmentFailed,
-  assessmentDashboardNavigated,
-  authPageViewed,
-  loginAttempted,
-  loginSucceeded,
-  loginFailed,
-  signupAttempted,
-  signupSucceeded,
-  signupFailed,
-  editProfilePageViewed,
-  profileSettingsToggled,
-  profileSaved,
-  profileSaveFailed,
-  quickQuizPageViewed,
-  quickQuizGoHomeClicked,
-  quickQuizRestartClicked,
-  resetPasswordPageViewed,
-  passwordResetAttempted,
-  passwordResetSucceeded,
-  passwordResetFailed,
-  timedChallengePageViewed,
-  timedChallengeTypeSelected,
+  profileSettingsUpdated,
+  displayFuriganaToggled,
+  quizAutoAdvanceToggled,
+  showStrokeOrderToggled,
+  quickQuizStarted,
+  quickQuizRestarted,
   timedChallengeStarted,
   timedChallengeAnswerSubmitted,
-  timedChallengeReset,
-  timedChallengeDashboardNavigated,
-  writingPracticePageViewed,
-  writingPracticeProgressNavigated,
-  abandonedSessionsFixed,
-  learningPathSectionViewed,
+  timedChallengeRestarted,
+  writingPracticeStarted,
   learningPathNavigated,
-  coursesPageNavigated,
+  coursesPageViewed,
   modalOpened,
-  searchPerformed,
+  commandDialogOpened,
+  commandSearchPerformed,
+  achievementViewed,
+  achievementEarned,
+  abandonedSessionsFixed,
 };

@@ -7,12 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import WritingPracticeExercise from '@/components/kana/WritingPracticeExercise';
 import { characterProgressService } from '@/services/characterProgressService';
-import { writingPracticeProgressNavigated, writingPracticePageViewed, useNavigate, useToast, useAuth, toast } from '@/lib/analytics-generated';
+import { writingPracticeStarted, useNavigate, useToast, useAuth, toast } from '@/lib/analytics-generated';
 
-// Track writing_practice_progress_navigated
-writingPracticeProgressNavigated();
-// Track writing_practice_page_viewed
-writingPracticePageViewed();
+// Track writing_practice_started
+writingPracticeStarted();
 const WritingPractice = () => {
   const { kanaType } = useParams<{ kanaType: 'hiragana' | 'katakana' }>();
   const navigate = useNavigate();
