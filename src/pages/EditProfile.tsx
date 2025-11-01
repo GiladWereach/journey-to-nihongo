@@ -10,7 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { profileSaveFailed, profileSaved, profileSettingsToggled, editProfilePageViewed, useAuth, useNavigate, useToast, loadProfile, loadSettings, single, setProfile, setSettings, upsert, ate, toISOString, toast } from '@/lib/analytics-generated';
 
+// Track profile_save_failed
+profileSaveFailed();
+// Track profile_saved
+profileSaved();
+// Track profile_settings_toggled
+profileSettingsToggled();
+// Track edit_profile_page_viewed
+editProfilePageViewed();
 const EditProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
