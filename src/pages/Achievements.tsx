@@ -7,7 +7,12 @@ import { Trophy, Star, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { achievementEarned, achievementViewed, useAuth } from '@/lib/analytics-generated';
+import { achievementEarned, achievementViewed, useAuth } from '@/lib/analytics-generated';
 const Achievements = () => {
+  // Track achievement_earned
+  achievementEarned();
+  // Track achievement_viewed
+  achievementViewed();
   // Track achievement_earned
   achievementEarned();
   // Track achievement_viewed
