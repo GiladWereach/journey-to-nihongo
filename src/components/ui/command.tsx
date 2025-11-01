@@ -5,12 +5,8 @@ import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { commandSearchPerformed, commandDialogOpened } from '@/lib/analytics-generated';
+
 const Command = React.forwardRef<
-  // Track command_search_performed
-  commandSearchPerformed();
-  // Track command_dialog_opened
-  commandDialogOpened();
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
 >(({ className, ...props }, ref) => (

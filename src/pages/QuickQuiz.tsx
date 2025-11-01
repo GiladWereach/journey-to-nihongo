@@ -10,12 +10,7 @@ import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
 import { KanaType } from '@/types/quiz';
 import { quizSessionService, QuizSession } from '@/services/quizSessionService';
-import { quickQuizRestarted, quickQuizStarted, useNavigate, useLocation, useAuth, useToast, toast } from '@/lib/analytics-generated';
 
-// Track quick_quiz_restarted
-quickQuizRestarted();
-// Track quick_quiz_started
-quickQuizStarted();
 const QuickQuiz = () => {
   const navigate = useNavigate();
   const location = useLocation();
