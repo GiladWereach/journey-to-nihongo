@@ -11,7 +11,30 @@ import { useToast } from '@/hooks/use-toast';
 import { KanaType, QuizCharacter } from '@/types/quiz';
 import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
+import { timedChallengeDashboardNavigated, timedChallengeGameReset, timedChallengeAnswerSubmitted, timedChallengeGameStarted, timedChallengeTypeSelected, timedChallengeNavigationClicked, timedChallengeRestarted, timedChallengeStarted, useAuth, useNavigate, useToast, endGame, random, generateQuestions, setResult, toast, toString } from '@/lib/analytics-generated';
 
+// Track timed_challenge_dashboard_navigated
+timedChallengeDashboardNavigated();
+// Track timed_challenge_game_reset
+timedChallengeGameReset();
+// Track timed_challenge_answer_submitted
+timedChallengeAnswerSubmitted();
+// Track timed_challenge_game_started
+timedChallengeGameStarted();
+// Track timed_challenge_type_selected
+timedChallengeTypeSelected();
+// Track timed_challenge_type_selected
+timedChallengeTypeSelected();
+// Track timed_challenge_navigation_clicked
+timedChallengeNavigationClicked();
+// Track timed_challenge_navigation_clicked
+timedChallengeNavigationClicked();
+// Track timed_challenge_restarted
+timedChallengeRestarted();
+// Track timed_challenge_answer_submitted
+timedChallengeAnswerSubmitted();
+// Track timed_challenge_started
+timedChallengeStarted();
 interface ChallengeResult {
   score: number;
   timeRemaining: number;
