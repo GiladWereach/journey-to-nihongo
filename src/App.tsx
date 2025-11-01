@@ -11,6 +11,7 @@ import Quiz from '@/pages/Quiz';
 import Learn from '@/pages/Learn';
 import KanaLearning from '@/pages/KanaLearning';
 import Achievements from '@/pages/Achievements';
+import '@/lib/analytics';
 import { pageViewed, pp } from '@/lib/analytics-generated';
 
 // Track page_viewed
