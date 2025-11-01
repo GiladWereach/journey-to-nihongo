@@ -10,7 +10,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
+import { formSubmitted, loginFormSubmitted, signupFormSubmitted, useAuth, useNavigate, useLocation, preventDefault } from '@/lib/analytics-generated';
 
+// Track form_submitted
+formSubmitted();
+// Track form_submitted
+formSubmitted();
+// Track login_form_submitted
+loginFormSubmitted();
+// Track signup_form_submitted
+signupFormSubmitted();
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
