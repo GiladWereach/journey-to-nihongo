@@ -10,7 +10,10 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { characterProgressService } from '@/services/characterProgressService';
 import { quizSessionService } from '@/services/quizSessionService';
 import { supabase } from '@/integrations/supabase/client';
+import { dashboardPageViewed } from '@/lib/analytics-generated';
 
+// Track dashboard_page_viewed
+dashboardPageViewed();
 interface DashboardStats {
   totalCharactersLearned: number;
   currentStreak: number;
