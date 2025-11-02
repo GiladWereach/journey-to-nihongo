@@ -5,7 +5,16 @@ import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { commandModalOpened, commandSearchPerformed, commandShortcutModalOpened, commandShortcutSearchPerformed } from '@/lib/analytics-generated';
 
+// Track command_shortcut_search_performed
+commandShortcutSearchPerformed();
+// Track command_shortcut_modal_opened
+commandShortcutModalOpened();
+// Track command_search_performed
+commandSearchPerformed();
+// Track command_modal_opened
+commandModalOpened();
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
