@@ -1,10 +1,3 @@
-export interface EventConfig {
-  event_name: string;
-  selector: string;
-  trigger: 'click' | 'submit';
-  description?: string;
-}
-
 export interface WeaveConfig {
   projectId: string;
   apiEndpoint: string;
@@ -13,9 +6,6 @@ export interface WeaveConfig {
   flushInterval?: number;
   autoPageViews?: boolean;
   autoErrorTracking?: boolean;
-  autoClickTracking?: boolean;
-  autoFormTracking?: boolean;
-  events?: EventConfig[];
 }
 
 export interface WeaveEvent {
