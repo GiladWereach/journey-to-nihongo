@@ -7,13 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { BookOpen, Play, BarChart, User, Target, Zap, TrendingUp } from 'lucide-react';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
-import { indexPageViewed, useAuth } from '@/lib/analytics-generated';
-import { indexPageViewed } from '@/lib/analytics-generated';
 
-// Track index_page_viewed
-indexPageViewed();
-// Track index_page_viewed
-indexPageViewed();
 const Index = () => {
   const { user } = useAuth();
 

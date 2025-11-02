@@ -10,37 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { profileSettingsSaveFailed, profileSettingsSaved, settingShowStrokeOrderToggled, settingQuizAutoAdvanceToggled, settingDisplayFuriganaToggled, profileEditCancelled, editProfilePageViewed, useAuth, useNavigate, useToast, loadProfile, loadSettings, single, setProfile, setSettings, upsert, ate, toISOString, toast } from '@/lib/analytics-generated';
-import { editProfilePageViewed, profileEditCancelled, settingDisplayFuriganaToggled, settingQuizAutoAdvanceToggled, settingShowStrokeOrderToggled, profileSettingsSaved, profileSettingsSaveFailed } from '@/lib/analytics-generated';
 
-// Track profile_settings_save_failed
-profileSettingsSaveFailed();
-// Track profile_settings_saved
-profileSettingsSaved();
-// Track setting_show_stroke_order_toggled
-settingShowStrokeOrderToggled();
-// Track setting_quiz_auto_advance_toggled
-settingQuizAutoAdvanceToggled();
-// Track setting_display_furigana_toggled
-settingDisplayFuriganaToggled();
-// Track profile_edit_cancelled
-profileEditCancelled();
-// Track edit_profile_page_viewed
-editProfilePageViewed();
-// Track profile_settings_save_failed
-profileSettingsSaveFailed();
-// Track profile_settings_saved
-profileSettingsSaved();
-// Track setting_show_stroke_order_toggled
-settingShowStrokeOrderToggled();
-// Track setting_quiz_auto_advance_toggled
-settingQuizAutoAdvanceToggled();
-// Track setting_display_furigana_toggled
-settingDisplayFuriganaToggled();
-// Track profile_edit_cancelled
-profileEditCancelled();
-// Track edit_profile_page_viewed
-editProfilePageViewed();
 const EditProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();

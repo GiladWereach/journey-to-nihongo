@@ -9,13 +9,7 @@ import { ArrowLeft, BookOpen, Award, TrendingUp, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserKanaProgress from '@/components/kana/UserKanaProgress';
 import { useAuth } from '@/contexts/AuthContext';
-import { kanaLearningPageViewed, useAuth } from '@/lib/analytics-generated';
-import { kanaLearningPageViewed } from '@/lib/analytics-generated';
 
-// Track kana_learning_page_viewed
-kanaLearningPageViewed();
-// Track kana_learning_page_viewed
-kanaLearningPageViewed();
 const KanaLearning: React.FC = () => {
   const { user } = useAuth();
 

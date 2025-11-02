@@ -9,13 +9,7 @@ import { TraditionalBackground, TraditionalCard } from '@/components/ui/Traditio
 import { KanaType } from '@/types/kana';
 import { QuizSession, quizSessionService } from '@/services/quizSessionService';
 import { useToast } from '@/hooks/use-toast';
-import { quizPageViewed, useAuth, useToast, toast } from '@/lib/analytics-generated';
-import { quizPageViewed } from '@/lib/analytics-generated';
 
-// Track quiz_page_viewed
-quizPageViewed();
-// Track quiz_page_viewed
-quizPageViewed();
 const Quiz: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
