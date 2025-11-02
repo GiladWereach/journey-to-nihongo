@@ -3,7 +3,12 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { dialogHeaderModalOpened, dialogFooterModalOpened } from '@/lib/analytics-generated';
 
+// Track dialog_footer_modal_opened
+dialogFooterModalOpened();
+// Track dialog_header_modal_opened
+dialogHeaderModalOpened();
 const Dialog = DialogPrimitive.Root
 
 const DialogTrigger = DialogPrimitive.Trigger

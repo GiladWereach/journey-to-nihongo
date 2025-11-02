@@ -11,7 +11,10 @@ import Quiz from '@/pages/Quiz';
 import Learn from '@/pages/Learn';
 import KanaLearning from '@/pages/KanaLearning';
 import Achievements from '@/pages/Achievements';
+import { pageViewed } from '@/lib/analytics-generated';
 
+// Track page_viewed
+pageViewed();
 function App() {
   return (
     <AuthProvider>

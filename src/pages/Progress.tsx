@@ -13,7 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
+import { progressPageViewed } from '@/lib/analytics-generated';
 
+// Track progress_page_viewed
+progressPageViewed();
 const Progress: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();

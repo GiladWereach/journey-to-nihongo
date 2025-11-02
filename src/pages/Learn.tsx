@@ -9,7 +9,10 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { BookOpen, Menu } from 'lucide-react';
 import PrimaryNavigation from '@/components/layout/PrimaryNavigation';
 import LearningPathCard from '@/components/ui/LearningPathCard';
+import { learnPageViewed } from '@/lib/analytics-generated';
 
+// Track learn_page_viewed
+learnPageViewed();
 const Learn: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
