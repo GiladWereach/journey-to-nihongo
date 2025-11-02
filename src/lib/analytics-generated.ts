@@ -2,7 +2,7 @@
  * Weave BI Tracking Functions
  * Auto-generated - DO NOT EDIT
  *
- * Generated at: 2025-11-02T17:01:29.700Z
+ * Generated at: 2025-11-02T17:21:27.731Z
  * Total events: 59
  * - Auto-tracked: 0 (clicks, forms, page views)
  * - Manual implementation: 59 (business logic events)
