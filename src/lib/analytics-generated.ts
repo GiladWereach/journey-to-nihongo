@@ -2,10 +2,10 @@
  * Weave BI Tracking Functions
  * Auto-generated - DO NOT EDIT
  *
- * Generated at: 2025-11-02T15:05:46.895Z
- * Total events: 49
+ * Generated at: 2025-11-02T16:12:34.150Z
+ * Total events: 59
  * - Auto-tracked: 0 (clicks, forms, page views)
- * - Manual implementation: 49 (business logic events)
+ * - Manual implementation: 59 (business logic events)
  *
  * USAGE:
  *
@@ -14,12 +14,12 @@
  *    No code needed - just import '@/lib/analytics' in your app entry point.
  *    
  *
- * 2. MANUAL EVENTS (49):
+ * 2. MANUAL EVENTS (59):
  *    Call these functions in your business logic:
- *    - page_viewed
- *    - achievements_page_viewed
- *    - assessment_page_viewed
- *    ... and 46 more
+ *    - password_reset_requested
+ *    - password_reset_failed
+ *    - timed_challenge_auth_redirect_clicked
+ *    ... and 56 more
  *
  *    Example:
  *    import { purchaseCompleted } from '@/lib/analytics-generated';
@@ -33,6 +33,106 @@
  */
 
 import { track } from './weave-bi';
+
+/**
+ * Track: password_reset_requested
+ */
+export const passwordResetRequested = () => track('password_reset_requested');
+
+/**
+ * Track: password_reset_failed
+ */
+export const passwordResetFailed = () => track('password_reset_failed');
+
+/**
+ * Track: timed_challenge_auth_redirect_clicked
+ */
+export const timedChallengeAuthRedirectClicked = () => track('timed_challenge_auth_redirect_clicked');
+
+/**
+ * Track: timed_challenge_dashboard_redirect_clicked
+ */
+export const timedChallengeDashboardRedirectClicked = () => track('timed_challenge_dashboard_redirect_clicked');
+
+/**
+ * Track: timed_challenge_type_selected
+ */
+export const timedChallengeTypeSelected = () => track('timed_challenge_type_selected');
+
+/**
+ * Track: timed_challenge_game_started
+ */
+export const timedChallengeGameStarted = () => track('timed_challenge_game_started');
+
+/**
+ * Track: timed_challenge_answer_submitted
+ */
+export const timedChallengeAnswerSubmitted = () => track('timed_challenge_answer_submitted');
+
+/**
+ * Track: timed_challenge_game_reset
+ */
+export const timedChallengeGameReset = () => track('timed_challenge_game_reset');
+
+/**
+ * Track: writing_practice_progress_redirect_clicked
+ */
+export const writingPracticeProgressRedirectClicked = () => track('writing_practice_progress_redirect_clicked');
+
+/**
+ * Track: abandoned_sessions_fixed
+ */
+export const abandonedSessionsFixed = () => track('abandoned_sessions_fixed');
+
+/**
+ * Track: learning_path_navigated
+ */
+export const learningPathNavigated = () => track('learning_path_navigated');
+
+/**
+ * Track: all_courses_viewed
+ */
+export const allCoursesViewed = () => track('all_courses_viewed');
+
+/**
+ * Track: alert_dialog_header_modal_opened
+ */
+export const alertDialogHeaderModalOpened = () => track('alert_dialog_header_modal_opened');
+
+/**
+ * Track: alert_dialog_footer_modal_opened
+ */
+export const alertDialogFooterModalOpened = () => track('alert_dialog_footer_modal_opened');
+
+/**
+ * Track: command_modal_opened
+ */
+export const commandModalOpened = () => track('command_modal_opened');
+
+/**
+ * Track: command_search_performed
+ */
+export const commandSearchPerformed = () => track('command_search_performed');
+
+/**
+ * Track: command_shortcut_modal_opened
+ */
+export const commandShortcutModalOpened = () => track('command_shortcut_modal_opened');
+
+/**
+ * Track: command_shortcut_search_performed
+ */
+export const commandShortcutSearchPerformed = () => track('command_shortcut_search_performed');
+
+/**
+ * Track: dialog_header_modal_opened
+ */
+export const dialogHeaderModalOpened = () => track('dialog_header_modal_opened');
+
+/**
+ * Track: dialog_footer_modal_opened
+ */
+export const dialogFooterModalOpened = () => track('dialog_footer_modal_opened');
 
 /**
  * Track: page_viewed
@@ -130,24 +230,24 @@ export const writingPracticePageViewed = () => track('writing_practice_page_view
 export const dashboardLinkClicked = () => track('dashboard_link_clicked');
 
 /**
- * Track: assessment_started
+ * Track: assessment_dashboard_button_clicked
  */
-export const assessmentStarted = () => track('assessment_started');
+export const assessmentDashboardButtonClicked = () => track('assessment_dashboard_button_clicked');
 
 /**
- * Track: assessment_question_answered
+ * Track: assessment_answer_selected
  */
-export const assessmentQuestionAnswered = () => track('assessment_question_answered');
+export const assessmentAnswerSelected = () => track('assessment_answer_selected');
 
 /**
- * Track: assessment_next_question_clicked
+ * Track: assessment_previous_button_clicked
  */
-export const assessmentNextQuestionClicked = () => track('assessment_next_question_clicked');
+export const assessmentPreviousButtonClicked = () => track('assessment_previous_button_clicked');
 
 /**
- * Track: assessment_previous_question_clicked
+ * Track: assessment_next_button_clicked
  */
-export const assessmentPreviousQuestionClicked = () => track('assessment_previous_question_clicked');
+export const assessmentNextButtonClicked = () => track('assessment_next_button_clicked');
 
 /**
  * Track: assessment_completed
@@ -190,99 +290,69 @@ export const signupCompleted = () => track('signup_completed');
 export const signupFailed = () => track('signup_failed');
 
 /**
- * Track: profile_settings_updated
+ * Track: profile_edit_cancelled
  */
-export const profileSettingsUpdated = () => track('profile_settings_updated');
+export const profileEditCancelled = () => track('profile_edit_cancelled');
 
 /**
- * Track: display_furigana_toggled
+ * Track: setting_display_furigana_toggled
  */
-export const displayFuriganaToggled = () => track('display_furigana_toggled');
+export const settingDisplayFuriganaToggled = () => track('setting_display_furigana_toggled');
 
 /**
- * Track: quiz_auto_advance_toggled
+ * Track: setting_quiz_auto_advance_toggled
  */
-export const quizAutoAdvanceToggled = () => track('quiz_auto_advance_toggled');
+export const settingQuizAutoAdvanceToggled = () => track('setting_quiz_auto_advance_toggled');
 
 /**
- * Track: show_stroke_order_toggled
+ * Track: setting_show_stroke_order_toggled
  */
-export const showStrokeOrderToggled = () => track('show_stroke_order_toggled');
+export const settingShowStrokeOrderToggled = () => track('setting_show_stroke_order_toggled');
 
 /**
- * Track: quick_quiz_restarted
+ * Track: profile_settings_saved
  */
-export const quickQuizRestarted = () => track('quick_quiz_restarted');
+export const profileSettingsSaved = () => track('profile_settings_saved');
 
 /**
- * Track: password_reset_requested
+ * Track: profile_settings_save_failed
  */
-export const passwordResetRequested = () => track('password_reset_requested');
+export const profileSettingsSaveFailed = () => track('profile_settings_save_failed');
 
 /**
- * Track: password_reset_failed
+ * Track: quick_quiz_go_home_button_clicked
  */
-export const passwordResetFailed = () => track('password_reset_failed');
+export const quickQuizGoHomeButtonClicked = () => track('quick_quiz_go_home_button_clicked');
 
 /**
- * Track: timed_challenge_type_selected
+ * Track: quick_quiz_restart_button_clicked
  */
-export const timedChallengeTypeSelected = () => track('timed_challenge_type_selected');
-
-/**
- * Track: timed_challenge_started
- */
-export const timedChallengeStarted = () => track('timed_challenge_started');
-
-/**
- * Track: timed_challenge_answer_submitted
- */
-export const timedChallengeAnswerSubmitted = () => track('timed_challenge_answer_submitted');
-
-/**
- * Track: timed_challenge_restarted
- */
-export const timedChallengeRestarted = () => track('timed_challenge_restarted');
-
-/**
- * Track: abandoned_sessions_fixed
- */
-export const abandonedSessionsFixed = () => track('abandoned_sessions_fixed');
-
-/**
- * Track: learning_path_navigated
- */
-export const learningPathNavigated = () => track('learning_path_navigated');
-
-/**
- * Track: courses_page_navigated
- */
-export const coursesPageNavigated = () => track('courses_page_navigated');
-
-/**
- * Track: alert_dialog_opened
- */
-export const alertDialogOpened = () => track('alert_dialog_opened');
-
-/**
- * Track: command_dialog_opened
- */
-export const commandDialogOpened = () => track('command_dialog_opened');
-
-/**
- * Track: command_search_performed
- */
-export const commandSearchPerformed = () => track('command_search_performed');
-
-/**
- * Track: dialog_opened
- */
-export const dialogOpened = () => track('dialog_opened');
+export const quickQuizRestartButtonClicked = () => track('quick_quiz_restart_button_clicked');
 
 /**
  * All analytics tracking functions
  */
 export const analytics = {
+  passwordResetRequested,
+  passwordResetFailed,
+  timedChallengeAuthRedirectClicked,
+  timedChallengeDashboardRedirectClicked,
+  timedChallengeTypeSelected,
+  timedChallengeGameStarted,
+  timedChallengeAnswerSubmitted,
+  timedChallengeGameReset,
+  writingPracticeProgressRedirectClicked,
+  abandonedSessionsFixed,
+  learningPathNavigated,
+  allCoursesViewed,
+  alertDialogHeaderModalOpened,
+  alertDialogFooterModalOpened,
+  commandModalOpened,
+  commandSearchPerformed,
+  commandShortcutModalOpened,
+  commandShortcutSearchPerformed,
+  dialogHeaderModalOpened,
+  dialogFooterModalOpened,
   pageViewed,
   achievementsPageViewed,
   assessmentPageViewed,
@@ -302,10 +372,10 @@ export const analytics = {
   timedChallengePageViewed,
   writingPracticePageViewed,
   dashboardLinkClicked,
-  assessmentStarted,
-  assessmentQuestionAnswered,
-  assessmentNextQuestionClicked,
-  assessmentPreviousQuestionClicked,
+  assessmentDashboardButtonClicked,
+  assessmentAnswerSelected,
+  assessmentPreviousButtonClicked,
+  assessmentNextButtonClicked,
   assessmentCompleted,
   assessmentFailed,
   loginAttempted,
@@ -314,22 +384,12 @@ export const analytics = {
   signupAttempted,
   signupCompleted,
   signupFailed,
-  profileSettingsUpdated,
-  displayFuriganaToggled,
-  quizAutoAdvanceToggled,
-  showStrokeOrderToggled,
-  quickQuizRestarted,
-  passwordResetRequested,
-  passwordResetFailed,
-  timedChallengeTypeSelected,
-  timedChallengeStarted,
-  timedChallengeAnswerSubmitted,
-  timedChallengeRestarted,
-  abandonedSessionsFixed,
-  learningPathNavigated,
-  coursesPageNavigated,
-  alertDialogOpened,
-  commandDialogOpened,
-  commandSearchPerformed,
-  dialogOpened,
+  profileEditCancelled,
+  settingDisplayFuriganaToggled,
+  settingQuizAutoAdvanceToggled,
+  settingShowStrokeOrderToggled,
+  profileSettingsSaved,
+  profileSettingsSaveFailed,
+  quickQuizGoHomeButtonClicked,
+  quickQuizRestartButtonClicked,
 };
