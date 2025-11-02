@@ -6,7 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { resetPasswordPageViewed, passwordResetFailed, passwordResetRequested, useAuth, preventDefault } from '@/lib/analytics-generated';
 
+// Track reset_password_page_viewed
+resetPasswordPageViewed();
+// Track password_reset_failed
+passwordResetFailed();
+// Track password_reset_requested
+passwordResetRequested();
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
