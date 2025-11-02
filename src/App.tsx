@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard';
 import Progress from '@/pages/Progress';
 import Quiz from '@/pages/Quiz';
 import Learn from '@/pages/Learn';
+import '@/lib/analytics';
 import KanaLearning from '@/pages/KanaLearning';
 import Achievements from '@/pages/Achievements';
 import { pageViewed } from '@/lib/analytics-generated';
