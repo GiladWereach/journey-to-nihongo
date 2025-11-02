@@ -1,6 +1,9 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { notFoundPageViewed } from '@/lib/analytics-generated';
 
+// Track not_found_page_viewed
+notFoundPageViewed();
 const NotFound = () => {
   const location = useLocation();
 
