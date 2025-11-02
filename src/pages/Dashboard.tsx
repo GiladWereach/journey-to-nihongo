@@ -11,7 +11,10 @@ import { characterProgressService } from '@/services/characterProgressService';
 import { quizSessionService } from '@/services/quizSessionService';
 import { supabase } from '@/integrations/supabase/client';
 import { dashboardPageViewed, useAuth, useUserProgress, setStats, fetchDashboardData, toLocaleDateString } from '@/lib/analytics-generated';
+import { dashboardPageViewed } from '@/lib/analytics-generated';
 
+// Track dashboard_page_viewed
+dashboardPageViewed();
 // Track dashboard_page_viewed
 dashboardPageViewed();
 interface DashboardStats {

@@ -14,7 +14,10 @@ import { supabase } from '@/integrations/supabase/client';
 import TraditionalProgressIndicator from '@/components/ui/TraditionalProgressIndicator';
 import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import { progressPageViewed, useAuth, useToast, setOverallStats, setStreakData, ate, toast, fetchData, toLocaleDateString, getMostPracticed, getNeedsWork } from '@/lib/analytics-generated';
+import { progressPageViewed } from '@/lib/analytics-generated';
 
+// Track progress_page_viewed
+progressPageViewed();
 // Track progress_page_viewed
 progressPageViewed();
 const Progress: React.FC = () => {

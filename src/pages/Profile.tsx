@@ -9,7 +9,10 @@ import { Navigate } from 'react-router-dom';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import { profilePageViewed, useAuth, signOut, toLocaleDateString } from '@/lib/analytics-generated';
+import { profilePageViewed } from '@/lib/analytics-generated';
 
+// Track profile_page_viewed
+profilePageViewed();
 // Track profile_page_viewed
 profilePageViewed();
 const Profile: React.FC = () => {

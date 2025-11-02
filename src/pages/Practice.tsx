@@ -7,7 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import { characterProgressService } from '@/services/characterProgressService';
 import { practicePageViewed, useAuth, useToast, toast } from '@/lib/analytics-generated';
+import { practicePageViewed } from '@/lib/analytics-generated';
 
+// Track practice_page_viewed
+practicePageViewed();
 // Track practice_page_viewed
 practicePageViewed();
 const Practice = () => {
