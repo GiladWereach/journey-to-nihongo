@@ -6,13 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Trophy, Star, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { achievementLinkClicked, achievementViewed, useAuth } from '@/lib/analytics-generated';
-
-// Track achievement_link_clicked
-achievementLinkClicked();
-// Track achievement_viewed
-achievementViewed();
+import { achievementEarned, achievementViewed, useAuth } from '@/lib/analytics-generated';
 const Achievements = () => {
+  // Track achievement_earned
+  achievementEarned();
+  // Track achievement_viewed
+  achievementViewed();
   const { user } = useAuth();
 
   // Placeholder achievements for now
