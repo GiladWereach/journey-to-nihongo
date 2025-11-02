@@ -10,7 +10,14 @@ import SimpleQuizSetup from '@/components/quiz/SimpleQuizSetup';
 import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
 import { KanaType } from '@/types/quiz';
 import { quizSessionService, QuizSession } from '@/services/quizSessionService';
+import { quickQuizRestartButtonClicked, quickQuizGoHomeButtonClicked, quickQuizPageViewed, useNavigate, useLocation, useAuth, useToast, toast } from '@/lib/analytics-generated';
 
+// Track quick_quiz_restart_button_clicked
+quickQuizRestartButtonClicked();
+// Track quick_quiz_go_home_button_clicked
+quickQuizGoHomeButtonClicked();
+// Track quick_quiz_page_viewed
+quickQuizPageViewed();
 const QuickQuiz = () => {
   const navigate = useNavigate();
   const location = useLocation();
