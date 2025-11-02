@@ -10,6 +10,7 @@ import Progress from '@/pages/Progress';
 import Quiz from '@/pages/Quiz';
 import Learn from '@/pages/Learn';
 import KanaLearning from '@/pages/KanaLearning';
+import '@/lib/analytics';
 import Achievements from '@/pages/Achievements';
 
 function App() {
