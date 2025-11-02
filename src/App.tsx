@@ -11,6 +11,7 @@ import Quiz from '@/pages/Quiz';
 import Learn from '@/pages/Learn';
 import KanaLearning from '@/pages/KanaLearning';
 import Achievements from '@/pages/Achievements';
+
 function App() {
   return (
     <AuthProvider>
