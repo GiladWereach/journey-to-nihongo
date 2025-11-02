@@ -3,7 +3,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { signupFailed, signupCompleted, loginFailed, loginCompleted, useToast, getSession, unsubscribe, signInWithPassword, toast, signUp, signOut } from '@/lib/analytics-generated';
 
+// Track signup_failed
+signupFailed();
+// Track signup_completed
+signupCompleted();
+// Track login_failed
+loginFailed();
+// Track login_completed
+loginCompleted();
 type AuthContextType = {
   session: Session | null;
   user: User | null;
