@@ -7,7 +7,10 @@ import { Trophy, Star, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { achievementsPageViewed, dashboardLinkClicked } from '@/lib/analytics-generated';
+import { dashboardLinkClicked } from '@/lib/analytics-generated';
 
+// Track dashboard_link_clicked
+dashboardLinkClicked();
 // Track dashboard_link_clicked
 dashboardLinkClicked();
 // Track achievements_page_viewed

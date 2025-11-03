@@ -4,7 +4,10 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { alertDialogHeaderModalOpened, alertDialogFooterModalOpened } from '@/lib/analytics-generated';
+import { alertDialogOpened } from '@/lib/analytics-generated';
 
+// Track alert_dialog_opened
+alertDialogOpened();
 // Track alert_dialog_footer_modal_opened
 alertDialogFooterModalOpened();
 // Track alert_dialog_header_modal_opened

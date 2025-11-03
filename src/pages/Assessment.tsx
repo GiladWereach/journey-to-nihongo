@@ -9,7 +9,22 @@ import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { assessmentQuestions, AssessmentQuestion } from '@/data/assessmentQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { assessmentPageViewed, assessmentDashboardButtonClicked, assessmentAnswerSelected, assessmentPreviousButtonClicked, assessmentNextButtonClicked, assessmentCompleted, assessmentFailed } from '@/lib/analytics-generated';
+import { assessmentStarted, assessmentAnswerSelected, assessmentNextQuestionClicked, assessmentPreviousQuestionClicked, assessmentCompleted, assessmentFailed, assessmentDashboardButtonClicked } from '@/lib/analytics-generated';
 
+// Track assessment_dashboard_button_clicked
+assessmentDashboardButtonClicked();
+// Track assessment_failed
+assessmentFailed();
+// Track assessment_completed
+assessmentCompleted();
+// Track assessment_previous_question_clicked
+assessmentPreviousQuestionClicked();
+// Track assessment_next_question_clicked
+assessmentNextQuestionClicked();
+// Track assessment_answer_selected
+assessmentAnswerSelected();
+// Track assessment_started
+assessmentStarted();
 // Track assessment_failed
 assessmentFailed();
 // Track assessment_completed
