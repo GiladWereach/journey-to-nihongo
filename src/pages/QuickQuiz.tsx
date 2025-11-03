@@ -11,7 +11,12 @@ import SimpleQuizInterface from '@/components/quiz/SimpleQuizInterface';
 import { KanaType } from '@/types/quiz';
 import { quizSessionService, QuizSession } from '@/services/quizSessionService';
 import { quickQuizPageViewed, quickQuizGoHomeButtonClicked, quickQuizRestartButtonClicked } from '@/lib/analytics-generated';
+import { quickQuizHomeButtonClicked, quickQuizRestartButtonClicked } from '@/lib/analytics-generated';
 
+// Track quick_quiz_restart_button_clicked
+quickQuizRestartButtonClicked();
+// Track quick_quiz_home_button_clicked
+quickQuizHomeButtonClicked();
 // Track quick_quiz_restart_button_clicked
 quickQuizRestartButtonClicked();
 // Track quick_quiz_go_home_button_clicked
