@@ -12,7 +12,20 @@ import { KanaType, QuizCharacter } from '@/types/quiz';
 import { hiraganaCharacters } from '@/data/hiraganaData';
 import { katakanaCharacters } from '@/data/katakanaData';
 import { timedChallengeAuthRedirectClicked, timedChallengeDashboardRedirectClicked, timedChallengeTypeSelected, timedChallengeGameStarted, timedChallengeAnswerSubmitted, timedChallengeGameReset, timedChallengePageViewed } from '@/lib/analytics-generated';
+import { timedChallengeAuthRedirectClicked, timedChallengeDashboardRedirectClicked, timedChallengeTypeSelected, timedChallengeGameStarted, timedChallengeAnswerSubmitted, timedChallengeGameReset } from '@/lib/analytics-generated';
 
+// Track timed_challenge_game_reset
+timedChallengeGameReset();
+// Track timed_challenge_answer_submitted
+timedChallengeAnswerSubmitted();
+// Track timed_challenge_game_started
+timedChallengeGameStarted();
+// Track timed_challenge_type_selected
+timedChallengeTypeSelected();
+// Track timed_challenge_dashboard_redirect_clicked
+timedChallengeDashboardRedirectClicked();
+// Track timed_challenge_auth_redirect_clicked
+timedChallengeAuthRedirectClicked();
 // Track timed_challenge_page_viewed
 timedChallengePageViewed();
 // Track timed_challenge_game_reset
