@@ -7,7 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { passwordResetRequested, passwordResetFailed, resetPasswordPageViewed } from '@/lib/analytics-generated';
+import { passwordResetRequested, passwordResetFailed } from '@/lib/analytics-generated';
 
+// Track password_reset_failed
+passwordResetFailed();
+// Track password_reset_requested
+passwordResetRequested();
 // Track reset_password_page_viewed
 resetPasswordPageViewed();
 // Track password_reset_failed
