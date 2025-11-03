@@ -11,7 +11,20 @@ import JapaneseCharacter from '@/components/ui/JapaneseCharacter';
 import TraditionalBackground from '@/components/ui/TraditionalAtmosphere';
 import { TraditionalCard } from '@/components/ui/TraditionalAtmosphere';
 import { authPageViewed, loginAttempted, signupAttempted } from '@/lib/analytics-generated';
+import { loginAttempted, loginCompleted, loginFailed, signupAttempted, signupCompleted, signupFailed } from '@/lib/analytics-generated';
 
+// Track signup_failed
+signupFailed();
+// Track signup_completed
+signupCompleted();
+// Track signup_attempted
+signupAttempted();
+// Track login_failed
+loginFailed();
+// Track login_completed
+loginCompleted();
+// Track login_attempted
+loginAttempted();
 // Track signup_attempted
 signupAttempted();
 // Track login_attempted
